@@ -1,8 +1,8 @@
-import { OcrProvider, OcrResult } from "./types"
+import { ExtractedLabelData, OcrProvider, OcrResult } from "./types"
 
 const MOCK_DELAY_MS = 800
 
-const MOCK_EXTRACTED = {
+const MOCK_EXTRACTED: ExtractedLabelData = {
   brandName: "OLD TOM DISTILLERY",
   classType: "Kentucky Straight Bourbon Whiskey",
   abv: "40% Alc./Vol. (80 Proof)",
