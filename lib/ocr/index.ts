@@ -1,27 +1,20 @@
 import { OcrProvider } from "./types"
 import { tesseractOcrProvider } from "./tesseract"
 import { mockOcrProvider } from "./mock"
+import { claudeOcrProvider } from "./claude"
+import { geminiOcrProvider } from "./gemini"
+import { openaiOcrProvider } from "./openai"
 
 export function getProvider(name: string, apiKey?: string): OcrProvider {
   switch (name) {
     case "mock":
       return mockOcrProvider
-    case "claude": {
-      // require() used for lazy loading — provider files added in Task 2
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { claudeOcrProvider } = require("./claude") as { claudeOcrProvider: (key: string) => OcrProvider }
+    case "claude":
       return claudeOcrProvider(apiKey ?? "")
-    }
-    case "gemini": {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { geminiOcrProvider } = require("./gemini") as { geminiOcrProvider: (key: string) => OcrProvider }
+    case "gemini":
       return geminiOcrProvider(apiKey ?? "")
-    }
-    case "openai": {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { openaiOcrProvider } = require("./openai") as { openaiOcrProvider: (key: string) => OcrProvider }
+    case "openai":
       return openaiOcrProvider(apiKey ?? "")
-    }
     case "tesseract":
     default:
       return tesseractOcrProvider
