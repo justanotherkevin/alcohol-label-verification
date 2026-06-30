@@ -2,7 +2,7 @@
 
 ## Overview
 
-A web application that verifies alcohol labels against TTB application data using a configurable vision/OCR processing backend. Supports single-label and batch verification with async job processing.
+A single Next.js unit (UI + API routes) that verifies alcohol labels against TTB COLA application data using a pluggable vision/OCR pipeline. Supports single-label (sync) and batch verification (SSE streaming).
 
 ---
 
@@ -11,78 +11,35 @@ A web application that verifies alcohol labels against TTB application data usin
 ### High-Level Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                          Client                             │
-│                     (Next.js / React)                       │
-└──────────┬───────────────────────────┬──────────────────────┘
-           │                           │
-    POST /api/verify            POST /api/batch
-    (single label)              (multi-label)
-           │                           │
-           ▼                           ▼
-┌──────────────────┐       ┌───────────────────────┐
-│  /api/verify     │       │  /api/batch           │
-│  (sync, ~5s)     │       │  creates job in Redis │
-└────────┬─────────┘       │  enqueues N messages  │
-         │                 └──────────┬────────────┘
-         │                            │ (one msg per label)
-         │                            ▼
-         │                 ┌───────────────────────┐
-         │                 │   Upstash QStash       │
-         │                 │   (HTTP queue)         │
-         │                 └──────────┬────────────┘
-         │                            │ triggers
-         │                            ▼
-         │                 ┌───────────────────────┐
-         │                 │  /api/worker          │
-         │                 │  (per-label fn)       │
-         │                 └──────────┬────────────┘
-         │                            │
-         └──────────────┬─────────────┘
-                        │
-                        ▼
-             ┌─────────────────────┐
-             │    OCR Service      │
-             │   lib/ocr.ts        │
-             │  (adapter layer)    │
-             └──────────┬──────────┘
-                        │ dispatches to configured provider
-          ┌─────────────┼──────────────┐
-          ▼             ▼              ▼
-   ┌────────────┐ ┌──────────┐ ┌────────────────┐
-   │   Claude   │ │  Google  │ │ AWS Textract   │
-   │  Vision    │ │  Vision  │ │   (or other)   │
-   └────────────┘ └──────────┘ └────────────────┘
-                        │
-                        ▼
-             ┌─────────────────────┐
-             │  Comparison Logic   │
-             │  lib/compare.ts     │
-             └──────────┬──────────┘
-                        │
-                        ▼
-             ┌─────────────────────┐
-             │   Upstash Redis     │
-             │  job status, cache  │
-             └─────────────────────┘
-                        ▲
-                        │ GET /api/jobs/:id
-                        │ (client polls)
-             ┌─────────────────────┐
-             │       Client        │
-             └─────────────────────┘
+Browser (Next.js)
+    │
+    ├── POST /api/verify          ← single label, sync ~5s
+    │       │
+    │       ├── reads X-Ocr-Provider + X-Api-Key headers
+    │       ├── getProvider(name, apiKey)
+    │       ├── provider.extract(imageBase64, mimeType) → OcrResult
+    │       ├── verifyLabel(extracted, applicationData, confidence) → VerifyResult
+    │       └── returns VerifyResult JSON
+    │
+    └── POST /api/batch           ← N labels, SSE stream
+            │
+            ├── reads multipart: images[] + csvRows JSON
+            ├── for each label (sequentially):
+            │       ├── getProvider(name, apiKey)
+            │       ├── provider.extract(...)
+            │       ├── verifyLabel(...)
+            │       └── SSE: emit { filename, result }
+            └── SSE: emit { done: true, summary }
 ```
 
 ---
 
 ## Services
 
-| Service        | Role                    | Hosting      | Free Tier   |
-| -------------- | ----------------------- | ------------ | ----------- |
-| Next.js App    | Frontend + API routes   | Vercel       | Yes (Hobby) |
-| Upstash Redis  | Job state, result cache | Upstash      | 10k req/day |
-| Upstash QStash | HTTP job queue, fan-out | Upstash      | 500 msg/day |
-| OCR Provider   | Image text extraction   | External API | Pay per use |
+| Service      | Role                  | Hosting      | Free Tier   |
+| ------------ | --------------------- | ------------ | ----------- |
+| Next.js App  | Frontend + API routes | Vercel       | Yes (Hobby) |
+| OCR Provider | Image text extraction | External API | Pay per use |
 
 ---
 
@@ -90,7 +47,7 @@ A web application that verifies alcohol labels against TTB application data usin
 
 ### `POST /api/verify`
 
-Single label verification. Synchronous — waits for OCR + comparison result.
+Single label verification. Synchronous — waits for OCR + verification result.
 
 **Request:**
 
@@ -101,9 +58,9 @@ Content-Type: multipart/form-data
 - classType: string
 - abv: string
 - netContents: string
-- bottlerInfo: string
+- bottler: string
 - countryOfOrigin: string
-- govtWarning: string
+- governmentWarning: string
 ```
 
 **Response:**
@@ -112,230 +69,186 @@ Content-Type: multipart/form-data
 {
   "overall": "pass" | "fail",
   "fields": {
-    "brandName":        { "status": "pass" | "fail", "extracted": "...", "expected": "...", "note": "..." },
-    "classType":        { "status": "pass" | "fail", "extracted": "...", "expected": "...", "note": "..." },
-    "abv":              { "status": "pass" | "fail", "extracted": "...", "expected": "...", "note": "..." },
-    "netContents":      { "status": "pass" | "fail", "extracted": "...", "expected": "...", "note": "..." },
-    "bottlerInfo":      { "status": "pass" | "fail", "extracted": "...", "expected": "...", "note": "..." },
-    "countryOfOrigin":  { "status": "pass" | "fail", "extracted": "...", "expected": "...", "note": "..." },
-    "govtWarning":      { "status": "pass" | "fail" | "warning", "extracted": "...", "expected": "...", "note": "..." }
-  }
+    "brandName":         { "status": "pass" | "fail" | "missing" | "warning", "extracted": "...", "expected": "...", "confidence": 0.95, "note": "..." },
+    "classType":         { "status": "pass" | "fail" | "missing" | "warning", "extracted": "...", "expected": "...", "confidence": 0.90, "note": "..." },
+    "abv":               { "status": "pass" | "fail" | "missing" | "warning", "extracted": "...", "expected": "...", "confidence": 0.98, "note": "..." },
+    "netContents":       { "status": "pass" | "fail" | "missing" | "warning", "extracted": "...", "expected": "...", "confidence": 0.92, "note": "..." },
+    "bottler":           { "status": "pass" | "fail" | "missing" | "warning", "extracted": "...", "expected": "...", "confidence": 0.88, "note": "..." },
+    "countryOfOrigin":   { "status": "pass" | "fail" | "missing" | "warning", "extracted": "...", "expected": "...", "confidence": 0.85, "note": "..." },
+    "governmentWarning": { "status": "pass" | "fail" | "missing" | "warning", "extracted": "...", "expected": "...", "confidence": 0.99, "note": "..." }
+  },
+  "regulatory": [ { "rule": "...", "status": "pass" | "fail", "note": "..." } ]
 }
 ```
+
+`confidence` is 0–1 per field; omitted when using the Tesseract provider (which returns no confidence scores).
 
 ---
 
 ### `POST /api/batch`
 
-Initiates async batch job. Returns a jobId immediately.
+Batch label verification. Returns a Server-Sent Events stream — one event per label as it finishes, then a final completion event.
 
 **Request:**
 
 ```
 Content-Type: multipart/form-data
-- labels: File[]   (images or ZIP)
-- csv: File        (application data mapped to filenames)
+- images[]: File[]   (one image per label)
+- csvRows: string    (JSON-encoded array of application data rows, each with a "filename" key)
 ```
 
-**Response:**
+**SSE Response:**
+
+Per-label events (one as each finishes):
 
 ```json
-{ "jobId": "job_abc123" }
+{ "filename": "old-tom-label.jpg", "result": { "overall": "pass", "fields": { ... } } }
 ```
+
+Final event:
+
+```json
+{ "done": true, "summary": { "total": 10, "passed": 8, "failed": 2 } }
+```
+
+Images are matched to CSV rows by the `filename` key. Both are sent in the same multipart POST.
 
 ---
 
-### `GET /api/jobs/:id`
+## OCR Provider Interface
 
-Client polls this for batch job progress and results.
-
-**Response:**
-
-```json
-{
-  "jobId": "job_abc123",
-  "status": "pending" | "processing" | "complete",
-  "total": 50,
-  "completed": 32,
-  "failed": 2,
-  "results": [
-    {
-      "filename": "label_001.jpg",
-      "overall": "pass",
-      "fields": { ... }
-    }
-  ]
-}
-```
-
----
-
-### `POST /api/worker`
-
-Internal route. Called by QStash for each label in a batch. Not called directly by the client.
-
-**Request (from QStash):**
-
-```json
-{
-  "jobId": "job_abc123",
-  "filename": "label_001.jpg",
-  "imageUrl": "...",
-  "applicationData": { ... }
-}
-```
-
----
-
-## OCR Service Adapter (`lib/ocr.ts`)
-
-Reads `PROCESSING_SERVICE` env var and dispatches to the correct provider. All providers implement the same interface.
+All providers implement one interface. The factory `getProvider(name, apiKey)` in `lib/ocr/index.ts` maps a provider name to the concrete implementation at request time.
 
 ```typescript
-interface OcrResult {
-  brandName: string;
-  classType: string;
-  abv: string;
-  netContents: string;
-  bottlerInfo: string;
-  countryOfOrigin: string;
-  govtWarning: string;
-  govtWarningBold: boolean;
-  govtWarningAllCaps: boolean;
-  govtWarningFontSize: "normal" | "small" | "tiny";
+// lib/ocr/types.ts
+
+export interface ExtractedLabelData {
+  brandName: string | null;
+  classType: string | null;
+  abv: string | null;
+  netContents: string | null;
+  bottler: string | null;
+  countryOfOrigin: string | null;
+  governmentWarning: string | null;
 }
 
-interface OcrProvider {
-  extract(image: Buffer, mimeType: string): Promise<OcrResult>;
+export type ConfidenceMap = Partial<Record<keyof ExtractedLabelData, number>>;
+
+export interface OcrResult {
+  data: ExtractedLabelData;
+  confidence: ConfidenceMap; // 0–1 per field; empty for Tesseract
+}
+
+export interface OcrProvider {
+  name: string;
+  extract: (imageBase64: string, mimeType: string) => Promise<OcrResult>;
 }
 ```
 
-**Supported providers (via `PROCESSING_SERVICE`):**
+### Provider Registry
 
-| Value      | Provider                          |
-| ---------- | --------------------------------- |
-| `claude`   | Anthropic Claude Vision (default) |
-| `google`   | Google Cloud Vision API           |
-| `textract` | AWS Textract                      |
+```
+lib/ocr/
+  types.ts       — OcrProvider, OcrResult, ExtractedLabelData, ConfidenceMap
+  index.ts       — getProvider(name, apiKey): OcrProvider factory
+  llm-prompt.ts  — shared extraction prompt + JSON parser (used by all LLM providers)
+  claude.ts      — Claude Sonnet 4.6
+  gemini.ts      — Gemini 2.0 Flash
+  openai.ts      — GPT-4o
+  tesseract.ts   — Tesseract.js WASM (default, no API key required)
+  mock.ts        — Fixed mock data (used by tests and CI)
+```
+
+### Provider Selection
+
+The client sends `X-Ocr-Provider` and `X-Api-Key` headers on every request. The API route calls `getProvider(name, apiKey)` to resolve the concrete provider. The key is used for that request only and never persisted server-side.
+
+Supported provider names: `tesseract` (default) | `claude` | `gemini` | `openai` | `mock`.
 
 ---
 
-## Comparison Logic (`lib/compare.ts`)
+## Verification Layer
 
-### Fuzzy Match (all fields except govt warning)
+Verification is deterministic TypeScript — no model involved.
 
-- Normalize both strings: lowercase, strip punctuation, collapse whitespace
-- Use Levenshtein distance or token overlap
-- Pass if similarity ≥ threshold (configurable, default 0.85)
-- ABV normalization: extract numeric value, convert proof if needed (`90 Proof` → `45%`)
+### `lib/verify.ts` — Application Match (Layer 1)
 
-### Strict Match (govt warning only)
+`verifyLabel(extracted, appData, confidence)` compares each extracted field against the COLA application data. Returns a `VerifyResult` with per-field statuses and an overall verdict.
 
-- Exact string comparison after collapsing whitespace
-- Separate checks for bold formatting and ALL CAPS on "GOVERNMENT WARNING:"
-- Font size flagged as `warning` state (not auto-fail)
+**Field match rules:**
 
-### Result States
+| Field             | Match Type | Normalization                                           |
+| ----------------- | ---------- | ------------------------------------------------------- |
+| brandName         | Fuzzy      | Lowercase, trim, collapse whitespace                    |
+| classType         | Fuzzy      | Same                                                    |
+| abv               | Fuzzy      | Strip `%`, `Alc./Vol.`, `Proof`; compare numeric        |
+| netContents       | Fuzzy      | Normalize units (`mL` = `ml`); compare numeric+unit     |
+| bottler           | Fuzzy      | Lowercase + trim                                        |
+| countryOfOrigin   | Fuzzy      | Lowercase + trim                                        |
+| governmentWarning | **Strict** | Exact string; must begin `GOVERNMENT WARNING:` ALL CAPS |
 
-- `pass` — match within tolerance
-- `fail` — mismatch beyond tolerance
-- `warning` — readable but suspicious (tiny text, low contrast govt warning)
+**Field result statuses:**
 
----
+- `pass` — extracted value matches application data within rules
+- `fail` — mismatch
+- `missing` — field not found on label (null extracted)
+- `warning` — readable but suspicious (low confidence)
 
-## Redis Data Model
+**Overall verdict:** `pass` only if all required fields are `pass`. Any `fail` or `missing` → overall fail.
 
-### Job record
+### `lib/ttb-rules.ts` — Regulatory Validation (Layer 2)
 
-```
-Key:   job:{jobId}
-Type:  Hash
-TTL:   6 hours
+`validateRegulatoryRules(extracted)` checks TTB CFR rules independently of the application data:
 
-Fields:
-  status      "pending" | "processing" | "complete"
-  total       "50"
-  completed   "32"
-  failed      "2"
-  createdAt   "2026-06-29T12:00:00Z"
-```
+| Check                                      | Regulation           |
+| ------------------------------------------ | -------------------- |
+| Class/type is a recognized TTB designation | 27 CFR Parts 4, 5, 7 |
+| ABV within legal bounds for product type   | 27 CFR Parts 4, 5, 7 |
+| Net contents matches a standard fill size  | Standards of fill    |
 
-### Per-label result
-
-```
-Key:   job:{jobId}:label:{filename}
-Type:  String (JSON)
-TTL:   6 hours
-
-Value: { overall, fields }
-```
-
-### OCR result cache
-
-```
-Key:   ocr:cache:{sha256(imageBytes)}
-Type:  String (JSON)
-TTL:   1 hour
-
-Value: OcrResult
-```
-
-Avoids re-calling the OCR provider if the same image is submitted twice within the TTL window.
+Layer 2 results are shown as a separate "Regulatory" section in the UI.
 
 ---
 
 ## Batch Processing Sequence
 
 ```
-Client          API /batch      QStash          /api/worker     Redis
-  │                │               │                 │             │
-  │── POST ────────▶               │                 │             │
-  │                │── create job ────────────────────────────────▶│
-  │                │── enqueue N msgs ──▶             │             │
-  │◀── jobId ──────│               │                 │             │
-  │                │               │                 │             │
-  │── poll ────────────────────────────────────────────────────────▶│
-  │◀── { status: "processing", completed: 0 } ──────────────────────│
-  │                │               │                 │             │
-  │                │               │── trigger ──────▶             │
-  │                │               │── trigger ──────▶             │
-  │                │               │── trigger ──────▶  (parallel) │
-  │                │               │                 │             │
-  │                │               │                 │── write ───▶│
-  │                │               │                 │── write ───▶│
-  │                │               │                 │── write ───▶│
-  │                │               │                 │             │
-  │── poll ────────────────────────────────────────────────────────▶│
-  │◀── { status: "complete", results: [...] } ──────────────────────│
+Client              /api/batch
+  │                      │
+  │── POST ──────────────▶
+  │                      │  (parse multipart: images + csvRows)
+  │                      │  (open SSE stream)
+  │                      │
+  │                      │── extract label 1 → verify → emit event
+  │◀── SSE: { filename: "label-01.jpg", result: { ... } } ──────────
+  │                      │
+  │                      │── extract label 2 → verify → emit event
+  │◀── SSE: { filename: "label-02.jpg", result: { ... } } ──────────
+  │                      │
+  │                      │  (... repeat for each label sequentially)
+  │                      │
+  │◀── SSE: { done: true, summary: { total: N, passed: X, failed: Y } }
 ```
 
 ---
 
 ## Environment Variables
 
-| Variable                     | Description                                        |
-| ---------------------------- | -------------------------------------------------- |
-| `ANTHROPIC_API_KEY`          | Required if `PROCESSING_SERVICE=claude`            |
-| `GOOGLE_VISION_API_KEY`      | Required if `PROCESSING_SERVICE=google`            |
-| `AWS_ACCESS_KEY_ID`          | Required if `PROCESSING_SERVICE=textract`          |
-| `AWS_SECRET_ACCESS_KEY`      | Required if `PROCESSING_SERVICE=textract`          |
-| `PROCESSING_SERVICE`         | `claude` (default) \| `google` \| `textract`       |
-| `UPSTASH_REDIS_REST_URL`     | Upstash Redis endpoint                             |
-| `UPSTASH_REDIS_REST_TOKEN`   | Upstash Redis auth token                           |
-| `QSTASH_URL`                 | Upstash QStash endpoint                            |
-| `QSTASH_TOKEN`               | Upstash QStash auth token                          |
-| `QSTASH_CURRENT_SIGNING_KEY` | QStash webhook verification                        |
-| `QSTASH_NEXT_SIGNING_KEY`    | QStash webhook verification (rotation)             |
-| `NEXT_PUBLIC_APP_URL`        | Public URL (used to construct worker callback URL) |
+| Variable            | Description                                      | Required |
+| ------------------- | ------------------------------------------------ | -------- |
+| `ANTHROPIC_API_KEY` | Claude provider default (if not using /settings) | No       |
+| `GEMINI_API_KEY`    | Gemini provider default (if not using /settings) | No       |
+| `OPENAI_API_KEY`    | OpenAI provider default (if not using /settings) | No       |
+
+All keys can also be entered at runtime via `/settings` without touching `.env`. The runtime key (from the `X-Api-Key` header) takes precedence over the env var.
 
 ---
 
 ## Constraints & Tradeoffs
 
-| Constraint                        | Decision                           | Tradeoff                                                      |
-| --------------------------------- | ---------------------------------- | ------------------------------------------------------------- |
-| Vercel Hobby 10s timeout          | Each worker handles one label only | More QStash messages, but each stays under timeout            |
-| No persistent storage             | Redis with TTL                     | Results expire after 6h; acceptable for prototype             |
-| Upstash QStash 500 msg/day (free) | Sufficient for demo/prototype      | Hard cap; upgrade needed for production                       |
-| No auth                           | Open API                           | Acceptable for prototype; must add before production          |
-| Image size                        | Passed as base64 in QStash message | QStash has 1MB body limit; large images need pre-upload to S3 |
+| Constraint                  | Decision                           | Tradeoff                                                             |
+| --------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| Vercel 60s function timeout | Sequential SSE (not parallel)      | Simpler; parallel fan-out deferred until batch grows past ~30 labels |
+| No persistent storage       | Stateless — results in React state | Gone on refresh; acceptable for prototype                            |
+| No auth                     | Open API                           | Acceptable for prototype; must add before production                 |
+| Image size                  | Base64 in multipart POST           | Large images may hit Vercel body limit; compress before upload       |
