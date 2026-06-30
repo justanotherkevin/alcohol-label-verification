@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - `require()` type casts and `MOCK_EXTRACTED` annotation in OCR mock and provider index (`lib/ocr/index.ts`, `lib/ocr/mock.ts`)
+- Tesseract playground bounding box overlay never rendering — `worker.recognize()` wasn't requesting block output and `extractBoundingBoxes()` read from a nonexistent field, plus `drawBoundingBoxes()` double-applied scale/offset to coordinates already in final pixel space (`tools/tesseract-playground.html`)
 
 ---
 
