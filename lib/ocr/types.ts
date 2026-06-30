@@ -8,7 +8,14 @@ export interface ExtractedLabelData {
   governmentWarning: string | null
 }
 
+export type ConfidenceMap = Partial<Record<keyof ExtractedLabelData, number>>
+
+export interface OcrResult {
+  data: ExtractedLabelData
+  confidence: ConfidenceMap
+}
+
 export interface OcrProvider {
   name: string
-  extract: (imageBase64: string, mimeType: string) => Promise<ExtractedLabelData>
+  extract: (imageBase64: string, mimeType: string) => Promise<OcrResult>
 }

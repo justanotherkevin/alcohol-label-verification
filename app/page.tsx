@@ -2,7 +2,9 @@
 
 import { useState, useRef } from "react"
 import { VerificationResult, FieldResult } from "@/lib/verify"
-import { ExtractedLabelData } from "@/lib/ocr"
+import { ExtractedLabelData, ConfidenceMap } from "@/lib/ocr"
+
+const SETTINGS_KEY = "ttb-ocr-settings"
 
 const DEFAULT_FIELDS = {
   brandName: "OLD TOM DISTILLERY",
@@ -21,7 +23,7 @@ function StatusBadge({ status }: { status: FieldResult["status"] }) {
   return <span className="text-yellow-500 font-bold text-lg">—</span>
 }
 
-function FieldRow({ field }: { field: FieldResult }) {
+function FieldRow({ field, confidence }: { field: FieldResult; confidence?: number }) {
   const bgColor =
     field.status === "pass"
       ? "bg-green-50 border-green-200"
@@ -34,7 +36,14 @@ function FieldRow({ field }: { field: FieldResult }) {
       <div className="flex items-start gap-3">
         <StatusBadge status={field.status} />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-800">{field.label}</p>
+          <div className="flex items-center gap-2">
+              <p className="font-semibold text-gray-800">{field.label}</p>
+              {confidence !== undefined && (
+                <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                  {Math.round(confidence * 100)}%
+                </span>
+              )}
+            </div>
           {field.status !== "pass" && (
             <div className="mt-1 text-sm space-y-1">
               <p className="text-gray-500">
@@ -64,6 +73,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<VerificationResult | null>(null)
   const [extracted, setExtracted] = useState<ExtractedLabelData | null>(null)
+  const [confidence, setConfidence] = useState<ConfidenceMap>({})
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -96,11 +106,26 @@ export default function Home() {
       formData.append("image", imageFile)
       formData.append("appData", JSON.stringify(fields))
 
-      const res = await fetch("/api/verify", { method: "POST", body: formData })
+      const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}") as {
+        provider?: string
+        apiKey?: string
+      }
+      const providerName = settings.provider ?? "tesseract"
+      const apiKey = settings.apiKey ?? ""
+
+      const res = await fetch("/api/verify", {
+        method: "POST",
+        headers: {
+          "X-Ocr-Provider": providerName,
+          ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+        },
+        body: formData,
+      })
       if (!res.ok) throw new Error("Verification failed")
 
-      const data = await res.json()
+      const data = await res.json() as { extracted: ExtractedLabelData; confidence: ConfidenceMap; result: VerificationResult }
       setExtracted(data.extracted)
+      setConfidence(data.confidence ?? {})
       setResult(data.result)
     } catch {
       setError("Something went wrong. Please try again.")
@@ -230,7 +255,11 @@ export default function Home() {
             </div>
             <div className="space-y-3">
               {result.fields.map((field) => (
-                <FieldRow key={field.field} field={field} />
+                <FieldRow
+                  key={field.field}
+                  field={field}
+                  confidence={confidence[field.field as keyof ConfidenceMap]}
+                />
               ))}
             </div>
           </div>

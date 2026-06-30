@@ -1,8 +1,24 @@
 import { OcrProvider } from "./types"
+import { tesseractOcrProvider } from "./tesseract"
 import { mockOcrProvider } from "./mock"
+import { claudeOcrProvider } from "./claude"
+import { geminiOcrProvider } from "./gemini"
+import { openaiOcrProvider } from "./openai"
 
-// Swap this out to plug in Claude, GPT-4V, Gemini Vision, etc.
-const activeProvider: OcrProvider = mockOcrProvider
+export function getProvider(name: string, apiKey?: string): OcrProvider {
+  switch (name) {
+    case "mock":
+      return mockOcrProvider
+    case "claude":
+      return claudeOcrProvider(apiKey ?? "")
+    case "gemini":
+      return geminiOcrProvider(apiKey ?? "")
+    case "openai":
+      return openaiOcrProvider(apiKey ?? "")
+    case "tesseract":
+    default:
+      return tesseractOcrProvider
+  }
+}
 
-export { activeProvider }
-export type { ExtractedLabelData, OcrProvider } from "./types"
+export type { ExtractedLabelData, OcrProvider, OcrResult, ConfidenceMap } from "./types"
