@@ -1,10 +1,8 @@
-import { ExtractedLabelData, OcrProvider } from "./types"
+import { OcrProvider, OcrResult } from "./types"
 
 const MOCK_DELAY_MS = 800
 
-// Simulates realistic label extraction — intentionally includes one mismatch
-// (ABV) and a government warning formatting issue so the UI has something to show.
-const MOCK_EXTRACTED: ExtractedLabelData = {
+const MOCK_EXTRACTED = {
   brandName: "OLD TOM DISTILLERY",
   classType: "Kentucky Straight Bourbon Whiskey",
   abv: "40% Alc./Vol. (80 Proof)",
@@ -17,8 +15,8 @@ const MOCK_EXTRACTED: ExtractedLabelData = {
 
 export const mockOcrProvider: OcrProvider = {
   name: "mock",
-  async extract(_imageBase64: string, _mimeType: string): Promise<ExtractedLabelData> {
+  async extract(_imageBase64: string, _mimeType: string): Promise<OcrResult> {
     await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS))
-    return MOCK_EXTRACTED
+    return { data: MOCK_EXTRACTED, confidence: {} }
   },
 }
