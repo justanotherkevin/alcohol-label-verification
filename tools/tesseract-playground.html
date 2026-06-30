@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tesseract Playground — Alcohol Label OCR</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0f0f0f;
+  color: #d8d8d8;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Status bar ── */
+#statusBar {
+  background: #161616;
+  border-bottom: 1px solid #252525;
+  padding: 5px 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 11px;
+  color: #666;
+  flex-shrink: 0;
+}
+#statusBar strong { color: #aaa; font-weight: 500; }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #333; margin-right: 4px; transition: background 0.3s; }
+.dot.ok { background: #2d8a4e; }
+.dot.busy { background: #8a6a2a; }
+#statusMsg { margin-left: auto; color: #4a9eff; }
+
+/* ── Main 3-column grid ── */
+#main {
+  display: grid;
+  grid-template-columns: 230px 1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid #222;
+}
+.panel:last-child { border-right: none; }
+
+.panel-header {
+  background: #161616;
+  border-bottom: 1px solid #222;
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #666;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+/* ── Controls ── */
+.section { margin-bottom: 18px; }
+.section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.ctl-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+
+label.toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+  color: #bbb;
+}
+label.toggle:hover { color: #ddd; }
+
+input[type="checkbox"] { accent-color: #4a9eff; width: 12px; height: 12px; cursor: pointer; }
+input[type="radio"]    { accent-color: #4a9eff; cursor: pointer; }
+
+.sub { margin-left: 20px; margin-top: 3px; margin-bottom: 5px; }
+.radio-row { display: flex; gap: 14px; }
+.radio-row label { display: flex; align-items: center; gap: 5px; cursor: pointer; color: #999; }
+
+select, input[type="text"] {
+  background: #1c1c1c;
+  border: 1px solid #2e2e2e;
+  color: #d0d0d0;
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-size: 12px;
+  width: 100%;
+}
+select:focus, input[type="text"]:focus {
+  outline: none;
+  border-color: #4a9eff;
+}
+
+input[type="range"] {
+  flex: 1;
+  accent-color: #4a9eff;
+  cursor: pointer;
+}
+.range-val { font-size: 11px; color: #666; min-width: 20px; text-align: right; font-family: monospace; }
+
+/* ── Buttons ── */
+button {
+  background: #222;
+  border: 1px solid #333;
+  color: #ccc;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.15s;
+}
+button:hover:not(:disabled) { background: #2c2c2c; color: #fff; }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+button.primary { background: #1a4a8a; border-color: #2a6abb; color: #fff; }
+button.primary:hover:not(:disabled) { background: #235aaa; }
+
+.preset-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #181818;
+  border: 1px solid #282828;
+  color: #888;
+  padding: 5px 9px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.preset-btn:hover { background: #222; color: #ccc; border-color: #333; }
+
+/* ── Image preview panel ── */
+.tab-strip {
+  display: flex;
+  border-bottom: 1px solid #222;
+  background: #141414;
+  flex-shrink: 0;
+}
+.tab {
+  padding: 6px 14px;
+  font-size: 11px;
+  color: #555;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  user-select: none;
+}
+.tab:hover { color: #999; }
+.tab.active { color: #d0d0d0; border-bottom-color: #4a9eff; }
+
+.preview-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #080808;
+  overflow: auto;
+  padding: 12px;
+  position: relative;
+}
+
+#dropZone {
+  border: 2px dashed #2a2a2a;
+  border-radius: 8px;
+  padding: 40px 24px;
+  text-align: center;
+  color: #444;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+  transition: border-color 0.2s, color 0.2s;
+}
+#dropZone.drag-over { border-color: #4a9eff; color: #4a9eff; }
+#dropZone svg { opacity: 0.4; }
+
+#origImg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: none;
+}
+#preCanvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: none;
+}
+
+/* ── Output panel ── */
+.field-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #1a1a1a;
+}
+.field-key {
+  font-family: monospace;
+  font-size: 11px;
+  color: #555;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+.field-val {
+  font-family: monospace;
+  font-size: 12px;
+  flex: 1;
+  word-break: break-word;
+  line-height: 1.4;
+}
+.field-val.null-val { color: #3a3a3a; font-style: italic; }
+
+.badge {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+.badge.ok   { background: #1a3d25; color: #3ddb6f; }
+.badge.fail { background: #3d1a1a; color: #db3d3d; }
+
+.meta-strip {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 12px;
+}
+.meta-strip strong { color: #999; font-weight: 500; }
+
+#rawPre {
+  font-family: monospace;
+  font-size: 11px;
+  color: #666;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: #0a0a0a;
+  border: 1px solid #1e1e1e;
+  border-radius: 4px;
+  padding: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.actions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+
+/* ── A/B compare ── */
+#abGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ab-col-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #555;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #222;
+}
+.ab-col-label.current { color: #4a9eff; }
+
+.ab-field-row {
+  display: flex;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid #161616;
+  align-items: flex-start;
+}
+.ab-field-key { font-family: monospace; font-size: 10px; color: #444; min-width: 80px; flex-shrink: 0; }
+.ab-field-val { font-family: monospace; font-size: 11px; flex: 1; word-break: break-all; }
+.ab-field-val.null-val { color: #333; font-style: italic; }
+.ab-field-val.diff { color: #e8a040; }
+
+/* ── Ground truth ── */
+#gtSection summary {
+  font-size: 11px;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+#gtSection summary:hover { color: #888; }
+#gtText {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  background: #0d0d0d;
+  border: 1px solid #252525;
+  color: #888;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  resize: vertical;
+  min-height: 60px;
+}
+.gt-note { font-size: 10px; color: #444; margin-top: 5px; }
+
+/* ── Run bar ── */
+#runBar {
+  background: #161616;
+  border-top: 1px solid #222;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#runStatus { font-size: 11px; color: #666; }
+#oemNote { margin-left: auto; font-size: 11px; color: #8a6a2a; }
+
+/* ── Spinner ── */
+.spin {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border: 1.5px solid #333;
+  border-top-color: #4a9eff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0f0f0f; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* ── How-to instructions ── */
+#howto {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #1e1e1e;
+}
+.howto-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 14px;
+}
+.howto-title code { color: #4a9eff; font-size: 10px; }
+.howto-step {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: flex-start;
+  font-size: 11px;
+  color: #666;
+  line-height: 1.5;
+}
+.howto-num {
+  background: #1e1e1e;
+  color: #555;
+  border-radius: 50%;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.howto-step strong { color: #999; }
+.howto-step code { color: #4a9eff; font-size: 10px; }
+.howto-code {
+  background: #0a0a0a;
+  border: 1px solid #1e1e1e;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #777;
+  margin-top: 6px;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+.howto-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  color: #444;
+  font-style: italic;
+}
+
+/* ── Loading overlay ── */
+#loadOverlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: #0f0f0f;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.35s ease;
+}
+#loadBox {
+  display: flex; flex-direction: column; gap: 18px;
+  align-items: flex-start;
+  padding: 36px 40px;
+  background: #161616;
+  border: 1px solid #252525;
+  border-radius: 10px;
+  min-width: 320px;
+}
+#loadTitle {
+  font-size: 16px; font-weight: 600; color: #d0d0d0; margin-bottom: 4px;
+}
+.load-row {
+  display: flex; align-items: center; gap: 10px; font-size: 13px;
+}
+.load-dot {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  background: #2d8a4e; flex-shrink: 0;
+}
+.load-dot.busy {
+  background: transparent;
+  border: 2px solid #333;
+  border-top-color: #4a9eff;
+  animation: spin 0.7s linear infinite;
+  width: 9px; height: 9px;
+}
+.load-dot.ok { background: #2d8a4e; border: none; animation: none; }
+.load-label { color: #888; min-width: 72px; }
+.load-msg { color: #555; font-size: 11px; font-family: monospace; }
+#loadSub {
+  font-size: 11px; color: #444; margin-top: 6px; max-width: 280px; line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Status bar ── -->
+<div id="statusBar">
+  <strong>Tesseract Playground</strong>
+  <span><span class="dot busy" id="tessDot"></span>Tesseract</span>
+  <span id="statusMsg">Loading Tesseract…</span>
+</div>
+
+<!-- ── Loading overlay (shown until both deps are ready) ── -->
+<div id="loadOverlay">
+  <div id="loadBox">
+    <div id="loadTitle">Loading Tesseract…</div>
+    <div class="load-row">
+      <span class="load-dot busy" id="ov-tessDot"></span>
+      <span class="load-label">Tesseract</span>
+      <span class="load-msg" id="ov-tessMsg">initializing…</span>
+    </div>
+    <div id="loadSub">Playground appears automatically when ready.</div>
+  </div>
+</div>
+
+<!-- ── 3-panel layout ── -->
+<div id="main">
+
+  <!-- Panel 1: Controls -->
+  <div class="panel">
+    <div class="panel-header">Controls</div>
+    <div class="panel-body">
+
+      <!-- Presets -->
+      <div class="section">
+        <div class="section-title">Presets</div>
+        <button class="preset-btn" onclick="applyPreset('clean')">Clean printed label</button>
+        <button class="preset-btn" onclick="applyPreset('foil')">Low-contrast / foil</button>
+        <button class="preset-btn" onclick="applyPreset('warning')">Small warning text</button>
+        <button class="preset-btn" onclick="applyPreset('crop')">Single field crop</button>
+      </div>
+
+      <!-- Preprocessing -->
+      <div class="section">
+        <div class="section-title">Preprocessing</div>
+
+        <div class="ctl-row">
+          <label class="toggle"><input type="checkbox" id="ckGray"> Grayscale</label>
+        </div>
+        <div class="ctl-row">
+          <label class="toggle"><input type="checkbox" id="ckBin"> Binarize</label>
+        </div>
+        <div class="sub" id="binOpts" style="display:none">
+          <div class="radio-row">
+            <label><input type="radio" name="binMeth" value="otsu" checked> Otsu</label>
+            <label><input type="radio" name="binMeth" value="adaptive"> Adaptive</label>
+          </div>
+        </div>
+
+        <div class="ctl-row">
+          <label class="toggle"><input type="checkbox" id="ckClahe"> CLAHE</label>
+        </div>
+        <div class="sub" id="claheOpts" style="display:none">
+          <div class="ctl-row" style="gap:8px">
+            <span style="color:#555;font-size:11px">Clip</span>
+            <input type="range" id="claheClip" min="1" max="8" step="0.5" value="2">
+            <span class="range-val" id="claheClipVal">2</span>
+          </div>
+        </div>
+
+        <div class="ctl-row">
+          <label class="toggle"><input type="checkbox" id="ckDenoise"> Denoise</label>
+        </div>
+        <div class="ctl-row">
+          <label class="toggle" style="opacity:0.35" title="Deskew unavailable (requires OpenCV)"><input type="checkbox" id="ckDeskew" disabled> Deskew</label>
+        </div>
+        <div class="ctl-row">
+          <label class="toggle"><input type="checkbox" id="ckInvert"> Invert</label>
+        </div>
+
+        <div class="ctl-row" style="margin-top:8px">
+          <span style="color:#666;font-size:11px;min-width:42px">Scale</span>
+          <select id="selScale">
+            <option value="1">1×</option>
+            <option value="2" selected>2×</option>
+            <option value="3">3×</option>
+            <option value="4">4×</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tesseract config -->
+      <div class="section">
+        <div class="section-title">Tesseract</div>
+
+        <div class="ctl-row">
+          <span style="color:#666;font-size:11px;min-width:62px">PSM</span>
+          <select id="selPsm">
+            <option value="0">0 — OSD only</option>
+            <option value="1">1 — Auto + OSD</option>
+            <option value="2">2 — Auto (no OSD)</option>
+            <option value="3">3 — Auto</option>
+            <option value="4">4 — Single column</option>
+            <option value="5">5 — Single block vert</option>
+            <option value="6">6 — Single block</option>
+            <option value="7">7 — Single line</option>
+            <option value="8">8 — Single word</option>
+            <option value="9">9 — Circle word</option>
+            <option value="10">10 — Single char</option>
+            <option value="11" selected>11 — Sparse text</option>
+            <option value="12">12 — Sparse + OSD</option>
+            <option value="13">13 — Raw line</option>
+          </select>
+        </div>
+
+        <div class="ctl-row">
+          <span style="color:#666;font-size:11px;min-width:62px">OEM</span>
+          <select id="selOem">
+            <option value="0">0 — Legacy</option>
+            <option value="1" selected>1 — LSTM only</option>
+            <option value="2">2 — Legacy + LSTM</option>
+            <option value="3">3 — Default</option>
+          </select>
+        </div>
+
+        <div class="ctl-row">
+          <span style="color:#666;font-size:11px;min-width:62px">Whitelist</span>
+          <input type="text" id="inWhitelist" placeholder="e.g. 0123456789.%">
+        </div>
+
+        <div class="ctl-row">
+          <span style="color:#666;font-size:11px;min-width:62px">Language</span>
+          <select id="selLang">
+            <option value="eng" selected>eng</option>
+            <option value="spa">spa</option>
+            <option value="fra">fra</option>
+            <option value="deu">deu</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Ground truth -->
+      <div class="section">
+        <details id="gtSection">
+          <summary>Ground truth (optional)</summary>
+          <textarea id="gtText" placeholder='{"brandName":"Old Tom","abv":"45%","classType":"Kentucky Straight Bourbon Whiskey"}'></textarea>
+          <div class="gt-note">Paste JSON with field values to see ✓/✗ badges. Re-run OCR after pasting.</div>
+        </details>
+      </div>
+
+    </div><!-- /panel-body -->
+  </div><!-- /panel 1 -->
+
+  <!-- Panel 2: Image preview -->
+  <div class="panel">
+    <div class="panel-header">
+      Image Preview
+      <span>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+        <button onclick="document.getElementById('fileInput').click()" style="font-size:11px;padding:2px 8px">Browse…</button>
+      </span>
+    </div>
+    <div class="tab-strip">
+      <div class="tab active" data-tab="original"      onclick="switchTab('original')">Original</div>
+      <div class="tab"        data-tab="preprocessed"  onclick="switchTab('preprocessed')">Preprocessed</div>
+    </div>
+    <div class="preview-area" id="previewArea">
+      <div id="dropZone">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <div>Drop a label image here</div>
+        <div style="font-size:11px;color:#333">PNG, JPG, WEBP</div>
+      </div>
+      <img id="origImg" alt="Original label">
+      <canvas id="preCanvas"></canvas>
+    </div>
+  </div><!-- /panel 2 -->
+
+  <!-- Panel 3: Output -->
+  <div class="panel">
+    <div class="panel-header">Output</div>
+    <div class="panel-body">
+
+      <div id="noResultMsg" style="color:#333;font-size:12px">Drop an image and click Run OCR.</div>
+
+      <div id="ocrOutput" style="display:none">
+
+        <!-- Meta -->
+        <div class="meta-strip">
+          <span>Confidence: <strong id="metaConf">—</strong></span>
+          <span>Time: <strong id="metaTime">—</strong></span>
+        </div>
+
+        <!-- Extracted fields -->
+        <div id="fieldsDiv"></div>
+
+        <!-- Actions -->
+        <div class="actions" style="margin-top:10px">
+          <button onclick="doCopyConfig(this)">Copy config JSON</button>
+          <button id="btnSaveA" onclick="doSaveA()">Save as A</button>
+          <button id="btnCompare" onclick="doToggleCompare()" disabled>Compare A|B</button>
+        </div>
+
+        <!-- A/B compare -->
+        <div id="abSection" style="display:none">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#444;margin-bottom:8px">A / B Comparison</div>
+          <div id="abGrid"></div>
+        </div>
+
+        <!-- Raw OCR -->
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#444;margin-bottom:4px">Raw OCR text</div>
+        <pre id="rawPre"></pre>
+
+      </div>
+
+      <!-- ── How to transfer settings ── -->
+      <div id="howto">
+        <div class="howto-title">How to transfer settings → <code>lib/ocr/tesseract.ts</code></div>
+
+        <div class="howto-step">
+          <span class="howto-num">1</span>
+          <div>Click <strong>Copy config JSON</strong> above after finding a good config.</div>
+        </div>
+
+        <div class="howto-step">
+          <span class="howto-num">2</span>
+          <div>
+            In <code>lib/ocr/tesseract.ts</code>, update <code>extract()</code>:
+            <pre class="howto-code">// add OEM as second arg (0=Legacy, 1=LSTM, 2=Both)
+const worker = await createWorker("eng", 1)
+
+// set PSM + whitelist before recognize()
+await worker.setParameters({
+  tessedit_pageseg_mode: '11',   // ← from psm
+  tessedit_char_whitelist: '',   // ← from whitelist
+})
+
+const { data } = await worker.recognize(buffer)</pre>
+          </div>
+        </div>
+
+        <div class="howto-step">
+          <span class="howto-num">3</span>
+          <div>
+            For <strong>scale / binarize / denoise</strong>, use <code>sharp</code> server-side before passing to Tesseract:
+            <pre class="howto-code">import sharp from 'sharp'
+const processed = await sharp(buffer)
+  .grayscale()
+  .resize({ width: origW * 2, kernel: 'cubic' })   // scale 2×
+  .threshold(128)                                    // binarize
+  .toBuffer()</pre>
+            <span class="howto-note">PSM &amp; OEM transfer directly; preprocessing needs <code>sharp</code> (already common in Next.js).</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /panel 3 -->
+
+</div><!-- /main -->
+
+<!-- ── Run bar ── -->
+<div id="runBar">
+  <button class="primary" id="btnRun" onclick="doRunOcr()" disabled title="Waiting for Tesseract to finish loading…">▶ Run OCR</button>
+  <span id="runStatus"></span>
+  <span id="oemNote"></span>
+</div>
+
+<!-- Hidden source canvas -->
+<canvas id="srcCanvas" style="display:none"></canvas>
+
+<!-- ── CDN dependencies ── -->
+<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+'use strict';
+
+// ─── State ───────────────────────────────────────────────────────────────
+const S = {
+  // Preprocessing
+  gray: false, bin: false, binMeth: 'otsu',
+  clahe: false, claheClip: 2,
+  denoise: false, deskew: false, invert: false,
+  scale: 2,
+  // Tesseract
+  psm: '11', oem: 1, whitelist: '', lang: 'eng',
+};
+
+let tessReady  = false;
+let hasImage   = false;
+let worker     = null;
+let activeOem  = 1;
+let activeLang = 'eng';
+let currentResults = null; // { extracted, text, conf, elapsed, psm, oem }
+let savedA         = null; // snapshot for A/B compare
+let compareMode    = false;
+let activeTab = 'original';
+
+// ─── Elements ────────────────────────────────────────────────────────────
+const srcCanvas  = document.getElementById('srcCanvas');
+const preCanvas  = document.getElementById('preCanvas');
+const origImg    = document.getElementById('origImg');
+const dropZone   = document.getElementById('dropZone');
+
+// ─── Tesseract loading ────────────────────────────────────────────────────
+async function initWorker(oem, lang) {
+  setStatus('Loading Tesseract…');
+  document.getElementById('tessDot').className = 'dot busy';
+  try {
+    if (worker) { try { await worker.terminate(); } catch(_) {} }
+    worker = await Tesseract.createWorker(lang, oem, {
+      logger: m => {
+        const pct = Math.round((m.progress || 0) * 100);
+        const msg = `${m.status || ''} ${pct < 100 ? pct + '%' : ''}`.trim();
+        setStatus('Tesseract: ' + msg);
+        const ovMsg = document.getElementById('ov-tessMsg');
+        if (ovMsg) ovMsg.textContent = msg;
+      },
+    });
+    activeOem  = oem;
+    activeLang = lang;
+    tessReady  = true;
+    document.getElementById('tessDot').className = 'dot ok';
+    const ovDot = document.getElementById('ov-tessDot');
+    const ovMsg = document.getElementById('ov-tessMsg');
+    if (ovDot) ovDot.className = 'load-dot ok';
+    if (ovMsg) ovMsg.textContent = 'ready';
+    setStatus('');
+    document.getElementById('btnRun').removeAttribute('title');
+    const overlay = document.getElementById('loadOverlay');
+    if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 380); }
+    checkReady();
+  } catch (e) {
+    setStatus('Tesseract load error: ' + e.message);
+  }
+}
+
+initWorker(S.oem, S.lang);
+
+// ─── Readiness gate ───────────────────────────────────────────────────────
+function checkReady() {
+  document.getElementById('btnRun').disabled = !(tessReady && hasImage);
+}
+
+// ─── Extractor functions (ported from lib/ocr/tesseract.ts) ───────────────
+
+const TTB_CLASS_TYPES = [
+  'bourbon whiskey','straight bourbon','kentucky straight bourbon','tennessee whiskey',
+  'blended whiskey','scotch whisky','irish whiskey','rye whiskey','vodka','gin',
+  'rum','tequila','mezcal','brandy','cognac','wine','malt beverage','beer','ale',
+  'lager','hard cider',
+];
+
+function extractAbv(text) {
+  const m = text.match(/(\d+\.?\d*\s*%\s*(?:Alc\.?\/Vol\.?|alc\.?\/vol\.?|alcohol by volume))/i);
+  return m ? m[1].trim() : null;
+}
+
+function extractNetContents(text) {
+  const m = text.match(/(\d+\.?\d*\s*(?:mL|ml|L\b|fl\.?\s*oz|oz))/i);
+  return m ? m[1].trim() : null;
+}
+
+function extractGovernmentWarning(text) {
+  const upper = text.toUpperCase();
+  const start = upper.indexOf('GOVERNMENT WARNING:');
+  if (start === -1) return null;
+  const slice = text.slice(start);
+  const end = slice.search(/\n\s*\n/);
+  return (end === -1 ? slice : slice.slice(0, end)).replace(/\s+/g, ' ').trim();
+}
+
+function extractBrandName(lines) {
+  for (const line of lines) {
+    const t = line.trim();
+    if (t.length > 2 && t.length < 80) return t;
+  }
+  return null;
+}
+
+function extractClassType(text) {
+  const lower = text.toLowerCase();
+  for (const cls of TTB_CLASS_TYPES) {
+    const idx = lower.indexOf(cls);
+    if (idx !== -1) {
+      const lineStart = text.lastIndexOf('\n', idx);
+      const lineEnd   = text.indexOf('\n', idx);
+      const line = text.slice(
+        lineStart === -1 ? 0 : lineStart + 1,
+        lineEnd   === -1 ? undefined : lineEnd,
+      );
+      return line.trim();
+    }
+  }
+  return null;
+}
+
+function extractBottler(text) {
+  const m = text.match(/(?:Bottled by|Produced by|Distilled by|Imported by)[^\n]*/i);
+  return m ? m[0].trim() : null;
+}
+
+function extractCountryOfOrigin(text) {
+  const m = text.match(/(?:Product of|Made in|Imported from)\s+([A-Za-z ]+)/i);
+  return m ? m[0].trim() : null;
+}
+
+function extractAll(text) {
+  const lines = text.split('\n');
+  return {
+    brandName:         extractBrandName(lines),
+    classType:         extractClassType(text),
+    abv:               extractAbv(text),
+    netContents:       extractNetContents(text),
+    bottler:           extractBottler(text),
+    countryOfOrigin:   extractCountryOfOrigin(text),
+    governmentWarning: extractGovernmentWarning(text),
+  };
+}
+
+// ─── Preprocessing (pure Canvas pixel ops — no OpenCV) ────────────────────
+
+function applyPreprocessing() {
+  if (!hasImage) return;
+
+  // Start from a copy of the source
+  let canvas = document.createElement('canvas');
+  canvas.width  = srcCanvas.width;
+  canvas.height = srcCanvas.height;
+  let ctx = canvas.getContext('2d');
+  ctx.drawImage(srcCanvas, 0, 0);
+
+  // 1. Scale
+  if (S.scale !== 1) {
+    const sc = document.createElement('canvas');
+    sc.width  = canvas.width  * S.scale;
+    sc.height = canvas.height * S.scale;
+    const sctx = sc.getContext('2d');
+    sctx.imageSmoothingEnabled = true;
+    sctx.imageSmoothingQuality = 'high';
+    sctx.drawImage(canvas, 0, 0, sc.width, sc.height);
+    canvas = sc;
+    ctx = canvas.getContext('2d');
+  }
+
+  const w = canvas.width, h = canvas.height;
+  const id = ctx.getImageData(0, 0, w, h);
+  const d  = id.data;
+
+  // Helper: ensure pixels are grayscale (in-place)
+  function ensureGray() {
+    for (let i = 0; i < d.length; i += 4) {
+      const g = Math.round(0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]);
+      d[i] = d[i+1] = d[i+2] = g;
+    }
+  }
+
+  // 2. Grayscale
+  if (S.gray) ensureGray();
+
+  // 3. CLAHE substitute: histogram equalization (global HE on luminance)
+  if (S.clahe) {
+    if (!S.gray) ensureGray();
+    const hist = new Int32Array(256);
+    for (let i = 0; i < d.length; i += 4) hist[d[i]]++;
+    const total = w * h;
+    const lut = new Uint8Array(256);
+    let cumul = 0, cdfMin = -1;
+    for (let v = 0; v < 256; v++) {
+      cumul += hist[v];
+      if (cdfMin < 0 && cumul > 0) cdfMin = cumul;
+      lut[v] = total > cdfMin ? Math.round((cumul - cdfMin) / (total - cdfMin) * 255) : 0;
+    }
+    for (let i = 0; i < d.length; i += 4) {
+      d[i] = d[i+1] = d[i+2] = lut[d[i]];
+    }
+  }
+
+  // 4. Denoise: separable [1,2,1]/4 Gaussian blur
+  if (S.denoise) {
+    const tmp = new Uint8ClampedArray(d);
+    // Horizontal pass into d
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        for (let c = 0; c < 3; c++) {
+          const l = x > 0   ? tmp[i - 4 + c] : tmp[i + c];
+          const m = tmp[i + c];
+          const r = x < w-1 ? tmp[i + 4 + c] : tmp[i + c];
+          d[i + c] = (l + 2*m + r) >> 2;
+        }
+      }
+    }
+    // Vertical pass (read from d, write into tmp, copy back)
+    const h2 = new Uint8ClampedArray(d);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        for (let c = 0; c < 3; c++) {
+          const t = y > 0   ? h2[i - w*4 + c] : h2[i + c];
+          const m = h2[i + c];
+          const b = y < h-1 ? h2[i + w*4 + c] : h2[i + c];
+          d[i + c] = (t + 2*m + b) >> 2;
+        }
+      }
+    }
+  }
+
+  // 5. Binarize
+  if (S.bin) {
+    if (!S.gray && !S.clahe) ensureGray();
+    if (S.binMeth === 'otsu') {
+      // Global Otsu threshold
+      const hist = new Int32Array(256);
+      for (let i = 0; i < d.length; i += 4) hist[d[i]]++;
+      const total = w * h;
+      let sum = 0;
+      for (let v = 0; v < 256; v++) sum += v * hist[v];
+      let sumB = 0, wB = 0, max = 0, thresh = 128;
+      for (let v = 0; v < 256; v++) {
+        wB += hist[v]; if (!wB) continue;
+        const wF = total - wB; if (!wF) break;
+        sumB += v * hist[v];
+        const between = wB * wF * ((sumB/wB) - ((sum-sumB)/wF)) ** 2;
+        if (between > max) { max = between; thresh = v; }
+      }
+      for (let i = 0; i < d.length; i += 4) {
+        const v = d[i] > thresh ? 255 : 0;
+        d[i] = d[i+1] = d[i+2] = v;
+      }
+    } else {
+      // Adaptive threshold via integral image (21×21 window, C=5)
+      const gray = new Uint8Array(w * h);
+      for (let i = 0; i < d.length; i += 4) gray[i >> 2] = d[i];
+      const SAT = new Float64Array((w+1) * (h+1));
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++)
+          SAT[(y+1)*(w+1)+(x+1)] = gray[y*w+x]
+            + SAT[y*(w+1)+(x+1)] + SAT[(y+1)*(w+1)+x] - SAT[y*(w+1)+x];
+      const half = 10, C = 5;
+      for (let y = 0; y < h; y++) {
+        const y1 = Math.max(0, y-half), y2 = Math.min(h-1, y+half);
+        for (let x = 0; x < w; x++) {
+          const x1 = Math.max(0, x-half), x2 = Math.min(w-1, x+half);
+          const area = (x2-x1) * (y2-y1) || 1;
+          const localSum = SAT[(y2+1)*(w+1)+(x2+1)] - SAT[y1*(w+1)+(x2+1)]
+                         - SAT[(y2+1)*(w+1)+x1] + SAT[y1*(w+1)+x1];
+          const i = (y*w+x) * 4;
+          const v = gray[y*w+x] > (localSum/area) - C ? 255 : 0;
+          d[i] = d[i+1] = d[i+2] = v;
+        }
+      }
+    }
+  }
+
+  // 6. Invert
+  if (S.invert) {
+    for (let i = 0; i < d.length; i += 4) {
+      d[i] = 255 - d[i]; d[i+1] = 255 - d[i+1]; d[i+2] = 255 - d[i+2];
+    }
+  }
+
+  ctx.putImageData(id, 0, 0);
+
+  // 7. Border padding (8px white)
+  const bd = document.createElement('canvas');
+  bd.width  = canvas.width  + 16;
+  bd.height = canvas.height + 16;
+  const bctx = bd.getContext('2d');
+  bctx.fillStyle = '#ffffff';
+  bctx.fillRect(0, 0, bd.width, bd.height);
+  bctx.drawImage(canvas, 8, 8);
+
+  // Show on preCanvas
+  preCanvas.width  = bd.width;
+  preCanvas.height = bd.height;
+  preCanvas.getContext('2d').drawImage(bd, 0, 0);
+}
+
+// ─── Run OCR ─────────────────────────────────────────────────────────────
+
+async function doRunOcr() {
+  if (!tessReady || !hasImage) return;
+  document.getElementById('btnRun').disabled = true;
+  setRunStatus('<span class="spin"></span>Preprocessing…');
+
+  try {
+    readControls();
+    applyPreprocessing();
+    switchTab('preprocessed');
+
+    // Reinit if OEM or lang changed
+    const oem  = S.oem;
+    const lang = S.lang;
+    if (oem !== activeOem || lang !== activeLang) {
+      setRunStatus('<span class="spin"></span>Reinitializing (OEM change)…');
+      await worker.reinitialize(lang, oem);
+      activeOem  = oem;
+      activeLang = lang;
+      document.getElementById('oemNote').textContent = '';
+    }
+
+    await worker.setParameters({
+      tessedit_pageseg_mode:   S.psm,
+      tessedit_char_whitelist: S.whitelist,
+    });
+
+    setRunStatus('<span class="spin"></span>Running OCR…');
+    const t0 = performance.now();
+
+    // Use preprocessed canvas if any preprocessing is active
+    const preprocessed = S.gray || S.bin || S.clahe || S.denoise || S.invert || S.scale !== 1;
+    const target = preprocessed ? preCanvas : srcCanvas;
+
+    const result  = await worker.recognize(target);
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+    const text    = result.data.text || '';
+    const conf    = Math.round(result.data.confidence || 0);
+
+    currentResults = {
+      extracted: extractAll(text),
+      text, conf, elapsed,
+      psm: S.psm, oem: S.oem,
+      config: captureConfig(),
+    };
+
+    renderResults(currentResults);
+    setRunStatus('');
+    if (compareMode && savedA) renderCompare();
+
+  } catch (e) {
+    setRunStatus('Error: ' + e.message);
+    console.error(e);
+  }
+  document.getElementById('btnRun').disabled = false;
+}
+
+// ─── Render output ────────────────────────────────────────────────────────
+
+const FIELDS = [
+  ['brandName',         'brandName'],
+  ['classType',         'classType'],
+  ['abv',               'abv'],
+  ['netContents',       'netContents'],
+  ['bottler',           'bottler'],
+  ['countryOfOrigin',   'countryOfOrigin'],
+  ['governmentWarning', 'governmentWarning'],
+];
+
+function parseGt() {
+  const raw = document.getElementById('gtText').value.trim();
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch (_) { return null; }
+}
+
+function renderResults(res) {
+  document.getElementById('noResultMsg').style.display = 'none';
+  document.getElementById('ocrOutput').style.display   = 'block';
+  document.getElementById('metaConf').textContent = res.conf + '%';
+  document.getElementById('metaTime').textContent = res.elapsed + 's';
+  document.getElementById('rawPre').textContent   = res.text;
+
+  const gt  = parseGt();
+  const div = document.getElementById('fieldsDiv');
+  div.innerHTML = '';
+  for (const [key, label] of FIELDS) {
+    const val  = res.extracted[key];
+    const row  = document.createElement('div');
+    row.className = 'field-row';
+    let badgeHtml = '';
+    if (gt && key in gt) {
+      const ok = val !== null && gt[key] !== null &&
+                 val.toLowerCase().includes(String(gt[key]).toLowerCase());
+      badgeHtml = `<span class="badge ${ok ? 'ok' : 'fail'}">${ok ? '✓' : '✗'}</span>`;
+    }
+    row.innerHTML = `
+      <span class="field-key">${label}</span>
+      <span class="field-val ${val === null ? 'null-val' : ''}">${val !== null ? esc(val) : '—'}</span>
+      ${badgeHtml}
+    `;
+    div.appendChild(row);
+  }
+}
+
+function renderCompare() {
+  if (!savedA || !currentResults) return;
+  document.getElementById('abSection').style.display = 'block';
+  const grid = document.getElementById('abGrid');
+  grid.innerHTML = `
+    <div>
+      <div class="ab-col-label">A — PSM ${savedA.psm} OEM ${savedA.oem}</div>
+      ${abFieldsHtml(savedA.extracted, currentResults.extracted, false)}
+      <div style="font-size:10px;color:#444;margin-top:4px">${savedA.conf}% conf · ${savedA.elapsed}s</div>
+    </div>
+    <div>
+      <div class="ab-col-label current">B — PSM ${currentResults.psm} OEM ${currentResults.oem}</div>
+      ${abFieldsHtml(currentResults.extracted, savedA.extracted, true)}
+      <div style="font-size:10px;color:#444;margin-top:4px">${currentResults.conf}% conf · ${currentResults.elapsed}s</div>
+    </div>
+  `;
+}
+
+function abFieldsHtml(extracted, other, highlightDiff) {
+  return FIELDS.map(([key, label]) => {
+    const val     = extracted[key];
+    const otherV  = other[key];
+    const isDiff  = val !== otherV;
+    const cls     = val === null ? 'null-val' : (highlightDiff && isDiff ? 'diff' : '');
+    return `<div class="ab-field-row">
+      <span class="ab-field-key">${label}</span>
+      <span class="ab-field-val ${cls}">${val !== null ? esc(val) : '—'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── A/B ─────────────────────────────────────────────────────────────────
+
+function doSaveA() {
+  if (!currentResults) return;
+  savedA = { ...currentResults };
+  document.getElementById('btnCompare').disabled = false;
+  const btn = document.getElementById('btnSaveA');
+  btn.textContent = 'Saved A ✓';
+  setTimeout(() => btn.textContent = 'Save as A', 2000);
+}
+
+function doToggleCompare() {
+  compareMode = !compareMode;
+  document.getElementById('btnCompare').textContent = compareMode ? 'Exit Compare' : 'Compare A|B';
+  if (!compareMode) {
+    document.getElementById('abSection').style.display = 'none';
+  } else if (currentResults && savedA) {
+    renderCompare();
+  }
+}
+
+// ─── Config JSON ──────────────────────────────────────────────────────────
+
+function captureConfig() {
+  return {
+    psm: parseInt(S.psm, 10),
+    oem: S.oem,
+    whitelist: S.whitelist,
+    lang: S.lang,
+    preprocessing: {
+      grayscale: S.gray,
+      scale:     S.scale,
+      clahe:     S.clahe,
+      claheClip: S.claheClip,
+      denoise:   S.denoise,
+      binarize:  S.bin,
+      binMethod: S.binMeth,
+      deskew:    S.deskew,
+      invert:    S.invert,
+    },
+  };
+}
+
+function doCopyConfig(btn) {
+  const cfg = captureConfig();
+  navigator.clipboard.writeText(JSON.stringify(cfg, null, 2)).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy config JSON', 2000);
+  });
+}
+
+// ─── Image upload ─────────────────────────────────────────────────────────
+
+function loadImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    srcCanvas.width  = img.naturalWidth;
+    srcCanvas.height = img.naturalHeight;
+    srcCanvas.getContext('2d').drawImage(img, 0, 0);
+
+    origImg.src = url;
+    origImg.style.display = 'block';
+    dropZone.style.display = 'none';
+    preCanvas.style.display = 'none';
+
+    hasImage = true;
+    checkReady();
+    applyPreprocessing();
+  };
+  img.src = url;
+}
+
+document.getElementById('fileInput').addEventListener('change', e => loadImageFile(e.target.files[0]));
+
+const previewArea = document.getElementById('previewArea');
+previewArea.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+previewArea.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+previewArea.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  loadImageFile(e.dataTransfer.files[0]);
+});
+dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
+
+// ─── Tab switching ────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  origImg.style.display    = tab === 'original'     && hasImage ? 'block' : 'none';
+  preCanvas.style.display  = tab === 'preprocessed' && hasImage ? 'block' : 'none';
+}
+
+// ─── Control wiring ───────────────────────────────────────────────────────
+
+function readControls() {
+  S.gray      = document.getElementById('ckGray').checked;
+  S.bin       = document.getElementById('ckBin').checked;
+  S.binMeth   = document.querySelector('input[name=binMeth]:checked').value;
+  S.clahe     = document.getElementById('ckClahe').checked;
+  S.claheClip = parseFloat(document.getElementById('claheClip').value);
+  S.denoise   = document.getElementById('ckDenoise').checked;
+  S.deskew    = document.getElementById('ckDeskew').checked;
+  S.invert    = document.getElementById('ckInvert').checked;
+  S.scale     = parseInt(document.getElementById('selScale').value, 10);
+  S.psm       = document.getElementById('selPsm').value;
+  S.oem       = parseInt(document.getElementById('selOem').value, 10);
+  S.whitelist = document.getElementById('inWhitelist').value;
+  S.lang      = document.getElementById('selLang').value;
+}
+
+// Show/hide sub-options
+document.getElementById('ckBin').addEventListener('change', e => {
+  document.getElementById('binOpts').style.display = e.target.checked ? 'block' : 'none';
+});
+document.getElementById('ckClahe').addEventListener('change', e => {
+  document.getElementById('claheOpts').style.display = e.target.checked ? 'block' : 'none';
+});
+document.getElementById('claheClip').addEventListener('input', e => {
+  document.getElementById('claheClipVal').textContent = e.target.value;
+  readControls(); if (hasImage) applyPreprocessing();
+});
+
+// Preprocessing changes → live canvas update
+['ckGray','ckBin','ckClahe','ckDenoise','ckDeskew','ckInvert','selScale'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    readControls(); if (hasImage) applyPreprocessing();
+  });
+});
+document.querySelectorAll('input[name=binMeth]').forEach(r => {
+  r.addEventListener('change', () => { readControls(); if (hasImage) applyPreprocessing(); });
+});
+
+// OEM warning
+document.getElementById('selOem').addEventListener('change', () => {
+  const oem = parseInt(document.getElementById('selOem').value, 10);
+  document.getElementById('oemNote').textContent =
+    oem !== activeOem ? '⚠ OEM changed — will reinitialize on next run' : '';
+});
+
+// ─── Presets ─────────────────────────────────────────────────────────────
+
+const PRESETS = {
+  clean: {
+    gray: true, bin: true, binMeth: 'otsu', clahe: false, claheClip: 2,
+    denoise: false, deskew: false, invert: false, scale: 2, psm: '11', oem: 1, whitelist: '',
+  },
+  foil: {
+    gray: true, bin: true, binMeth: 'adaptive', clahe: true, claheClip: 2,
+    denoise: false, deskew: false, invert: false, scale: 2, psm: '11', oem: 1, whitelist: '',
+  },
+  warning: {
+    gray: true, bin: true, binMeth: 'otsu', clahe: false, claheClip: 2,
+    denoise: true, deskew: false, invert: false, scale: 3, psm: '6', oem: 1, whitelist: '',
+  },
+  crop: {
+    gray: true, bin: true, binMeth: 'otsu', clahe: false, claheClip: 2,
+    denoise: false, deskew: false, invert: false, scale: 3, psm: '7', oem: 1, whitelist: '',
+  },
+};
+
+function applyPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  Object.assign(S, p);
+  document.getElementById('ckGray').checked    = p.gray;
+  document.getElementById('ckBin').checked     = p.bin;
+  document.getElementById('binOpts').style.display   = p.bin   ? 'block' : 'none';
+  document.getElementById('ckClahe').checked   = p.clahe;
+  document.getElementById('claheOpts').style.display = p.clahe ? 'block' : 'none';
+  document.getElementById('claheClip').value   = p.claheClip;
+  document.getElementById('claheClipVal').textContent = p.claheClip;
+  document.getElementById('ckDenoise').checked = p.denoise;
+  document.getElementById('ckDeskew').checked  = p.deskew;
+  document.getElementById('ckInvert').checked  = p.invert;
+  document.getElementById('selScale').value    = p.scale;
+  document.getElementById('selPsm').value      = p.psm;
+  document.getElementById('selOem').value      = p.oem;
+  document.getElementById('inWhitelist').value = p.whitelist;
+  document.querySelector(`input[name=binMeth][value="${p.binMeth}"]`).checked = true;
+  document.getElementById('oemNote').textContent =
+    p.oem !== activeOem ? '⚠ OEM changed — will reinitialize on next run' : '';
+  if (hasImage) applyPreprocessing();
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function setStatus(html)    { document.getElementById('statusMsg').innerHTML  = html; }
+function setRunStatus(html) { document.getElementById('runStatus').innerHTML  = html; }
+</script>
+</body>
+</html>
