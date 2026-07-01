@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server"
 import { getProvider } from "@/lib/ocr"
 import { verifyLabel, ApplicationData } from "@/lib/verify"
+import { addApplication } from "@/lib/queue/store"
+import { QueueApplication } from "@/lib/queue/types"
+import { isFieldFlagged } from "@/lib/queue/field-status"
 
 interface CsvRow extends ApplicationData {
   filename: string
@@ -63,6 +66,31 @@ export async function POST(request: NextRequest) {
           const { filename, ...appData } = row
           const ocrResult = await provider.extract(imageData.base64, imageData.mimeType)
           const result = verifyLabel(appData, ocrResult.data, ocrResult.confidence)
+
+          let queueId: string | undefined
+          if (result.fields.some((f) => isFieldFlagged(f))) {
+            queueId = `TTB-BATCH-${Date.now()}-${i}`
+            const queueApp: QueueApplication = {
+              id: queueId,
+              brandName: appData.brandName || filename,
+              applicant: appData.bottler || "Batch import",
+              submittedAt: new Date().toISOString(),
+              applicationData: appData,
+              imageBase64: imageData.base64,
+              imageMimeType: imageData.mimeType,
+              status: "analyzed",
+              analysis: {
+                extracted: ocrResult.data,
+                confidence: ocrResult.confidence,
+                boundingBoxes: ocrResult.boundingBoxes,
+                result,
+                analyzedAt: new Date().toISOString(),
+              },
+              resolution: null,
+            }
+            addApplication(queueApp)
+          }
+
           controller.enqueue(
             encoder.encode(
               sseEvent({
@@ -72,6 +100,7 @@ export async function POST(request: NextRequest) {
                 extracted: ocrResult.data,
                 confidence: ocrResult.confidence,
                 result,
+                queueId,
               })
             )
           )

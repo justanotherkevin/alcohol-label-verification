@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-01] — feat/queue-based-review-flow (PR #13)
+
+### Added
+
+- Implementation plan for the queue-based review redesign (`docs/superpowers/plans/2026-07-01-queue-based-review-flow.md`) — captures the shift from manual data entry to AI-precomputed, specialist-reviewed applications, written before any code changed
+- Queue domain module (`lib/queue/`): `types.ts` (shared `QueueApplication`/`QueueAnalysis`/`Resolution` contracts consumed by every other file below), `seed-data.ts` (5 pre-analyzed + 1 pending demo applications covering every verdict type — clean pass, government-warning strict-fail, fuzzy-match pass, low-confidence/glare fail, ABV-mismatch override-candidate), `mock-templates.ts` (templates cycled by the dev-only "add mock application" tool), `store.ts` (in-memory CRUD — list/get/add/update/resolve; deliberately no database, matching this prototype's stated scope), `analyze.ts` (wraps the existing `getProvider()` OCR factory and `verifyLabel()` into a pre-analysis step that runs ahead of a specialist opening an application), `resolve.ts` (pure, unit-tested approve/reject gating — approval requires every flagged field to be overridden, rejection requires citing a still-flagged field plus a note), `field-status.ts` (`isFieldFlagged()` — the single shared definition of "needs review", now used everywhere flagging is computed)
+- Mock label fixture images (`tests/mocks/labels/*.png`) committed to git — the plan's seed data depended on images that turned out to exist only in one local checkout, untracked
+- Queue API routes (`app/api/queue/`): `GET/POST /api/queue` (list, add-mock), `POST /api/queue/analyze` (run pre-analysis), `GET /api/queue/[id]` (detail), `POST /api/queue/[id]/resolve` (approve/reject) — thin wrappers that delegate all logic to `lib/queue/`
+- Queue application review page (`app/queue/[id]/page.tsx`) — the specialist-facing screen: bundled label image with per-field AI results, click-to-highlight bounding boxes, per-field Override (reason required), Approve/Reject gated by `validateResolution`
+- E2E coverage for the queue flow (`tests/queue.spec.ts`) — queue load, add-mock, run-pre-analysis, override/approve gating, reject requiring citation + note, and the full approve/reject submit round-trip through `POST /api/queue/[id]/resolve`
+
+### Changed
+
+- Dashboard (`app/page.tsx`) rewritten from a static hardcoded table into a live queue fed by `GET /api/queue`, with dev-only "+ Add mock application" and "Run pre-analysis now" buttons
+- Sidebar nav (`components/Sidebar.tsx`) — "Verify Label" entry removed, "Dashboard" relabeled "Queue"
+- Batch processing (`app/api/batch/route.ts`, `app/batch/page.tsx`) — any batch row that doesn't fully pass now gets pushed into the same review queue (via `addApplication`) instead of only appearing in the CSV export, so batch- and single-sourced flagged applications go through one consistent review workflow
+- `app/queue/[id]/page.tsx` — fixed a state-sync bug where overriding a field already checked for rejection left a stale citation the server would refuse; `saveOverride` now prunes `rejectedFields`, and the Confirm-Reject gate re-derives the valid citation count
+- Field-flagging logic (`lib/queue/store.ts`, `lib/queue/resolve.ts`, `app/api/batch/route.ts`, `app/queue/[id]/page.tsx`) — a field that passes its text match but fails a regulatory bounds check (ABV range, fill size, class/type) now counts as flagged everywhere (flag counts, approve/reject gating, batch routing), and the review page's "Regulatory" sub-section — present on the old `/verify` page, silently dropped when the review page was first built — is restored; closes a compliance-visibility gap where a regulatory violation could be approved as a "clean pass"
+- `tests/landing.spec.ts`, `tests/batch.spec.ts` updated for the new queue-based dashboard and the "Review in queue →" link on flagged batch rows
+
+### Removed
+
+- Manual single-label verify page and its API route (`app/verify/page.tsx`, `app/api/verify/route.ts`) — specialists no longer type application data by hand, they only review pre-submitted applications
+- `tests/single-verify.spec.ts` — tested the now-deleted manual entry page
+
+---
+
 ## [2026-07-01] — feat/google-vision-ocr-provider
 
 ### Added
