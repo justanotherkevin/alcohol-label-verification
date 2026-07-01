@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "hooks:install": "cp scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push",
+    "prepare": "npm run hooks:install"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.107.0",

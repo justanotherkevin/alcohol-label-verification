@@ -1,0 +1,9 @@
+#!/bin/sh
+echo "Running unit tests before push..."
+npm run test:unit
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "Push blocked: unit tests failed. Fix tests before pushing."
+  exit 1
+fi
+echo "All tests passed. Pushing..."
