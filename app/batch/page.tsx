@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import Papa from "papaparse"
 import Notification from "@/components/Notification"
 import { VerificationResult } from "@/lib/verify"
@@ -24,6 +25,7 @@ interface BatchResult {
   confidence?: ConfidenceMap
   result?: VerificationResult
   error?: string
+  queueId?: string
 }
 
 interface NotificationEntry {
@@ -137,6 +139,7 @@ export default function BatchPage() {
           confidence?: ConfidenceMap
           result?: VerificationResult
           error?: string
+          queueId?: string
         }
         if (payload.type === "start" && payload.total !== undefined) {
           setNotifTotal(payload.total)
@@ -148,6 +151,7 @@ export default function BatchPage() {
             confidence: payload.confidence,
             result: payload.result,
             error: payload.error,
+            queueId: payload.queueId,
           }
           setResults((prev) => {
             const next = [...prev]
@@ -274,19 +278,29 @@ export default function BatchPage() {
                 }`}
               >
                 <span className="text-sm font-medium text-on-surface">{r.filename}</span>
-                {r.error ? (
-                  <span className="text-xs text-on-surface-muted">Error</span>
-                ) : (
-                  <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                      r.result?.overallPass
-                        ? "bg-bp-success-surface text-bp-success border border-bp-success-border"
-                        : "bg-bp-error-surface text-bp-error border border-bp-error-border"
-                    }`}
-                  >
-                    {r.result?.overallPass ? "PASS" : "FAIL"}
-                  </span>
-                )}
+                <div className="flex items-center gap-3">
+                  {r.queueId && (
+                    <Link
+                      href={`/queue/${r.queueId}`}
+                      className="text-xs font-medium text-primary hover:text-primary-hover"
+                    >
+                      Review in queue →
+                    </Link>
+                  )}
+                  {r.error ? (
+                    <span className="text-xs text-on-surface-muted">Error</span>
+                  ) : (
+                    <span
+                      className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                        r.result?.overallPass
+                          ? "bg-bp-success-surface text-bp-success border border-bp-success-border"
+                          : "bg-bp-error-surface text-bp-error border border-bp-error-border"
+                      }`}
+                    >
+                      {r.result?.overallPass ? "PASS" : "FAIL"}
+                    </span>
+                  )}
+                </div>
               </div>
               {r.error ? (
                 <p className="px-4 py-3 text-sm text-bp-error">{r.error}</p>
