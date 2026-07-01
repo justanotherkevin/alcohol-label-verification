@@ -7,6 +7,7 @@ import {
   extractCountryOfOrigin,
   extractGovernmentWarning,
   extractNetContents,
+  logRawOcrText,
 } from "./tesseract"
 import { BoundingBoxMap, ExtractedLabelData, OcrProvider, OcrResult } from "./types"
 
@@ -59,6 +60,7 @@ export function googleVisionOcrProvider(apiKey: string): OcrProvider {
       }
 
       const text = result?.fullTextAnnotation?.text ?? ""
+      logRawOcrText("google-vision", text)
       const page = result?.fullTextAnnotation?.pages?.[0]
       const W = page?.width ?? 0
       const H = page?.height ?? 0

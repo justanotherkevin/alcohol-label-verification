@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 const SETTINGS_KEY = "ttb-ocr-settings"
 const PROVIDER_LABELS: Record<string, string> = {
   tesseract: "Tesseract",
+  "google-vision": "Google Vision",
   claude: "Claude",
   gemini: "Gemini",
   openai: "OpenAI",

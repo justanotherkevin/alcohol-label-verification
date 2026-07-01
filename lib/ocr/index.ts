@@ -17,7 +17,7 @@ export function getProvider(name: string, apiKey?: string): OcrProvider {
     case "openai":
       return openaiOcrProvider(apiKey ?? "")
     case "google-vision":
-      return googleVisionOcrProvider(apiKey ?? "")
+      return googleVisionOcrProvider(apiKey ?? process.env.GOOGLE_VISION_API_KEY ?? "")
     case "tesseract":
     default:
       return tesseractOcrProvider

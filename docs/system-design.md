@@ -281,8 +281,9 @@ Client              /api/batch
 | `ANTHROPIC_API_KEY` | Claude provider default (if not using /settings) | No       |
 | `GEMINI_API_KEY`    | Gemini provider default (if not using /settings) | No       |
 | `OPENAI_API_KEY`    | OpenAI provider default (if not using /settings) | No       |
+| `GOOGLE_VISION_API_KEY` | Google Vision provider default, **dev-only** — read from `.env.development.local`, which Next.js never loads outside `next dev`; production always requires the client-supplied key from `/settings` | No |
 
-All keys can also be entered at runtime via `/settings` without touching `.env`. The runtime key (from the `X-Api-Key` header) takes precedence over the env var.
+All keys can also be entered at runtime via `/settings` without touching `.env`. The runtime key (from the `X-Api-Key` header) takes precedence over the env var, where a fallback is implemented (currently `google-vision` only — see `lib/ocr/index.ts`'s `getProvider()`).
 
 ---
 

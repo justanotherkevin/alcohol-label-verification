@@ -18,6 +18,12 @@ export function computeFieldBbox(words: WordLike[], fieldValue: string | null, W
 
 const GOVERNMENT_WARNING_PREFIX = "GOVERNMENT WARNING:"
 
+export function logRawOcrText(provider: string, text: string): void {
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[OCR:${provider}] raw text:\n${text}`)
+  }
+}
+
 export function extractAbv(text: string): string | null {
   const match = text.match(/(\d+\.?\d*\s*%\s*(?:Alc\.?\/Vol\.?|alc\.?\/vol\.?|alcohol by volume))/i)
   return match ? match[1].trim() : null
@@ -113,6 +119,7 @@ export const tesseractOcrProvider: OcrProvider = {
     try {
       const { data } = await worker.recognize(buffer)
       text = data.text
+      logRawOcrText("tesseract", text)
       words = (data.blocks ?? [])
         .flatMap(b => b.paragraphs)
         .flatMap(p => p.lines)
