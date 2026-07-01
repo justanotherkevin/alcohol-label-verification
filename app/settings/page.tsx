@@ -31,6 +31,13 @@ const PROVIDERS = [
     description: "OpenAI's vision model. Strong accuracy.",
     requiresKey: true,
   },
+  {
+    id: "mock",
+    label: "Mock (Testing)",
+    cost: "Free",
+    description: "Returns fixed test data. No API key needed.",
+    requiresKey: false,
+  },
 ]
 
 export const SETTINGS_KEY = "ttb-ocr-settings"

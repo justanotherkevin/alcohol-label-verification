@@ -60,6 +60,14 @@ function FieldRow({ field, confidence }: { field: FieldResult; confidence?: numb
           {field.status === "pass" && (
             <p className="text-sm text-gray-500 mt-1 font-mono">{field.extracted}</p>
           )}
+          {field.regulatory && field.regulatory.status !== "skipped" && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Regulatory</span>
+              <p className={`text-xs mt-0.5 ${field.regulatory.status === "fail" ? "text-red-600" : field.regulatory.status === "warning" ? "text-yellow-600" : "text-green-600"}`}>
+                {field.regulatory.status === "fail" ? "✗" : field.regulatory.status === "warning" ? "⚠" : "✓"} {field.regulatory.note}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
