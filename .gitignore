@@ -43,9 +43,6 @@ next-env.d.ts
 # Tesseract trained data (runtime artifact, downloaded by tesseract.js)
 *.traineddata
 
-.claude
-CLAUDE.md
-
 # testing
 /test-results
 /playwright-report
