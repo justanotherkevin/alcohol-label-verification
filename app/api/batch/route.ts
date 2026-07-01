@@ -3,6 +3,7 @@ import { getProvider } from "@/lib/ocr"
 import { verifyLabel, ApplicationData } from "@/lib/verify"
 import { addApplication } from "@/lib/queue/store"
 import { QueueApplication } from "@/lib/queue/types"
+import { isFieldFlagged } from "@/lib/queue/field-status"
 
 interface CsvRow extends ApplicationData {
   filename: string
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
           const result = verifyLabel(appData, ocrResult.data, ocrResult.confidence)
 
           let queueId: string | undefined
-          if (!result.overallPass) {
+          if (result.fields.some((f) => isFieldFlagged(f))) {
             queueId = `TTB-BATCH-${Date.now()}-${i}`
             const queueApp: QueueApplication = {
               id: queueId,

@@ -65,3 +65,43 @@ test('reject requires citing a field and a note', async ({ page }) => {
   await page.getByPlaceholder('Rejection note (required)…').fill('Government warning is not compliant')
   await expect(confirmBtn).toBeEnabled()
 })
+
+test('approving a resolved application returns to the queue and removes its row', async ({ page }) => {
+  await page.goto('/')
+  const firstRow = page.locator('tbody tr').first()
+  const brandName = (await firstRow.locator('td').nth(1).textContent())?.trim()
+  await firstRow.getByRole('link', { name: 'Review →' }).click()
+
+  const overrideButtons = page.getByRole('button', { name: 'Override', exact: true })
+  await expect(overrideButtons.first()).toBeVisible({ timeout: 15000 })
+  const count = await overrideButtons.count()
+  for (let i = 0; i < count; i++) {
+    await page.getByRole('button', { name: 'Override', exact: true }).first().click()
+    await page.getByPlaceholder('Reason for overriding this mismatch…').fill('Confirmed acceptable on manual review')
+    await page.getByRole('button', { name: 'Save override' }).click()
+  }
+  await expect(page.getByRole('button', { name: 'Approve' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Approve' }).click()
+
+  await expect(page).toHaveURL('/')
+  if (brandName) {
+    await expect(page.getByText(brandName).first()).not.toBeVisible()
+  }
+})
+
+test('rejecting a resolved application returns to the queue and removes its row', async ({ page }) => {
+  await page.goto('/')
+  const firstRow = page.locator('tbody tr').first()
+  const brandName = (await firstRow.locator('td').nth(1).textContent())?.trim()
+  await firstRow.getByRole('link', { name: 'Review →' }).click()
+
+  await page.getByRole('button', { name: 'Reject' }).click()
+  await page.getByRole('checkbox').first().check()
+  await page.getByPlaceholder('Rejection note (required)…').fill('Government warning is not compliant')
+  await page.getByRole('button', { name: 'Confirm Reject' }).click()
+
+  await expect(page).toHaveURL('/')
+  if (brandName) {
+    await expect(page.getByText(brandName).first()).not.toBeVisible()
+  }
+})

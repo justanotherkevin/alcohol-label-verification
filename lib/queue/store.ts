@@ -1,6 +1,7 @@
 import { QueueApplication, QueueSummary, Resolution } from "./types"
 import { SEED_APPLICATIONS } from "./seed-data"
 import { MOCK_QUEUE_TEMPLATES } from "./mock-templates"
+import { isFieldFlagged } from "./field-status"
 
 let applications: QueueApplication[] = SEED_APPLICATIONS.map((app) => ({ ...app }))
 let templateCursor = 0
@@ -15,7 +16,7 @@ export function listQueue(): QueueSummary[] {
       applicant: app.applicant,
       submittedAt: app.submittedAt,
       status: app.status,
-      flagCount: app.analysis ? app.analysis.result.fields.filter((f) => f.status !== "pass").length : 0,
+      flagCount: app.analysis ? app.analysis.result.fields.filter(isFieldFlagged).length : 0,
       overallPass: app.analysis ? app.analysis.result.overallPass : null,
     }))
     .sort((a, b) => b.flagCount - a.flagCount)

@@ -1,4 +1,5 @@
 import { FieldOverride, QueueAnalysis } from "./types"
+import { isFieldFlagged } from "./field-status"
 
 export interface ResolveRequestBody {
   decision: "approved" | "rejected"
@@ -12,7 +13,7 @@ export type ValidationOutcome = { ok: true } | { ok: false; error: string }
 export function validateResolution(analysis: QueueAnalysis, body: ResolveRequestBody): ValidationOutcome {
   const overriddenFields = new Set(body.overrides.map((o) => o.field))
   const stillFlagged = analysis.result.fields
-    .filter((f) => f.status !== "pass" && !overriddenFields.has(f.field))
+    .filter((f) => isFieldFlagged(f) && !overriddenFields.has(f.field))
     .map((f) => f.field)
 
   if (body.decision === "approved") {

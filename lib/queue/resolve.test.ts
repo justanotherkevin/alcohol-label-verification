@@ -68,4 +68,40 @@ describe("validateResolution", () => {
     })
     expect(outcome.ok).toBe(false)
   })
+
+  it("rejects approval when a field passes text match but fails its regulatory check", () => {
+    const regulatoryAnalysis: QueueAnalysis = {
+      ...analysis,
+      result: {
+        overallPass: true,
+        fields: [
+          { field: "brandName", label: "Brand Name", expected: "X", extracted: "X", status: "pass" },
+          {
+            field: "abv",
+            label: "Alcohol Content (ABV)",
+            expected: "40%",
+            extracted: "40%",
+            status: "pass",
+            regulatory: { status: "fail", note: "ABV outside legal range for this class/type" },
+          },
+        ],
+      },
+    }
+
+    const outcome = validateResolution(regulatoryAnalysis, {
+      decision: "approved",
+      overrides: [],
+      rejectedFields: [],
+      note: "",
+    })
+    expect(outcome.ok).toBe(false)
+
+    const outcomeAfterOverride = validateResolution(regulatoryAnalysis, {
+      decision: "approved",
+      overrides: [{ field: "abv", reason: "Confirmed via lab certificate" }],
+      rejectedFields: [],
+      note: "",
+    })
+    expect(outcomeAfterOverride.ok).toBe(true)
+  })
 })

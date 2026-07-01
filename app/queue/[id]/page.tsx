@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { FieldResult, VerificationResult } from "@/lib/verify"
 import { BoundingBoxMap, ConfidenceMap } from "@/lib/ocr/types"
+import { isFieldFlagged } from "@/lib/queue/field-status"
 
 interface QueueApplicationDetail {
   id: string
@@ -106,7 +107,7 @@ export default function QueueDetailPage() {
     setRejectedFields((prev) => (prev.includes(fieldKey) ? prev.filter((f) => f !== fieldKey) : [...prev, fieldKey]))
   }
 
-  const flaggedFields = app?.analysis?.result.fields.filter((f) => f.status !== "pass") ?? []
+  const flaggedFields = app?.analysis?.result.fields.filter(isFieldFlagged) ?? []
   const stillFlagged = flaggedFields.filter((f) => !overrides[f.field])
   const canApprove = app?.analysis !== null && stillFlagged.length === 0
   // Only count citations that are still actually flagged — guards against any
@@ -180,10 +181,11 @@ export default function QueueDetailPage() {
           <div className="space-y-3">
             {app.analysis.result.fields.map((f) => {
               const isOverridden = Boolean(overrides[f.field])
+              const flagged = isFieldFlagged(f)
               const bgColor =
-                f.status === "pass" || isOverridden
+                !flagged || isOverridden
                   ? "bg-bp-success-surface border-bp-success-border"
-                  : f.status === "fail"
+                  : f.status === "fail" || f.regulatory?.status === "fail"
                     ? "bg-bp-error-surface border-bp-error-border"
                     : "bg-bp-warning-surface border-bp-warning-border"
               return (
@@ -194,7 +196,7 @@ export default function QueueDetailPage() {
                   onClick={() => handleFieldClick(f.field)}
                 >
                   <div className="flex items-start gap-3">
-                    <StatusBadge status={isOverridden ? "pass" : f.status} />
+                    <StatusBadge status={isOverridden ? "pass" : flagged && f.status === "pass" ? "fail" : f.status} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-on-surface">
                         {f.label} {isOverridden && <span className="text-xs font-normal text-bp-success">(Overridden)</span>}
@@ -212,13 +214,32 @@ export default function QueueDetailPage() {
                           {f.note && <p className="text-on-surface-muted italic text-xs mt-1">{f.note}</p>}
                         </div>
                       )}
+                      {f.regulatory && f.regulatory.status !== "skipped" && (
+                        <div className="mt-2 pt-2 border-t border-outline">
+                          <span className="text-xs font-medium text-on-surface-muted uppercase tracking-wide">
+                            Regulatory
+                          </span>
+                          <p
+                            className={`text-xs mt-0.5 ${
+                              f.regulatory.status === "fail"
+                                ? "text-bp-error"
+                                : f.regulatory.status === "warning"
+                                  ? "text-bp-warning"
+                                  : "text-bp-success"
+                            }`}
+                          >
+                            {f.regulatory.status === "fail" ? "✗" : f.regulatory.status === "warning" ? "⚠" : "✓"}{" "}
+                            {f.regulatory.note}
+                          </p>
+                        </div>
+                      )}
                       {isOverridden && (
                         <p className="text-xs text-on-surface-muted mt-1 italic">Reason: {overrides[f.field]}</p>
                       )}
                       {f.status === "pass" && !isOverridden && (
                         <p className="text-sm text-on-surface-dim mt-1 font-mono">{f.extracted}</p>
                       )}
-                      {f.status !== "pass" && (
+                      {flagged && (
                         <div className="mt-2 flex gap-2" onClick={(e) => e.stopPropagation()}>
                           {isOverridden ? (
                             <button
