@@ -87,6 +87,9 @@ export default function QueueDetailPage() {
   function saveOverride() {
     if (!overrideDraftField || !overrideReason.trim()) return
     setOverrides((prev) => ({ ...prev, [overrideDraftField]: overrideReason.trim() }))
+    // Keep the reject checkbox list in sync: a field that's now overridden is no
+    // longer "still flagged", so it must not remain cited for rejection.
+    setRejectedFields((prev) => prev.filter((f) => f !== overrideDraftField))
     setOverrideDraftField(null)
     setOverrideReason("")
   }
@@ -106,15 +109,23 @@ export default function QueueDetailPage() {
   const flaggedFields = app?.analysis?.result.fields.filter((f) => f.status !== "pass") ?? []
   const stillFlagged = flaggedFields.filter((f) => !overrides[f.field])
   const canApprove = app?.analysis !== null && stillFlagged.length === 0
+  // Only count citations that are still actually flagged — guards against any
+  // drift between `rejectedFields` and `stillFlagged` when deciding whether the
+  // Confirm Reject button should be enabled.
+  const validRejectedFieldCount = rejectedFields.filter((f) => stillFlagged.some((sf) => sf.field === f)).length
 
   async function submitResolution(decision: "approved" | "rejected") {
     if (!app) return
     setSubmitError(null)
     setSubmitting(true)
+    // Defense-in-depth: only ever submit rejected-field citations that are still
+    // actually flagged (not since overridden), even if state somehow drifted.
+    const stillFlaggedKeys = new Set(stillFlagged.map((f) => f.field))
+    const validRejectedFields = rejectedFields.filter((f) => stillFlaggedKeys.has(f))
     const body = {
       decision,
       overrides: Object.entries(overrides).map(([field, reason]) => ({ field, reason })),
-      rejectedFields: decision === "rejected" ? rejectedFields : [],
+      rejectedFields: decision === "rejected" ? validRejectedFields : [],
       note: decision === "rejected" ? rejectNote : "",
     }
     const res = await fetch(`/api/queue/${app.id}/resolve`, {
@@ -319,7 +330,7 @@ export default function QueueDetailPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => submitResolution("rejected")}
-                  disabled={rejectedFields.length === 0 || !rejectNote.trim() || submitting}
+                  disabled={validRejectedFieldCount === 0 || !rejectNote.trim() || submitting}
                   className="px-5 py-2.5 bg-bp-error text-white text-sm font-semibold rounded-lg disabled:opacity-40"
                 >
                   Confirm Reject
