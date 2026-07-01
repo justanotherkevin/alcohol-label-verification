@@ -84,3 +84,17 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | `docs/stakeholder-interview-notes.md`        | Discovery interview notes from four TTB stakeholders establishing core requirements (≤5s response, simple UI, batch support, fuzzy + strict matching).              |
 | `docs/users-flow.md`                         | User journey flows for each persona: single-label verify (incl. step 5a bounding box inspection), batch processing, edge-case table, and deferred admin journeys.   |
 | `docs/ttb-cola-reference.md`                 | Real TTB COLA process reference: Form 5100.31 fields, mandatory label elements, government warning rules, allowable revisions, and domain vocabulary.               |
+
+## source file map
+
+| File                          | Summary                                                                                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/globals.css`             | Bureau Precision (Luminous) design tokens — all `--bp-*` CSS vars and `@theme` mappings to Tailwind utilities (`bg-primary`, `text-bp-error`, etc.).  |
+| `app/layout.tsx`              | Root layout: Inter + Noto Sans fonts, Material Symbols CDN link, fixed sidebar + `<main class="ml-64">` content area.                                |
+| `app/page.tsx`                | Dashboard home (`/`): static metrics cards and verification queue table with mock data; no API calls.                                                 |
+| `app/verify/page.tsx`         | Single-label verify form (`/verify`): image upload, application data fields, calls `POST /api/verify`, shows field results with bounding box overlay. |
+| `app/batch/page.tsx`          | Batch verification (`/batch`): multi-file upload + CSV, streams results via SSE from `POST /api/batch`.                                               |
+| `app/audit/page.tsx`          | Audit log (`/audit`): static mock history table + activity timeline; no API calls.                                                                    |
+| `app/settings/page.tsx`       | OCR provider settings (`/settings`): radio cards, API key input, persisted to `localStorage`.                                                         |
+| `components/Sidebar.tsx`      | Fixed 256px left sidebar with TTB branding, 5 nav links (aria-current), and OCR engine badge; reads provider from `localStorage`.                     |
+| `components/Notification.tsx` | Fixed top-right panel showing batch progress and per-file pass/fail entries (max 10 visible, most-recent-first).                                      |
