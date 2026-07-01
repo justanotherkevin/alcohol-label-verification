@@ -56,4 +56,5 @@ test('valid CSV + images enables Verify All and streams results', async ({ page 
   // Wait for both result cards (filename appears in result card and notification panel)
   await expect(page.getByTestId('result-card-0')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('result-card-1')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByRole('link', { name: /Review in queue/i }).first()).toBeVisible({ timeout: 15000 })
 })
