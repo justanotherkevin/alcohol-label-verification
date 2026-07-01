@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-01]
+
+### Added
+
+- `BoundingBox` interface and `BoundingBoxMap` type in `lib/ocr/types.ts`; `OcrResult` now carries an optional `boundingBoxes` field
+- LLM extraction prompt updated to request normalized (0–1) bounding box coordinates per field; `parseExtractionResponse()` extracts them — all three LLM providers (Claude, Gemini, GPT-4o) inherit this automatically
+- `computeFieldBbox()` in `lib/ocr/tesseract.ts`: flattens block→paragraph→line→word tree, word-matches against extracted field text, returns union bbox normalized by max word coordinate
+- Hardcoded `MOCK_BOUNDING_BOXES` in `lib/ocr/mock.ts` covering all 7 fields for E2E testing
+- Unit tests for LLM parser bbox extraction (`lib/ocr/llm-prompt.test.ts`) and Tesseract word-match bbox logic (`lib/ocr/tesseract.test.ts`)
+- User flow step 5a (bounding box field-source inspection) added to `docs/users-flow.md`
+- Build Step 15 (bounding box field-source inspection) added to `docs/20260630-ai-label-verification-app.md`
+
+---
+
 ## [2026-06-30]
 
 ### Added

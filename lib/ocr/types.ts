@@ -10,9 +10,19 @@ export interface ExtractedLabelData {
 
 export type ConfidenceMap = Partial<Record<keyof ExtractedLabelData, number>>
 
+export interface BoundingBox {
+  x: number      // 0.0–1.0, normalized fraction of image width
+  y: number      // 0.0–1.0, normalized fraction of image height
+  width: number  // 0.0–1.0
+  height: number // 0.0–1.0
+}
+
+export type BoundingBoxMap = Partial<Record<keyof ExtractedLabelData, BoundingBox | null>>
+
 export interface OcrResult {
   data: ExtractedLabelData
   confidence: ConfidenceMap
+  boundingBoxes?: BoundingBoxMap
 }
 
 export interface OcrProvider {

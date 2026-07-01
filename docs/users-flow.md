@@ -2,13 +2,13 @@
 
 ## Personas
 
-| Persona | Role | Primary Need |
-|---|---|---|
-| **Jenny Park** | Junior compliance agent (8 months) | Guided, step-by-step label check |
-| **Dave Morrison** | Senior compliance agent (28 years) | Fast throughput + ability to apply judgment on edge cases |
-| **Janet (Seattle)** | Compliance agent, high-volume importer handling | Batch processing of 200–300 labels at once |
-| **Sarah Chen** | Deputy Director | Aggregate pass/fail visibility across submissions |
-| **Marcus Williams** | IT Admin | API key config, no blocked endpoints |
+| Persona             | Role                                            | Primary Need                                              |
+| ------------------- | ----------------------------------------------- | --------------------------------------------------------- |
+| **Jenny Park**      | Junior compliance agent (8 months)              | Guided, step-by-step label check                          |
+| **Dave Morrison**   | Senior compliance agent (28 years)              | Fast throughput + ability to apply judgment on edge cases |
+| **Janet (Seattle)** | Compliance agent, high-volume importer handling | Batch processing of 200–300 labels at once                |
+| **Sarah Chen**      | Deputy Director                                 | Aggregate pass/fail visibility across submissions         |
+| **Marcus Williams** | IT Admin                                        | API key config, no blocked endpoints                      |
 
 > **Scope note:** User auth, role-based access, and data retention are out of scope for this prototype. Sarah and Marcus's admin journeys are deferred. Dave's override flow is included as a lightweight addition.
 
@@ -47,6 +47,16 @@
    │   └── ⚠️ Warning — low confidence, readability issue, or soft mismatch
    └── Govt Warning row shows exact character diff if failed
 
+5a. INSPECT field source (optional, any field)
+   ├── Labeling Specialist clicks any field row in the results panel
+   ├── A bounding rectangle highlights on the label image showing
+   │   exactly where the OCR read that field's text from
+   ├── Clicking a different row moves the highlight to that field
+   ├── Clicking the same row again deselects (clears the highlight)
+   └── If the OCR could not locate the field spatially, click does nothing silently
+   Note: available on LLM providers (Claude/Gemini/GPT-4o) and Tesseract word-match.
+         If bounding box data is absent, feature is simply not available for that field.
+
 6. OVERRIDE (Dave's edge case flow)
    ├── Any ❌ Fail field shows an "Override" option
    ├── Agent selects Override → required free-text reason field appears
@@ -58,6 +68,7 @@
 ```
 
 **Matching rules:**
+
 - Government Warning → strict exact match (word-for-word, `GOVERNMENT WARNING:` must be bold + ALL CAPS)
 - All other fields → fuzzy/normalized match (`STONE'S THROW` vs `Stone's Throw` passes; `45% Alc./Vol.` vs `45% ABV` passes)
 - Unreadable image → returns "Unable to extract" per field, does not silently fail
@@ -104,31 +115,35 @@
 
 ## Edge Cases & States
 
-| Scenario | Behavior |
-|---|---|
-| Image has glare / poor lighting | AI attempts extraction; low-confidence fields flagged ⚠️ |
-| Image is completely unreadable | Returns "Unable to extract" per field; does not auto-reject |
-| Minor brand name formatting diff | Fuzzy match — passes (e.g. `STONE'S THROW` vs `Stone's Throw`) |
-| Govt warning in title case | Strict match — fails; diff shown |
-| Govt warning in small/low-contrast text | Flagged ⚠️ but not auto-rejected |
-| ABV format variation | Normalized match — passes (e.g. `45% Alc./Vol. (90 Proof)` vs `45% ABV`) |
-| Batch: CSV row has no matching image | Flagged before processing begins |
-| API timeout / error | Clear error message per label; does not silently fail |
+| Scenario                                | Behavior                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------ |
+| Image has glare / poor lighting         | AI attempts extraction; low-confidence fields flagged ⚠️                 |
+| Image is completely unreadable          | Returns "Unable to extract" per field; does not auto-reject              |
+| Minor brand name formatting diff        | Fuzzy match — passes (e.g. `STONE'S THROW` vs `Stone's Throw`)           |
+| Govt warning in title case              | Strict match — fails; diff shown                                         |
+| Govt warning in small/low-contrast text | Flagged ⚠️ but not auto-rejected                                         |
+| ABV format variation                    | Normalized match — passes (e.g. `45% Alc./Vol. (90 Proof)` vs `45% ABV`) |
+| Batch: CSV row has no matching image    | Flagged before processing begins                                         |
+| API timeout / error                     | Clear error message per label; does not silently fail                    |
+| Field bounding box unavailable          | Click on field row does nothing; no error shown                          |
 
 ---
 
 ## Deferred Journeys (out of scope for prototype)
 
 **Sarah Chen — Supervisor Dashboard**
+
 - Aggregate pass/fail rates across submissions
 - Agent throughput metrics
 - Requires: data persistence, auth
 
 **Marcus Williams — IT Admin Config**
+
 - API key management UI
 - System health / uptime monitoring
 - Requires: admin role, persistent config storage
 
 **Full audit trail**
+
 - Agent override history with timestamps and IDs
 - Requires: user auth + data retention
