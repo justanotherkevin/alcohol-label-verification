@@ -10,27 +10,27 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('verify label button is disabled until image is uploaded', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/verify')
   const btn = page.getByRole('button', { name: 'Verify Label' })
   await expect(btn).toBeDisabled()
 })
 
 test('uploading image shows preview', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/verify')
   const fileInput = page.locator('input[type="file"]')
   await fileInput.setInputFiles(path.join('tests', 'mocks', 'label_1.jpg'))
   await expect(page.locator('img[alt="Label preview"]')).toBeVisible()
 })
 
 test('after upload, verify label button is enabled', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/verify')
   const fileInput = page.locator('input[type="file"]')
   await fileInput.setInputFiles(path.join('tests', 'mocks', 'label_1.jpg'))
   await expect(page.getByRole('button', { name: 'Verify Label' })).toBeEnabled()
 })
 
 test('verify with mock provider shows result cards', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/verify')
   const fileInput = page.locator('input[type="file"]')
   await fileInput.setInputFiles(path.join('tests', 'mocks', 'label_1.jpg'))
   await page.getByRole('button', { name: 'Verify Label' }).click()
@@ -39,7 +39,7 @@ test('verify with mock provider shows result cards', async ({ page }) => {
 })
 
 test('result shows all 7 field rows', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/verify')
   const fileInput = page.locator('input[type="file"]')
   await fileInput.setInputFiles(path.join('tests', 'mocks', 'label_1.jpg'))
   await page.getByRole('button', { name: 'Verify Label' }).click()
@@ -49,7 +49,7 @@ test('result shows all 7 field rows', async ({ page }) => {
 })
 
 test('classType field row shows Regulatory subsection', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/verify')
   const fileInput = page.locator('input[type="file"]')
   await fileInput.setInputFiles(path.join('tests', 'mocks', 'label_1.jpg'))
   await page.getByRole('button', { name: 'Verify Label' }).click()
@@ -58,7 +58,7 @@ test('classType field row shows Regulatory subsection', async ({ page }) => {
 })
 
 test('clicking a field row selects it (ring highlight)', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/verify')
   const fileInput = page.locator('input[type="file"]')
   await fileInput.setInputFiles(path.join('tests', 'mocks', 'label_1.jpg'))
   await page.getByRole('button', { name: 'Verify Label' }).click()
@@ -71,7 +71,7 @@ test('clicking a field row selects it (ring highlight)', async ({ page }) => {
 })
 
 test('clicking the same field row again deselects it', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/verify')
   const fileInput = page.locator('input[type="file"]')
   await fileInput.setInputFiles(path.join('tests', 'mocks', 'label_1.jpg'))
   await page.getByRole('button', { name: 'Verify Label' }).click()
