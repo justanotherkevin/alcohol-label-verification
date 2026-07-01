@@ -1,0 +1,643 @@
+{
+  "version": "1.0.0",
+  "source": "TTB Form 5100.31 (04/2023); TTB Form 5013.2 (08/2025); 27 CFR Parts 4, 5, 7, 13, 16; 27 U.S.C. 205",
+  "fields": [
+    {
+      "key": "repId",
+      "ttbTerm": "Rep ID No.",
+      "formItem": "1",
+      "category": "administrative",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": false,
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Third-party representative identifier. When present, enables TTB to disclose application status to that representative."
+      },
+      "matchRule": "not-compared",
+      "regulatoryCitations": [],
+      "allowableRevisions": [],
+      "failureMessages": {},
+      "specialistNotes": "Optional field; absence is never a defect. Not printed on labels, so it is never part of label-vs-application matching."
+    },
+    {
+      "key": "permitNumber",
+      "ttbTerm": "Plant Registry / Basic Permit / Brewer's Notice No.",
+      "formItem": "2",
+      "category": "identification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "pattern",
+      "acceptedValues": {
+        "regex": "^(BW|TPWBH|DSP|BR)-.+",
+        "example": "DSP-KY-12345",
+        "notes": "BW- (bonded wine) or TPWBH- for wine, DSP- for distilled spirits, BR- for beer. Also accepts an importer's basic permit number for imports."
+      },
+      "matchRule": "regex",
+      "regulatoryCitations": ["27 CFR Part 13"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "\"{extracted}\" does not match a recognized permit/registry prefix (BW-, TPWBH-, DSP-, BR-).",
+        "missing": "Plant Registry / Basic Permit / Brewer's Notice No. is required and was not found."
+      },
+      "specialistNotes": "Verify the prefix matches the declared Type of Product (DSP- for spirits, BW-/TPWBH- for wine, BR- for malt)."
+    },
+    {
+      "key": "sourceOfProduct",
+      "ttbTerm": "Source of Product",
+      "formItem": "3",
+      "category": "identification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "enum",
+      "acceptedValues": {
+        "values": ["Domestic", "Imported"],
+        "caseSensitive": false
+      },
+      "matchRule": "enum-membership",
+      "regulatoryCitations": ["27 CFR Part 13"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "\"{extracted}\" is not a valid Source of Product; must be \"Domestic\" or \"Imported\".",
+        "missing": "Source of Product is required."
+      },
+      "specialistNotes": "If Imported, Country of Origin must be present on the label and Certificate of Exemption applications are not permitted."
+    },
+    {
+      "key": "serialNumber",
+      "ttbTerm": "Serial Number",
+      "formItem": "4",
+      "category": "identification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "pattern",
+      "acceptedValues": {
+        "regex": "^\\d{2}-\\d+$",
+        "example": "24-1",
+        "notes": "Two-digit year, hyphen, sequential number assigned by the applicant."
+      },
+      "matchRule": "regex",
+      "regulatoryCitations": ["27 CFR Part 13"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "\"{extracted}\" does not match the required serial number format YY-N (e.g. 24-1).",
+        "missing": "Serial Number is required."
+      },
+      "specialistNotes": "Assigned sequentially by the applicant, not by TTB. Used as the resubmission reference on Item 14d."
+    },
+    {
+      "key": "typeOfProduct",
+      "ttbTerm": "Type of Product",
+      "formItem": "5",
+      "category": "classification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "enum",
+      "acceptedValues": {
+        "values": ["WINE", "DISTILLED SPIRITS", "MALT BEVERAGES"],
+        "caseSensitive": false
+      },
+      "matchRule": "enum-membership",
+      "regulatoryCitations": ["27 CFR Parts 4, 5, 7"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "\"{extracted}\" is not one of WINE, DISTILLED SPIRITS, or MALT BEVERAGES.",
+        "missing": "Type of Product is required."
+      },
+      "specialistNotes": "Determines which product-specific field set, ABV bounds, and standard-fill list apply for the rest of the review."
+    },
+    {
+      "key": "brandName",
+      "ttbTerm": "Brand Name",
+      "formItem": "6",
+      "category": "identification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": true,
+      "onApplication": true,
+      "required": true,
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Name under which the product is sold. If no brand name is used, the bottler/importer name must be used as the brand name."
+      },
+      "matchRule": "fuzzy",
+      "regulatoryCitations": ["27 CFR 4.32", "27 CFR 5.32", "27 CFR 7.22"],
+      "allowableRevisions": [
+        "3b: case, font, and abbreviation changes do not require a new COLA"
+      ],
+      "failureMessages": {
+        "fail": "Label brand name \"{extracted}\" does not match application Brand Name \"{expected}\".",
+        "missing": "Brand Name was not found on the label."
+      },
+      "specialistNotes": "Case and punctuation differences (e.g. \"stone's throw\" vs \"STONE'S THROW\") are an allowable revision, not a defect. A substantive brand name change always requires a new COLA."
+    },
+    {
+      "key": "fancifulName",
+      "ttbTerm": "Fanciful Name",
+      "formItem": "7",
+      "category": "identification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": true,
+      "onApplication": true,
+      "required": "required for some specialty products; otherwise optional",
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Further identifies the product beyond the brand name (e.g. a specific blend or cuvée name)."
+      },
+      "matchRule": "fuzzy",
+      "regulatoryCitations": ["27 CFR 4.33", "27 CFR 5.33", "27 CFR 7.23"],
+      "allowableRevisions": [
+        "3b: case, font, and abbreviation changes do not require a new COLA"
+      ],
+      "failureMessages": {
+        "fail": "Label fanciful name \"{extracted}\" does not match application Fanciful Name \"{expected}\".",
+        "missing": "Fanciful Name was declared on the application but not found on the label."
+      },
+      "specialistNotes": "Only compare when the application declares a fanciful name; its absence on the label is not a defect if Item 7 was left blank on the application."
+    },
+    {
+      "key": "applicantNameAddress",
+      "ttbTerm": "Name and Address of Applicant",
+      "formItem": "8",
+      "category": "identification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Must exactly match the plant registry, basic permit, or brewer's notice on file, including any approved DBA/trade name."
+      },
+      "matchRule": "fuzzy",
+      "regulatoryCitations": ["27 CFR Part 13"],
+      "allowableRevisions": [
+        "19: name/address change within the same state does not require a new COLA"
+      ],
+      "failureMessages": {
+        "fail": "Applicant name/address does not match the permit/registry on file.",
+        "missing": "Name and Address of Applicant is required."
+      },
+      "specialistNotes": "This is the source-of-truth for the label's Name and Address field (see 'bottler')."
+    },
+    {
+      "key": "mailingAddress",
+      "ttbTerm": "Mailing Address",
+      "formItem": "8a",
+      "category": "administrative",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": false,
+      "valueType": "freetext",
+      "acceptedValues": { "notes": "Only completed if different from Item 8." },
+      "matchRule": "not-compared",
+      "regulatoryCitations": [],
+      "allowableRevisions": [],
+      "failureMessages": {},
+      "specialistNotes": "Correspondence-only field; never printed on a label."
+    },
+    {
+      "key": "classType",
+      "ttbTerm": "Class / Type Designation",
+      "formItem": "5",
+      "category": "classification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": true,
+      "onApplication": true,
+      "required": true,
+      "valueType": "enum",
+      "acceptedValues": {
+        "notes": "Must be a recognized class/type designation for the declared Type of Product. See lib/ttb-rules.ts SPIRITS_CLASS_TYPES / WINE_CLASS_TYPES / MALT_CLASS_TYPES for the authoritative list.",
+        "caseSensitive": false
+      },
+      "matchRule": "fuzzy",
+      "regulatoryCitations": [
+        "27 CFR Part 4 (Wine)",
+        "27 CFR Part 5 (Distilled Spirits)",
+        "27 CFR Part 7 (Malt Beverages)"
+      ],
+      "allowableRevisions": [
+        "3b: case, font, and abbreviation changes do not require a new COLA"
+      ],
+      "failureMessages": {
+        "fail": "Label class/type \"{extracted}\" is not a recognized TTB class/type designation for {productType} (27 CFR Parts 4, 5, 7).",
+        "missing": "Class/Type designation was not found on the label."
+      },
+      "specialistNotes": "For spirits, brand name, alcohol content, and class/type must appear in the same field of vision (see 'sameFieldOfVision')."
+    },
+    {
+      "key": "abv",
+      "ttbTerm": "Alcohol Content",
+      "formItem": null,
+      "category": "content",
+      "appliesToProductTypes": ["all"],
+      "onLabel": true,
+      "onApplication": false,
+      "required": "always required for spirits; required for wine unless labeled 'table wine' ≤14% or 'dessert wine'; required for malt only if alcohol is derived from added flavors/non-beverage ingredients",
+      "valueType": "numeric-percent",
+      "acceptedValues": {
+        "unit": "%",
+        "boundsByProductType": {
+          "spirits": { "min": 20, "max": 95 },
+          "wine": { "min": 7, "max": 24 },
+          "malt": { "min": 0.5, "max": 20 }
+        },
+        "notes": "Bounds sourced from lib/ttb-rules.ts ABV_BOUNDS. Most spirits additionally require a minimum of 40% ABV under their specific class/type standard."
+      },
+      "matchRule": "numeric-tolerance",
+      "regulatoryCitations": ["27 CFR 4.36", "27 CFR 5.37", "27 CFR 7.71"],
+      "allowableRevisions": [
+        "11: change to the mandatory alcohol content statement does not require a new COLA (flavored malt beverages excepted)"
+      ],
+      "failureMessages": {
+        "fail": "Label ABV \"{extracted}\" does not match application ABV \"{expected}\".",
+        "missing": "Alcohol Content was not found on the label.",
+        "outOfBounds": "ABV {value}% is outside the allowed range for {productType} ({min}%–{max}%)."
+      },
+      "specialistNotes": "Numeric comparison, not string comparison: \"45% ABV\" and \"45% Alc./Vol.\" are equivalent formats representing the same value."
+    },
+    {
+      "key": "netContents",
+      "ttbTerm": "Net Contents",
+      "formItem": "14c",
+      "category": "content",
+      "appliesToProductTypes": ["all"],
+      "onLabel": true,
+      "onApplication": "only for Distinctive Liquor Bottle Approval applications",
+      "required": true,
+      "valueType": "numeric-volume",
+      "acceptedValues": {
+        "unit": "mL",
+        "standardFillSizesByProductType": {
+          "spirits": [50, 100, 200, 375, 750, 1000, 1750],
+          "wine": [100, 187, 375, 500, 750, 1000, 1500, 3000, 4500],
+          "malt": "no federal standards of fill; any container size permitted"
+        },
+        "notes": "Sourced from lib/ttb-rules.ts SPIRITS_FILL_SIZES_ML / WINE_FILL_SIZES_ML. A tolerance of ±5 mL is applied for rounding/label-printing variance."
+      },
+      "matchRule": "enum-membership",
+      "regulatoryCitations": ["27 CFR 5.47a (spirits)", "27 CFR 4.72 (wine)"],
+      "allowableRevisions": [
+        "10: change to net contents statement does not require a new COLA, provided it complies with standards of fill"
+      ],
+      "failureMessages": {
+        "fail": "{value} mL is not a standard fill size for {productType} (27 CFR {citation}).",
+        "missing": "Net Contents was not found on the label."
+      },
+      "specialistNotes": "Malt beverages have no federal standard-of-fill restriction — any declared volume passes this check for malt."
+    },
+    {
+      "key": "bottler",
+      "ttbTerm": "Name and Address",
+      "formItem": "8",
+      "category": "identification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": true,
+      "onApplication": true,
+      "required": true,
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Must be accompanied by a qualifying phrase: 'Bottled by', 'Produced by', 'Distilled by', 'Imported by', etc."
+      },
+      "matchRule": "fuzzy",
+      "regulatoryCitations": ["27 CFR 4.35", "27 CFR 5.36", "27 CFR 7.24"],
+      "allowableRevisions": [
+        "19: name/address change within the same state does not require a new COLA"
+      ],
+      "failureMessages": {
+        "fail": "Label bottler/producer \"{extracted}\" does not match application Name and Address \"{expected}\".",
+        "missing": "Name and Address of bottler/producer was not found on the label."
+      },
+      "specialistNotes": "Confirm the qualifying phrase (Bottled by / Produced by / Distilled by / Imported by) is consistent with the declared Source of Product and permit type."
+    },
+    {
+      "key": "countryOfOrigin",
+      "ttbTerm": "Country of Origin",
+      "formItem": null,
+      "category": "identification",
+      "appliesToProductTypes": ["all"],
+      "onLabel": true,
+      "onApplication": "derived from Item 3",
+      "required": "required only when Source of Product = Imported",
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Must be consistent with the declared Source of Product and, for wine, any appellation of origin claim."
+      },
+      "matchRule": "fuzzy",
+      "regulatoryCitations": ["27 CFR Part 13"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "Label country of origin \"{extracted}\" does not match expected \"{expected}\".",
+        "missing": "Country of Origin is required for imported products and was not found on the label."
+      },
+      "specialistNotes": "Not applicable when Source of Product = Domestic; do not flag as missing in that case."
+    },
+    {
+      "key": "governmentWarning",
+      "ttbTerm": "Government Warning Statement",
+      "formItem": null,
+      "category": "compliance",
+      "appliesToProductTypes": ["all"],
+      "onLabel": true,
+      "onApplication": false,
+      "required": true,
+      "valueType": "fixed-text",
+      "acceptedValues": {
+        "exactText": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+        "caseRule": "\"GOVERNMENT WARNING:\" prefix must be ALL CAPS and bold",
+        "typeSizeByContainerSize": [
+          { "maxVolumeMl": 237, "minTypeSizeMm": 1 },
+          { "minVolumeMl": 237, "maxVolumeMl": 3000, "minTypeSizeMm": 2 },
+          { "minVolumeMl": 3000, "minTypeSizeMm": 3 }
+        ]
+      },
+      "matchRule": "strict",
+      "regulatoryCitations": ["27 CFR Part 16"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "Warning text does not match the required exact wording (27 CFR Part 16).",
+        "wrongCase": "Warning must begin with \"GOVERNMENT WARNING:\" in ALL CAPS (27 CFR Part 16); title case (\"Government Warning\") is non-compliant.",
+        "missing": "Government Warning Statement was not found on the label."
+      },
+      "specialistNotes": "Zero tolerance for rewording, abbreviation, or paraphrasing. Buried/tiny text is flagged for visual review but is not necessarily an automatic rejection unless the type-size minimum is provably violated."
+    },
+    {
+      "key": "grapeVarietal",
+      "ttbTerm": "Grape Varietal(s)",
+      "formItem": "10",
+      "category": "classification",
+      "appliesToProductTypes": ["wine"],
+      "onLabel": true,
+      "onApplication": true,
+      "required": "required if a varietal is claimed on the label",
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Each varietal appearing on the label must be listed on the application. Percentage-of-varietal rules apply per 27 CFR 4.23 but are not captured here."
+      },
+      "matchRule": "fuzzy",
+      "regulatoryCitations": ["27 CFR 4.23"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "Label varietal claim \"{extracted}\" does not match application Grape Varietal(s) \"{expected}\".",
+        "missing": "A varietal is claimed on the label but was not declared on the application."
+      },
+      "specialistNotes": "Only applies to wine. If no varietal is claimed on the label, this field is not applicable."
+    },
+    {
+      "key": "wineAppellation",
+      "ttbTerm": "Wine Appellation",
+      "formItem": "11",
+      "category": "classification",
+      "appliesToProductTypes": ["wine"],
+      "onLabel": true,
+      "onApplication": true,
+      "required": "required if an appellation of origin is stated on the label",
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Must correspond to a recognized viticultural area or political appellation, and the wine must meet the sourcing percentage required for that appellation."
+      },
+      "matchRule": "fuzzy",
+      "regulatoryCitations": ["27 CFR 4.25"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "Label appellation \"{extracted}\" does not match application Wine Appellation \"{expected}\".",
+        "missing": "An appellation is claimed on the label but Item 11 was not completed on the application."
+      },
+      "specialistNotes": "Only applies to wine, and only when an appellation is actually printed on the label."
+    },
+    {
+      "key": "vintageDate",
+      "ttbTerm": "Vintage Date",
+      "formItem": null,
+      "category": "classification",
+      "appliesToProductTypes": ["wine"],
+      "onLabel": true,
+      "onApplication": false,
+      "required": "required if a vintage year is claimed on the label",
+      "valueType": "date",
+      "acceptedValues": {
+        "notes": "A four-digit calendar year. Wine must meet the minimum percentage of grapes harvested in the stated year to bear a vintage date (27 CFR 4.27).",
+        "pattern": "^(19|20)\\d{2}$"
+      },
+      "matchRule": "regex",
+      "regulatoryCitations": ["27 CFR 4.27"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "\"{extracted}\" is not a valid four-digit vintage year.",
+        "missing": "Vintage claimed on label but no vintage date found."
+      },
+      "specialistNotes": "Only applies to wine, and only when a vintage year is actually claimed on the label."
+    },
+    {
+      "key": "sulfiteDeclaration",
+      "ttbTerm": "Sulfite Declaration",
+      "formItem": null,
+      "category": "compliance",
+      "appliesToProductTypes": ["wine"],
+      "onLabel": true,
+      "onApplication": false,
+      "required": "required when SO₂ ≥ 10 ppm",
+      "valueType": "enum",
+      "acceptedValues": {
+        "values": [
+          "CONTAINS SULFITES",
+          "CONTAINS SULFITE",
+          "CONTAINS SULFITING AGENTS"
+        ],
+        "caseSensitive": false
+      },
+      "matchRule": "enum-membership",
+      "regulatoryCitations": ["27 CFR 4.32(e)"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "\"{extracted}\" is not an accepted sulfite declaration wording.",
+        "missing": "Sulfite Declaration is required (SO₂ ≥ 10 ppm) and was not found on the label."
+      },
+      "specialistNotes": "Only applies to wine with SO₂ at or above 10 ppm; this threshold is not extractable from a label image and must be confirmed against formula/lab data."
+    },
+    {
+      "key": "ageStatement",
+      "ttbTerm": "Age Statement",
+      "formItem": null,
+      "category": "classification",
+      "appliesToProductTypes": ["spirits"],
+      "onLabel": true,
+      "onApplication": false,
+      "required": "required when the declared class/type mandates it (e.g. straight whiskies aged less than 4 years)",
+      "valueType": "pattern",
+      "acceptedValues": {
+        "regex": "^\\d+\\s+(year|years)(\\s+old)?$",
+        "example": "4 years old"
+      },
+      "matchRule": "conditional",
+      "regulatoryCitations": ["27 CFR 5.40"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "\"{extracted}\" does not match the required age statement format.",
+        "missing": "Class/type \"{classType}\" requires an age statement and none was found on the label."
+      },
+      "specialistNotes": "Only applies to spirits, and only when the specific class/type designation triggers a mandatory age statement (notably straight whiskies under 4 years old)."
+    },
+    {
+      "key": "sameFieldOfVision",
+      "ttbTerm": "Same Field of Vision Rule",
+      "formItem": null,
+      "category": "compliance",
+      "appliesToProductTypes": ["spirits"],
+      "onLabel": true,
+      "onApplication": false,
+      "required": true,
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Brand name, alcohol content, and class/type designation must all appear on the same side of the container simultaneously. For cylindrical containers, all three must fall within any 40% arc of the circumference."
+      },
+      "matchRule": "conditional",
+      "regulatoryCitations": ["27 CFR 5.63"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "Brand name, alcohol content, and class/type designation do not appear within the same 40% arc of the label (27 CFR 5.63)."
+      },
+      "specialistNotes": "Not a text-value field — requires visual/positional review of label artwork, not OCR text comparison alone. Applies only to distilled spirits."
+    },
+    {
+      "key": "typeOfApplication",
+      "ttbTerm": "Type of Application",
+      "formItem": "14",
+      "category": "administrative",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "enum",
+      "acceptedValues": {
+        "values": [
+          "a. Certificate of Label Approval",
+          "b. Certificate of Exemption",
+          "c. Distinctive Liquor Bottle Approval",
+          "d. Resubmission After Rejection"
+        ],
+        "caseSensitive": false
+      },
+      "matchRule": "enum-membership",
+      "regulatoryCitations": ["27 CFR Part 13"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "\"{extracted}\" is not a recognized Type of Application (a–d).",
+        "missing": "Type of Application is required."
+      },
+      "specialistNotes": "Certificate of Exemption requires the label to state 'For sale in [STATE] only' and is not available for imports or malt beverages. Resubmission requires the original TTB ID of the rejected application."
+    },
+    {
+      "key": "bottleCapacityBeforeClosure",
+      "ttbTerm": "Total Bottle Capacity Before Closure",
+      "formItem": "14c",
+      "category": "content",
+      "appliesToProductTypes": ["spirits", "wine"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": "required only when Type of Application = Distinctive Liquor Bottle Approval",
+      "valueType": "numeric-volume",
+      "acceptedValues": {
+        "unit": "mL",
+        "notes": "Must be greater than or equal to the declared Net Contents to allow for headspace before closure."
+      },
+      "matchRule": "numeric-tolerance",
+      "regulatoryCitations": ["27 CFR Part 13"],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "fail": "Total bottle capacity {value} mL is less than declared Net Contents {netContents} mL.",
+        "missing": "Total Bottle Capacity Before Closure is required for Distinctive Liquor Bottle Approval applications."
+      },
+      "specialistNotes": "Only relevant for non-standard bottle shapes filed under Type of Application (c)."
+    },
+    {
+      "key": "phoneNumber",
+      "ttbTerm": "Phone Number",
+      "formItem": "12",
+      "category": "administrative",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "pattern",
+      "acceptedValues": {
+        "regex": "^[\\d()\\-.\\s+]{7,}$",
+        "example": "(202) 555-0100"
+      },
+      "matchRule": "not-compared",
+      "regulatoryCitations": [],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "missing": "Phone Number is required for TTB correspondence."
+      },
+      "specialistNotes": "Contact-only field; not printed on labels and not part of label matching."
+    },
+    {
+      "key": "emailAddress",
+      "ttbTerm": "Email Address",
+      "formItem": "13",
+      "category": "administrative",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": false,
+      "valueType": "pattern",
+      "acceptedValues": { "regex": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" },
+      "matchRule": "not-compared",
+      "regulatoryCitations": [],
+      "allowableRevisions": [],
+      "failureMessages": {},
+      "specialistNotes": "Optional; if provided, TTB sends processed paper applications to this address. Not part of label matching."
+    },
+    {
+      "key": "dateOfApplication",
+      "ttbTerm": "Date of Application",
+      "formItem": "16",
+      "category": "administrative",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "date",
+      "acceptedValues": {
+        "notes": "Date the application was signed/submitted."
+      },
+      "matchRule": "not-compared",
+      "regulatoryCitations": [],
+      "allowableRevisions": [],
+      "failureMessages": { "missing": "Date of Application is required." },
+      "specialistNotes": "Administrative timestamp only; not compared against the label."
+    },
+    {
+      "key": "signature",
+      "ttbTerm": "Signature / Print Name",
+      "formItem": "17-18",
+      "category": "administrative",
+      "appliesToProductTypes": ["all"],
+      "onLabel": false,
+      "onApplication": true,
+      "required": true,
+      "valueType": "freetext",
+      "acceptedValues": {
+        "notes": "Must be signed in ink by the applicant or an authorized agent, with the signer's name printed."
+      },
+      "matchRule": "not-compared",
+      "regulatoryCitations": [
+        "Form 5100.31 Part II (Applicant's Certification, penalty of perjury)"
+      ],
+      "allowableRevisions": [],
+      "failureMessages": {
+        "missing": "Signature and printed name are required under penalty of perjury certification."
+      },
+      "specialistNotes": "Certification-only field; not printed on labels and not part of label matching."
+    }
+  ]
+}

@@ -145,6 +145,48 @@ export interface OcrProvider {
 }
 ```
 
+### Two-Layer Extraction (Tesseract & Google Vision)
+
+Text-based OCR providers (`tesseract.ts`, `google-vision.ts`) don't understand what a "brand name" or "ABV" is — they only see pixels and text. Field identification happens in a second layer, on top of the raw OCR output:
+
+```
+┌───────────────────────────────┐
+│  Layer 1: OCR Engine           │
+│  Tesseract.js  /  Google Vision│
+└───────────────────────────────┘
+                │
+                ├── full text (flat string, no field semantics)
+                └── word list: { text, bbox } (pixel coords, no field semantics)
+                │
+                ▼
+┌───────────────────────────────┐
+│  Layer 2: Regex Extraction     │
+│  lib/ocr/tesseract.ts:         │
+│  extractAbv, extractBrandName, │
+│  extractBottler, extractClass- │
+│  Type, extractCountryOfOrigin, │
+│  extractGovernmentWarning,     │
+│  extractNetContents            │
+└───────────────────────────────┘
+                │
+                └── field value strings (e.g. abv: "43% ALC./VOL")
+                │      or null if no pattern matched the text
+                ▼
+┌───────────────────────────────┐
+│  Bbox Lookup                   │
+│  computeFieldBbox(words,       │
+│    fieldValue, W, H)           │
+└───────────────────────────────┘
+                │
+                └── union of matching words' boxes, normalized 0–1
+                ▼
+       ExtractedLabelData + BoundingBoxMap
+```
+
+A `null` field can come from either layer: Layer 1 failed to read the text at all (bad image quality, occlusion), or Layer 1 read it fine but Layer 2's regex doesn't match how it's actually phrased on this label (e.g. no "Bottled by" prefix present). This is why the same regex functions are shared verbatim between `tesseract.ts` and `google-vision.ts` — swapping OCR engines doesn't change what a "field" means, only how reliably the raw text/words are captured.
+
+LLM providers (`claude.ts`, `gemini.ts`, `openai.ts`) skip this two-layer split entirely — the model returns field values and bounding boxes directly in one pass (Pattern B in `docs/ocr-comparison.md`), trading determinism for not needing a regex layer at all.
+
 ### Provider Registry
 
 ```
