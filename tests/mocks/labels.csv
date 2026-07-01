@@ -1,0 +1,6 @@
+image_id,brand_name,product_name,product_type,alcohol_content,origin,vintage_year,appellation,serial_number,net_contents,compliance_status,issued_date,expiry_date
+label_1.jpg,Windsor Vineyards,Windsor Vineyards Reserve,Wine,13.5%,California,2000,Napa Valley,00-72,750ml,APPROVED,2002-07-21,N/A
+12345-imports.png,12345 imports,Rum with coconut liqueur,Rum,18.0%,Canada,,FL,,200ml,,,
+abc-distillery.png,ABC,Straight rye whisky,whisky,45.5%,MD,,MD,,750ml,,,
+malt-hop-brewery.png,mlat & hop brewery,pale ale hoptastic,,,MD,,MD,,1pint,,,
+,,,,,,,,,,,,
