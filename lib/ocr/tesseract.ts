@@ -18,17 +18,23 @@ export function computeFieldBbox(words: WordLike[], fieldValue: string | null, W
 
 const GOVERNMENT_WARNING_PREFIX = "GOVERNMENT WARNING:"
 
-function extractAbv(text: string): string | null {
+export function logRawOcrText(provider: string, text: string): void {
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[OCR:${provider}] raw text:\n${text}`)
+  }
+}
+
+export function extractAbv(text: string): string | null {
   const match = text.match(/(\d+\.?\d*\s*%\s*(?:Alc\.?\/Vol\.?|alc\.?\/vol\.?|alcohol by volume))/i)
   return match ? match[1].trim() : null
 }
 
-function extractNetContents(text: string): string | null {
+export function extractNetContents(text: string): string | null {
   const match = text.match(/(\d+\.?\d*\s*(?:mL|ml|L\b|fl\.?\s*oz|oz))/i)
   return match ? match[1].trim() : null
 }
 
-function extractGovernmentWarning(text: string): string | null {
+export function extractGovernmentWarning(text: string): string | null {
   const upper = text.toUpperCase()
   const start = upper.indexOf(GOVERNMENT_WARNING_PREFIX)
   if (start === -1) return null
@@ -40,7 +46,7 @@ function extractGovernmentWarning(text: string): string | null {
   return raw.replace(/\s+/g, " ").trim()
 }
 
-function extractBrandName(lines: string[]): string | null {
+export function extractBrandName(lines: string[]): string | null {
   // Brand name is typically the first prominent non-empty line
   for (const line of lines) {
     const trimmed = line.trim()
@@ -73,7 +79,7 @@ const TTB_CLASS_TYPES = [
   "hard cider",
 ]
 
-function extractClassType(text: string): string | null {
+export function extractClassType(text: string): string | null {
   const lower = text.toLowerCase()
   for (const cls of TTB_CLASS_TYPES) {
     const idx = lower.indexOf(cls)
@@ -91,12 +97,12 @@ function extractClassType(text: string): string | null {
   return null
 }
 
-function extractBottler(text: string): string | null {
+export function extractBottler(text: string): string | null {
   const match = text.match(/(?:Bottled by|Produced by|Distilled by|Imported by)[^\n]*/i)
   return match ? match[0].trim() : null
 }
 
-function extractCountryOfOrigin(text: string): string | null {
+export function extractCountryOfOrigin(text: string): string | null {
   const match = text.match(/(?:Product of|Made in|Imported from)\s+([A-Za-z ]+)/i)
   return match ? match[0].trim() : null
 }
@@ -113,6 +119,7 @@ export const tesseractOcrProvider: OcrProvider = {
     try {
       const { data } = await worker.recognize(buffer)
       text = data.text
+      logRawOcrText("tesseract", text)
       words = (data.blocks ?? [])
         .flatMap(b => b.paragraphs)
         .flatMap(p => p.lines)

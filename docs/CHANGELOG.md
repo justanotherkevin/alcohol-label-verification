@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-01] — feat/google-vision-ocr-provider
+
+### Added
+
+- Google Cloud Vision OCR provider (`lib/ocr/google-vision.ts`) — calls the Vision REST API in `DOCUMENT_TEXT_DETECTION` mode, reuses `tesseract.ts`'s regex field extractors on the returned full text, and maps matched field values back to Vision's word-level bounding boxes via the existing `computeFieldBbox()` union logic; normalizes coordinates using Vision's own `pages[0].width`/`.height` rather than approximating
+- Registered in the provider factory (`lib/ocr/index.ts`, `case "google-vision"`)
+- "Two-Layer Extraction" architecture diagram in `docs/system-design.md`, cross-referenced from `docs/ocr-comparison.md`
+- `docs/backlogs.md` — new file to track non-critical follow-up work; first entry covers refining the Layer 2 regex extractors based on gaps found while testing this provider
+- OCR provider research doc (`docs/ocr-comparison.md`)
+
+- `logRawOcrText()` (`lib/ocr/tesseract.ts`) — `NODE_ENV`-gated console log of raw OCR text, called from both `tesseractOcrProvider` and `googleVisionOcrProvider` before Layer 2 regex runs, so a `null` field can be diagnosed as an OCR miss vs. a regex-coverage gap
+- Google Cloud Vision card in the `/settings` provider list (`app/settings/page.tsx`) and sidebar label (`components/Sidebar.tsx`)
+
+### Changed
+
+- Exported the previously-private regex extractor functions in `lib/ocr/tesseract.ts` (`extractAbv`, `extractNetContents`, `extractGovernmentWarning`, `extractBrandName`, `extractClassType`, `extractBottler`, `extractCountryOfOrigin`) so `google-vision.ts` can reuse them — no logic changes
+- `getProvider()` (`lib/ocr/index.ts`) falls back to `process.env.GOOGLE_VISION_API_KEY` for the `google-vision` case when no client key is supplied — sourced from a new dev-only `.env.development.local` (replacing the prior generic `.env`), which Next.js never loads outside `next dev`, so production always requires the user's own key from `/settings`
+- Corrected the Google Vision `/settings` cost badge from the inaccurate "Free (TTB volume)" to the real per-request price past the free tier (`~$0.0015 / label`), with a note that usage against the 1,000/month free quota isn't tracked
+
+---
+
 ## [2026-07-01] — feat/app-settings-and-config-updates (PR #9)
 
 ### Added

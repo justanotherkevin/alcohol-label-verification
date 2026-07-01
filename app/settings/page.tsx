@@ -11,6 +11,13 @@ const PROVIDERS = [
     requiresKey: false,
   },
   {
+    id: "google-vision",
+    label: "Google Cloud Vision",
+    cost: "~$0.0015 / label",
+    description: "Dedicated OCR engine with precise word-level bounding boxes. First 1,000 requests/month are free — this app doesn't track usage against that quota.",
+    requiresKey: true,
+  },
+  {
     id: "claude",
     label: "Claude Sonnet 4.6",
     cost: "~$0.010 / label",

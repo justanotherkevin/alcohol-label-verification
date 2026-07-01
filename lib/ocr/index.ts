@@ -4,6 +4,7 @@ import { mockOcrProvider } from "./mock"
 import { claudeOcrProvider } from "./claude"
 import { geminiOcrProvider } from "./gemini"
 import { openaiOcrProvider } from "./openai"
+import { googleVisionOcrProvider } from "./google-vision"
 
 export function getProvider(name: string, apiKey?: string): OcrProvider {
   switch (name) {
@@ -15,6 +16,8 @@ export function getProvider(name: string, apiKey?: string): OcrProvider {
       return geminiOcrProvider(apiKey ?? "")
     case "openai":
       return openaiOcrProvider(apiKey ?? "")
+    case "google-vision":
+      return googleVisionOcrProvider(apiKey ?? process.env.GOOGLE_VISION_API_KEY ?? "")
     case "tesseract":
     default:
       return tesseractOcrProvider
