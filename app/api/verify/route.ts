@@ -24,5 +24,5 @@ export async function POST(req: NextRequest) {
   const ocrResult = await provider.extract(base64, image.type)
   const result = verifyLabel(appData, ocrResult.data)
 
-  return NextResponse.json({ extracted: ocrResult.data, confidence: ocrResult.confidence, result })
+  return NextResponse.json({ extracted: ocrResult.data, confidence: ocrResult.confidence, boundingBoxes: ocrResult.boundingBoxes, result })
 }

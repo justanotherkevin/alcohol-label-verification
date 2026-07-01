@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { VerificationResult, FieldResult } from "@/lib/verify"
-import { ExtractedLabelData, ConfidenceMap } from "@/lib/ocr"
+import { ExtractedLabelData, ConfidenceMap, BoundingBoxMap } from "@/lib/ocr/types"
 
 const SETTINGS_KEY = "ttb-ocr-settings"
 
@@ -23,7 +23,17 @@ function StatusBadge({ status }: { status: FieldResult["status"] }) {
   return <span className="text-yellow-500 font-bold text-lg">—</span>
 }
 
-function FieldRow({ field, confidence }: { field: FieldResult; confidence?: number }) {
+function FieldRow({
+  field,
+  confidence,
+  onClick,
+  isSelected,
+}: {
+  field: FieldResult
+  confidence?: number
+  onClick?: () => void
+  isSelected?: boolean
+}) {
   const bgColor =
     field.status === "pass"
       ? "bg-green-50 border-green-200"
@@ -32,18 +42,21 @@ function FieldRow({ field, confidence }: { field: FieldResult; confidence?: numb
         : "bg-yellow-50 border-yellow-200"
 
   return (
-    <div className={`border rounded-lg p-4 ${bgColor}`}>
+    <div
+      className={`border rounded-lg p-4 ${bgColor} ${onClick ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-blue-500" : ""}`}
+      onClick={onClick}
+    >
       <div className="flex items-start gap-3">
         <StatusBadge status={field.status} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-              <p className="font-semibold text-gray-800">{field.label}</p>
-              {confidence !== undefined && (
-                <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                  {Math.round(confidence * 100)}%
-                </span>
-              )}
-            </div>
+            <p className="font-semibold text-gray-800">{field.label}</p>
+            {confidence !== undefined && (
+              <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                {Math.round(confidence * 100)}%
+              </span>
+            )}
+          </div>
           {field.status !== "pass" && (
             <div className="mt-1 text-sm space-y-1">
               <p className="text-gray-500">
@@ -63,8 +76,17 @@ function FieldRow({ field, confidence }: { field: FieldResult; confidence?: numb
           {field.regulatory && field.regulatory.status !== "skipped" && (
             <div className="mt-2 pt-2 border-t border-gray-200">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Regulatory</span>
-              <p className={`text-xs mt-0.5 ${field.regulatory.status === "fail" ? "text-red-600" : field.regulatory.status === "warning" ? "text-yellow-600" : "text-green-600"}`}>
-                {field.regulatory.status === "fail" ? "✗" : field.regulatory.status === "warning" ? "⚠" : "✓"} {field.regulatory.note}
+              <p
+                className={`text-xs mt-0.5 ${
+                  field.regulatory.status === "fail"
+                    ? "text-red-600"
+                    : field.regulatory.status === "warning"
+                      ? "text-yellow-600"
+                      : "text-green-600"
+                }`}
+              >
+                {field.regulatory.status === "fail" ? "✗" : field.regulatory.status === "warning" ? "⚠" : "✓"}{" "}
+                {field.regulatory.note}
               </p>
             </div>
           )}
@@ -82,13 +104,46 @@ export default function Home() {
   const [result, setResult] = useState<VerificationResult | null>(null)
   const [extracted, setExtracted] = useState<ExtractedLabelData | null>(null)
   const [confidence, setConfidence] = useState<ConfidenceMap>({})
+  const [boundingBoxes, setBoundingBoxes] = useState<BoundingBoxMap | null>(null)
+  const [selectedField, setSelectedField] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const img = imgRef.current
+    if (!canvas || !img) return
+
+    const w = img.offsetWidth
+    const h = img.offsetHeight
+    canvas.width = w
+    canvas.height = h
+
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+    ctx.clearRect(0, 0, w, h)
+
+    if (!selectedField || !boundingBoxes) return
+    const bbox = boundingBoxes[selectedField as keyof BoundingBoxMap]
+    if (!bbox) return
+
+    ctx.strokeStyle = "#2563EB"
+    ctx.lineWidth = 2
+    ctx.fillStyle = "rgba(37, 99, 235, 0.12)"
+    ctx.beginPath()
+    ctx.rect(bbox.x * w, bbox.y * h, bbox.width * w, bbox.height * h)
+    ctx.fill()
+    ctx.stroke()
+  }, [selectedField, boundingBoxes])
 
   function handleImageChange(file: File) {
     setImageFile(file)
     setResult(null)
     setExtracted(null)
+    setBoundingBoxes(null)
+    setSelectedField(null)
     setError(null)
     const reader = new FileReader()
     reader.onload = (e) => setImagePreview(e.target?.result as string)
@@ -101,6 +156,10 @@ export default function Home() {
     if (file) handleImageChange(file)
   }
 
+  function handleFieldClick(fieldKey: string) {
+    setSelectedField((prev) => (prev === fieldKey ? null : fieldKey))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!imageFile) return
@@ -108,6 +167,7 @@ export default function Home() {
     setLoading(true)
     setError(null)
     setResult(null)
+    setSelectedField(null)
 
     try {
       const formData = new FormData()
@@ -131,9 +191,15 @@ export default function Home() {
       })
       if (!res.ok) throw new Error("Verification failed")
 
-      const data = await res.json() as { extracted: ExtractedLabelData; confidence: ConfidenceMap; result: VerificationResult }
+      const data = await res.json() as {
+        extracted: ExtractedLabelData
+        confidence: ConfidenceMap
+        boundingBoxes?: BoundingBoxMap
+        result: VerificationResult
+      }
       setExtracted(data.extracted)
       setConfidence(data.confidence ?? {})
+      setBoundingBoxes(data.boundingBoxes ?? null)
       setResult(data.result)
     } catch {
       setError("Something went wrong. Please try again.")
@@ -164,11 +230,20 @@ export default function Home() {
                 className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
               >
                 {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Label preview"
-                    className="max-h-64 mx-auto rounded-lg object-contain"
-                  />
+                  <div className="relative inline-block mx-auto">
+                    <img
+                      ref={imgRef}
+                      src={imagePreview}
+                      alt="Label preview"
+                      className="max-h-64 rounded-lg object-contain block"
+                      onLoad={() => setSelectedField(null)}
+                    />
+                    <canvas
+                      ref={canvasRef}
+                      aria-hidden="true"
+                      className="absolute top-0 left-0 rounded-lg pointer-events-none"
+                    />
+                  </div>
                 ) : (
                   <div className="text-gray-400">
                     <p className="text-4xl mb-2">📷</p>
@@ -261,12 +336,17 @@ export default function Home() {
                 {result.overallPass ? "PASSED" : "FAILED"}
               </span>
             </div>
+            {boundingBoxes && (
+              <p className="text-xs text-gray-400">Click a field to highlight its location on the label.</p>
+            )}
             <div className="space-y-3">
               {result.fields.map((field) => (
                 <FieldRow
                   key={field.field}
                   field={field}
                   confidence={confidence[field.field as keyof ConfidenceMap]}
+                  onClick={() => handleFieldClick(field.field)}
+                  isSelected={selectedField === field.field}
                 />
               ))}
             </div>
