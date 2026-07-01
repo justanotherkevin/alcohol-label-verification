@@ -1,5 +1,20 @@
 import { createWorker } from "tesseract.js"
-import { OcrProvider, OcrResult } from "./types"
+import { BoundingBox, BoundingBoxMap, ExtractedLabelData, OcrProvider, OcrResult } from "./types"
+
+type WordLike = { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }
+
+export function computeFieldBbox(words: WordLike[], fieldValue: string | null, W: number, H: number): BoundingBox | null {
+  if (!fieldValue || words.length === 0 || W === 0 || H === 0) return null
+  const tokens = fieldValue.toLowerCase().split(/\s+/).filter(t => t.length > 1)
+  if (tokens.length === 0) return null
+  const matched = words.filter(w => tokens.some(t => w.text.toLowerCase().includes(t)))
+  if (matched.length === 0) return null
+  const x0 = Math.min(...matched.map(w => w.bbox.x0))
+  const y0 = Math.min(...matched.map(w => w.bbox.y0))
+  const x1 = Math.max(...matched.map(w => w.bbox.x1))
+  const y1 = Math.max(...matched.map(w => w.bbox.y1))
+  return { x: x0 / W, y: y0 / H, width: (x1 - x0) / W, height: (y1 - y0) / H }
+}
 
 const GOVERNMENT_WARNING_PREFIX = "GOVERNMENT WARNING:"
 
@@ -92,26 +107,39 @@ export const tesseractOcrProvider: OcrProvider = {
     const buffer = Buffer.from(imageBase64, "base64")
     const worker = await createWorker("eng")
     let text = ""
+    let words: WordLike[] = []
+    let W = 0
+    let H = 0
     try {
       const { data } = await worker.recognize(buffer)
       text = data.text
+      words = (data.blocks ?? [])
+        .flatMap(b => b.paragraphs)
+        .flatMap(p => p.lines)
+        .flatMap(l => l.words)
+      W = words.length > 0 ? Math.max(...words.map(w => w.bbox.x1)) : 0
+      H = words.length > 0 ? Math.max(...words.map(w => w.bbox.y1)) : 0
     } finally {
       await worker.terminate()
     }
 
     const lines = text.split("\n").filter((l) => l.trim().length > 0)
 
-    return {
-      data: {
-        brandName: extractBrandName(lines),
-        classType: extractClassType(text),
-        abv: extractAbv(text),
-        netContents: extractNetContents(text),
-        bottler: extractBottler(text),
-        countryOfOrigin: extractCountryOfOrigin(text),
-        governmentWarning: extractGovernmentWarning(text),
-      },
-      confidence: {},
+    const extracted: ExtractedLabelData = {
+      brandName: extractBrandName(lines),
+      classType: extractClassType(text),
+      abv: extractAbv(text),
+      netContents: extractNetContents(text),
+      bottler: extractBottler(text),
+      countryOfOrigin: extractCountryOfOrigin(text),
+      governmentWarning: extractGovernmentWarning(text),
     }
+
+    const boundingBoxes: BoundingBoxMap = {}
+    for (const field of Object.keys(extracted) as (keyof ExtractedLabelData)[]) {
+      boundingBoxes[field] = computeFieldBbox(words, extracted[field], W, H)
+    }
+
+    return { data: extracted, confidence: {}, boundingBoxes }
   },
 }

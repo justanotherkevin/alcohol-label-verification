@@ -797,6 +797,42 @@ tests/settings.spec.ts       — Provider select + Save → nav badge updates; s
 **Verify:** `npm run test` → all 4 spec files pass with Chromium.  
 **Status: ✅ done** _(was G4 — `single-verify.spec.ts` renamed from `label-verification.spec.ts`; `batch.spec.ts` and `settings.spec.ts` created)_
 
+---
+
+### Step 15 — Bounding box field-source inspection
+_Implements: Flow 1 step 5a (docs/users-flow.md)_
+
+**What:** Clicking a field row in the results panel draws a highlight rectangle on the label image showing where the OCR extracted that field's text.
+
+**Files to change:**
+
+| File | Change |
+|---|---|
+| `lib/ocr/types.ts` | Add `BoundingBox { x, y, width, height: number (0.0–1.0 normalized) }` and `BoundingBoxMap` alongside `ConfidenceMap` |
+| `lib/ocr/llm-prompt.ts` | Update prompt to request `"boundingBox": { x, y, width, height }` per field (normalized 0–1); update `parseExtractionResponse()` to extract it |
+| `lib/ocr/claude.ts` / `gemini.ts` / `openai.ts` | Pass `boundingBoxes` from parsed response into `OcrResult` |
+| `lib/ocr/tesseract.ts` | After extracting field text, find matching words in `data.words`, compute union bbox, normalize by image dimensions |
+| `lib/ocr/mock.ts` | Add hardcoded `boundingBoxes` for each field so E2E tests can exercise the highlight interaction |
+| `app/api/verify/route.ts` | Include `boundingBoxes` in the JSON response alongside `extracted`, `confidence`, `result` |
+| `app/page.tsx` | (1) Keep `<img>`, add absolutely-positioned `<canvas>` overlay same dimensions; (2) add `selectedField` state; (3) pass `onClick` + `isSelected` to each `FieldRow`; (4) on field click, scale normalized bbox to rendered image dimensions and draw rectangle on canvas |
+
+**Key constraints:**
+- Bounding box is purely additive — if `null` for a field, click does nothing; no error state
+- Use normalized coords (0.0–1.0) in the data model; scale to rendered px client-side
+- Canvas must match rendered `<img>` dimensions (use `onLoad` + `getBoundingClientRect`)
+- Only one field highlighted at a time; clicking same row again deselects
+
+**Verify:**
+1. Select Claude/Gemini/GPT-4o provider; upload a label; verify → click a passing field row → colored rectangle appears on the label image in the correct region
+2. Click a different field → highlight moves
+3. Click same field again → highlight clears
+4. Select Tesseract provider; same interaction works via word-match bbox
+5. If LLM returns `null` boundingBox for a field, clicking that row does nothing
+
+**Status: ☐ not started**
+
+---
+
 # Operational Considerations & Open Questions
 
 The Key Decisions above describe how the prototype is built. This section addresses what it takes to _trust, run, and operationalize_ it — accuracy measurement, where the approach sits against industry practice, what it costs at TTB scale, and what happens to a result after verification.

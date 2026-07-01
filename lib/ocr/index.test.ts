@@ -24,4 +24,19 @@ describe("getProvider", () => {
     expect(result).toHaveProperty("confidence")
     expect(result.data).toHaveProperty("brandName")
   }, 5000)
+
+  it("mock provider returns boundingBoxes for all fields", async () => {
+    const p = getProvider("mock")
+    const result = await p.extract("base64", "image/jpeg")
+    expect(result.boundingBoxes).toBeDefined()
+    const fields = ["brandName", "classType", "abv", "netContents", "bottler", "countryOfOrigin", "governmentWarning"]
+    for (const field of fields) {
+      const bbox = result.boundingBoxes![field as keyof typeof result.boundingBoxes]
+      expect(bbox).not.toBeNull()
+      expect(bbox).toHaveProperty("x")
+      expect(bbox).toHaveProperty("y")
+      expect(bbox).toHaveProperty("width")
+      expect(bbox).toHaveProperty("height")
+    }
+  }, 5000)
 })
