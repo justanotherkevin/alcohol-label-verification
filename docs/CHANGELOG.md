@@ -6,7 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [2026-07-01]
+## [2026-07-01] — feat/app-settings-and-config-updates (PR #9)
+
+### Added
+
+- Regulatory subsection in `FieldRow` (`app/page.tsx`): Layer 2 regulatory result now renders inline below each field row when present — color-coded pass/fail/warning with status icon and note
+- Mock provider added to `/settings` provider selector (`app/settings/page.tsx`) so the app is usable without an API key
+
+### Changed
+
+- `next.config.ts`: added `serverExternalPackages: ['tesseract.js']` for WASM server-side compatibility
+
+### Removed
+
+- `REQUIREMENTS.md`: deleted — fully superseded by `docs/20260630-ai-label-verification-app.md`
+
+---
+
+## [2026-07-01] — feat/bounding-box-field-source (PR #8)
 
 ### Added
 
