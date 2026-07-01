@@ -17,8 +17,7 @@ const PROVIDER_LABELS: Record<string, string> = {
 type NavItem = { href: string; icon: string; label: string }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/",         icon: "dashboard",  label: "Dashboard" },
-  { href: "/verify",   icon: "fact_check", label: "Verify Label" },
+  { href: "/",         icon: "inbox",      label: "Queue" },
   { href: "/batch",    icon: "layers",     label: "Batch Review" },
   { href: "/audit",    icon: "history",    label: "Audit Log" },
   { href: "/settings", icon: "settings",   label: "Settings" },
