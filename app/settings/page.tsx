@@ -65,12 +65,19 @@ export default function SettingsPage() {
   const selectedProvider = PROVIDERS.find((p) => p.id === provider)
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-2">Settings</h1>
-      <p className="text-sm text-gray-500 mb-8">
-        Choose your OCR provider. API keys are stored in your browser only and never sent to our
-        servers. Estimates vary by image resolution.
-      </p>
+    <div className="px-8 py-8 max-w-2xl">
+      <div className="mb-8">
+        <h1
+          className="text-2xl font-bold text-on-surface"
+          style={{ fontFamily: "var(--font-inter)" }}
+        >
+          Settings
+        </h1>
+        <p className="text-sm text-on-surface-muted mt-1">
+          Choose your OCR provider. API keys are stored in your browser only and never sent to our
+          servers. Estimates vary by image resolution.
+        </p>
+      </div>
 
       <div className="space-y-3">
         {PROVIDERS.map((p) => (
@@ -78,8 +85,8 @@ export default function SettingsPage() {
             key={p.id}
             className={`flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-colors ${
               provider === p.id
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 bg-white hover:border-gray-300"
+                ? "border-primary bg-surface-dim"
+                : "border-outline bg-surface-card hover:border-outline-variant"
             }`}
           >
             <input
@@ -95,12 +102,12 @@ export default function SettingsPage() {
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-900">{p.label}</span>
-                <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                <span className="font-medium text-on-surface">{p.label}</span>
+                <span className="text-xs px-2 py-0.5 rounded bg-surface-dim text-on-surface-muted">
                   {p.cost}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 mt-0.5">{p.description}</p>
+              <p className="text-sm text-on-surface-muted mt-0.5">{p.description}</p>
             </div>
           </label>
         ))}
@@ -108,7 +115,7 @@ export default function SettingsPage() {
 
       {selectedProvider?.requiresKey && (
         <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-on-surface-dim mb-1">
             API Key for {selectedProvider.label}
           </label>
           <input
@@ -116,7 +123,7 @@ export default function SettingsPage() {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="API key"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-outline rounded-lg px-3 py-2 text-sm font-mono bg-surface-card text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           />
         </div>
       )}
@@ -124,12 +131,12 @@ export default function SettingsPage() {
       <div className="mt-6 flex items-center gap-3">
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
         >
           Save Settings
         </button>
-        {saved && <span className="text-sm text-green-600">Saved!</span>}
+        {saved && <span className="text-sm text-bp-success">Saved!</span>}
       </div>
-    </main>
+    </div>
   )
 }

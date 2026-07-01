@@ -1,358 +1,144 @@
-"use client"
+const QUEUE_ITEMS = [
+  { id: "TTB-2024-8841", name: "Whiskey Reserve 12yr",  officer: "M. Chen",   submitted: "2h ago",  status: "Under Review" },
+  { id: "TTB-2024-8840", name: "Pacific Coast IPA",     officer: "J. Torres", submitted: "3h ago",  status: "Needs Attention" },
+  { id: "TTB-2024-8839", name: "Sonoma Valley Pinot",   officer: "A. Patel",  submitted: "5h ago",  status: "In Queue" },
+  { id: "TTB-2024-8838", name: "Blue Ridge Bourbon",    officer: "M. Chen",   submitted: "6h ago",  status: "Approved" },
+  { id: "TTB-2024-8837", name: "Cascade Mountain Gin",  officer: "L. Kim",    submitted: "8h ago",  status: "Under Review" },
+  { id: "TTB-2024-8836", name: "Gulf Coast White Wine", officer: "J. Torres", submitted: "10h ago", status: "In Queue" },
+]
 
-import { useState, useRef, useEffect } from "react"
-import { VerificationResult, FieldResult } from "@/lib/verify"
-import { ExtractedLabelData, ConfidenceMap, BoundingBoxMap } from "@/lib/ocr/types"
-
-const SETTINGS_KEY = "ttb-ocr-settings"
-
-const DEFAULT_FIELDS = {
-  brandName: "OLD TOM DISTILLERY",
-  classType: "Kentucky Straight Bourbon Whiskey",
-  abv: "45% Alc./Vol. (90 Proof)",
-  netContents: "750 mL",
-  bottler: "Old Tom Distillery, Louisville, KY",
-  countryOfOrigin: "USA",
-  governmentWarning:
-    "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+const STATUS_STYLES: Record<string, string> = {
+  "Under Review":    "bg-blue-50 text-blue-700 border border-blue-200",
+  "Needs Attention": "bg-bp-error-surface text-bp-error border border-bp-error-border",
+  "Approved":        "bg-bp-success-surface text-bp-success border border-bp-success-border",
+  "In Queue":        "bg-surface-dim text-on-surface-dim border border-outline",
 }
 
-function StatusBadge({ status }: { status: FieldResult["status"] }) {
-  if (status === "pass") return <span className="text-green-600 font-bold text-lg">✓</span>
-  if (status === "fail") return <span className="text-red-600 font-bold text-lg">✗</span>
-  return <span className="text-yellow-500 font-bold text-lg">—</span>
+const STATUS_DOT: Record<string, string> = {
+  "Under Review":    "bg-blue-500",
+  "Needs Attention": "bg-bp-error",
+  "Approved":        "bg-bp-success",
+  "In Queue":        "bg-on-surface-muted",
 }
 
-function FieldRow({
-  field,
-  confidence,
-  onClick,
-  isSelected,
-}: {
-  field: FieldResult
-  confidence?: number
-  onClick?: () => void
-  isSelected?: boolean
-}) {
-  const bgColor =
-    field.status === "pass"
-      ? "bg-green-50 border-green-200"
-      : field.status === "fail"
-        ? "bg-red-50 border-red-200"
-        : "bg-yellow-50 border-yellow-200"
+const METRICS = [
+  { icon: "inbox",     label: "Pending Reviews", value: "24",    sub: "6 added today" },
+  { icon: "speed",     label: "Daily Velocity",  value: "18",    sub: "Avg: 14 / day" },
+  { icon: "warning",   label: "Needs Attention", value: "3",     sub: "Action required" },
+  { icon: "bar_chart", label: "Total Processed", value: "1,284", sub: "This quarter" },
+]
 
+export default function DashboardPage() {
   return (
-    <div
-      className={`border rounded-lg p-4 ${bgColor} ${onClick ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-blue-500" : ""}`}
-      onClick={onClick}
-    >
-      <div className="flex items-start gap-3">
-        <StatusBadge status={field.status} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-gray-800">{field.label}</p>
-            {confidence !== undefined && (
-              <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                {Math.round(confidence * 100)}%
+    <div className="px-8 py-8 max-w-7xl">
+      <div className="mb-8">
+        <h1
+          className="text-2xl font-bold text-on-surface"
+          style={{ fontFamily: "var(--font-inter)" }}
+        >
+          Verification Dashboard
+        </h1>
+        <p className="text-sm text-on-surface-muted mt-1">
+          TTB COLA compliance review queue — updated just now
+        </p>
+      </div>
+
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {METRICS.map(({ icon, label, value, sub }) => (
+          <div key={label} className="bg-surface-card border border-outline rounded-2xl p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-on-surface-muted font-medium uppercase tracking-wide">
+                  {label}
+                </p>
+                <p
+                  className="text-3xl font-bold text-on-surface mt-1"
+                  style={{ fontFamily: "var(--font-inter)" }}
+                >
+                  {value}
+                </p>
+                <p className="text-xs text-on-surface-muted mt-1">{sub}</p>
+              </div>
+              <span className="material-symbols-outlined text-primary opacity-60 text-2xl">
+                {icon}
               </span>
-            )}
+            </div>
           </div>
-          {field.status !== "pass" && (
-            <div className="mt-1 text-sm space-y-1">
-              <p className="text-gray-500">
-                <span className="font-medium">Expected:</span>{" "}
-                <span className="font-mono">{field.expected ?? "—"}</span>
-              </p>
-              <p className="text-red-700">
-                <span className="font-medium">Found on label:</span>{" "}
-                <span className="font-mono">{field.extracted ?? "not found"}</span>
-              </p>
-              {field.note && <p className="text-gray-400 italic text-xs mt-1">{field.note}</p>}
-            </div>
-          )}
-          {field.status === "pass" && (
-            <p className="text-sm text-gray-500 mt-1 font-mono">{field.extracted}</p>
-          )}
-          {field.regulatory && field.regulatory.status !== "skipped" && (
-            <div className="mt-2 pt-2 border-t border-gray-200">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Regulatory</span>
-              <p
-                className={`text-xs mt-0.5 ${
-                  field.regulatory.status === "fail"
-                    ? "text-red-600"
-                    : field.regulatory.status === "warning"
-                      ? "text-yellow-600"
-                      : "text-green-600"
-                }`}
-              >
-                {field.regulatory.status === "fail" ? "✗" : field.regulatory.status === "warning" ? "⚠" : "✓"}{" "}
-                {field.regulatory.note}
-              </p>
-            </div>
-          )}
+        ))}
+      </div>
+
+      {/* Queue Table */}
+      <div className="bg-surface-card border border-outline rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-outline flex items-center justify-between">
+          <h2
+            className="text-sm font-semibold text-on-surface"
+            style={{ fontFamily: "var(--font-inter)" }}
+          >
+            Verification Queue
+          </h2>
+          <a
+            href="/verify"
+            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+          >
+            <span className="material-symbols-outlined text-[16px]">add</span>
+            New Application
+          </a>
+        </div>
+
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-outline bg-surface-dim">
+              {["App ID", "Label Name", "Officer", "Submitted", "Status", "Action"].map((h) => (
+                <th
+                  key={h}
+                  className="px-6 py-3 text-left text-xs font-semibold text-on-surface-muted uppercase tracking-wider"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-outline">
+            {QUEUE_ITEMS.map((item) => (
+              <tr key={item.id} className="hover:bg-surface-dim transition-colors">
+                <td className="px-6 py-4 font-mono text-xs text-on-surface-dim">{item.id}</td>
+                <td className="px-6 py-4 text-sm font-medium text-on-surface">{item.name}</td>
+                <td className="px-6 py-4 text-sm text-on-surface-dim">{item.officer}</td>
+                <td className="px-6 py-4 text-sm text-on-surface-muted">{item.submitted}</td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[item.status]}`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[item.status]}`} />
+                    {item.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <a
+                    href="/verify"
+                    className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+                  >
+                    Analyze →
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="px-6 py-3 border-t border-outline flex items-center justify-between">
+          <p className="text-xs text-on-surface-muted">Showing 6 of 24 pending</p>
+          <div className="flex gap-2">
+            <button className="text-xs px-3 py-1.5 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors">
+              Previous
+            </button>
+            <button className="text-xs px-3 py-1.5 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors">
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  )
-}
-
-export default function Home() {
-  const [fields, setFields] = useState(DEFAULT_FIELDS)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<VerificationResult | null>(null)
-  const [extracted, setExtracted] = useState<ExtractedLabelData | null>(null)
-  const [confidence, setConfidence] = useState<ConfidenceMap>({})
-  const [boundingBoxes, setBoundingBoxes] = useState<BoundingBoxMap | null>(null)
-  const [selectedField, setSelectedField] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const img = imgRef.current
-    if (!canvas || !img) return
-
-    const w = img.offsetWidth
-    const h = img.offsetHeight
-    canvas.width = w
-    canvas.height = h
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-    ctx.clearRect(0, 0, w, h)
-
-    if (!selectedField || !boundingBoxes) return
-    const bbox = boundingBoxes[selectedField as keyof BoundingBoxMap]
-    if (!bbox) return
-
-    ctx.strokeStyle = "#2563EB"
-    ctx.lineWidth = 2
-    ctx.fillStyle = "rgba(37, 99, 235, 0.12)"
-    ctx.beginPath()
-    ctx.rect(bbox.x * w, bbox.y * h, bbox.width * w, bbox.height * h)
-    ctx.fill()
-    ctx.stroke()
-  }, [selectedField, boundingBoxes])
-
-  function handleImageChange(file: File) {
-    setImageFile(file)
-    setResult(null)
-    setExtracted(null)
-    setBoundingBoxes(null)
-    setSelectedField(null)
-    setError(null)
-    const reader = new FileReader()
-    reader.onload = (e) => setImagePreview(e.target?.result as string)
-    reader.readAsDataURL(file)
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    if (file) handleImageChange(file)
-  }
-
-  function handleFieldClick(fieldKey: string) {
-    setSelectedField((prev) => (prev === fieldKey ? null : fieldKey))
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!imageFile) return
-
-    setLoading(true)
-    setError(null)
-    setResult(null)
-    setSelectedField(null)
-
-    try {
-      const formData = new FormData()
-      formData.append("image", imageFile)
-      formData.append("appData", JSON.stringify(fields))
-
-      const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}") as {
-        provider?: string
-        apiKey?: string
-      }
-      const providerName = settings.provider ?? "tesseract"
-      const apiKey = settings.apiKey ?? ""
-
-      const res = await fetch("/api/verify", {
-        method: "POST",
-        headers: {
-          "X-Ocr-Provider": providerName,
-          ...(apiKey ? { "X-Api-Key": apiKey } : {}),
-        },
-        body: formData,
-      })
-      if (!res.ok) throw new Error("Verification failed")
-
-      const data = await res.json() as {
-        extracted: ExtractedLabelData
-        confidence: ConfidenceMap
-        boundingBoxes?: BoundingBoxMap
-        result: VerificationResult
-      }
-      setExtracted(data.extracted)
-      setConfidence(data.confidence ?? {})
-      setBoundingBoxes(data.boundingBoxes ?? null)
-      setResult(data.result)
-    } catch {
-      setError("Something went wrong. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 py-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">TTB Label Verification</h1>
-          <p className="text-gray-500 mt-1">
-            Upload a label image and enter the application data to verify compliance.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Image Upload */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800">Label Image</h2>
-              <div
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
-              >
-                {imagePreview ? (
-                  <div className="relative inline-block mx-auto">
-                    <img
-                      ref={imgRef}
-                      src={imagePreview}
-                      alt="Label preview"
-                      className="max-h-64 rounded-lg object-contain block"
-                      onLoad={() => setSelectedField(null)}
-                    />
-                    <canvas
-                      ref={canvasRef}
-                      aria-hidden="true"
-                      className="absolute top-0 left-0 rounded-lg pointer-events-none"
-                    />
-                  </div>
-                ) : (
-                  <div className="text-gray-400">
-                    <p className="text-4xl mb-2">📷</p>
-                    <p className="font-medium">Drop label image here</p>
-                    <p className="text-sm mt-1">or click to browse</p>
-                    <p className="text-xs mt-2">JPG, PNG, WEBP</p>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => e.target.files?.[0] && handleImageChange(e.target.files[0])}
-                />
-              </div>
-              {imageFile && (
-                <p className="text-sm text-gray-500">
-                  Selected: <span className="font-medium">{imageFile.name}</span>
-                </p>
-              )}
-            </div>
-
-            {/* Application Data */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800">Application Data</h2>
-              {(
-                [
-                  ["brandName", "Brand Name"],
-                  ["classType", "Class / Type"],
-                  ["abv", "Alcohol Content (ABV)"],
-                  ["netContents", "Net Contents"],
-                  ["bottler", "Bottler / Producer"],
-                  ["countryOfOrigin", "Country of Origin"],
-                ] as [keyof typeof fields, string][]
-              ).map(([key, label]) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                  <input
-                    type="text"
-                    value={fields[key]}
-                    onChange={(e) => setFields({ ...fields, [key]: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  />
-                </div>
-              ))}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Government Warning Statement
-                </label>
-                <textarea
-                  rows={4}
-                  value={fields.governmentWarning}
-                  onChange={(e) => setFields({ ...fields, governmentWarning: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              type="submit"
-              disabled={!imageFile || loading}
-              className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? "Verifying…" : "Verify Label"}
-            </button>
-            {loading && (
-              <span className="text-gray-500 text-sm animate-pulse">Extracting label data…</span>
-            )}
-          </div>
-        </form>
-
-        {error && (
-          <div className="mt-6 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3">
-            {error}
-          </div>
-        )}
-
-        {result && extracted && (
-          <div className="mt-10 space-y-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-bold text-gray-900">Verification Results</h2>
-              <span
-                className={`px-4 py-1 rounded-full text-sm font-bold ${
-                  result.overallPass ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                }`}
-              >
-                {result.overallPass ? "PASSED" : "FAILED"}
-              </span>
-            </div>
-            {boundingBoxes && (
-              <p className="text-xs text-gray-400">Click a field to highlight its location on the label.</p>
-            )}
-            <div className="space-y-3">
-              {result.fields.map((field) => (
-                <FieldRow
-                  key={field.field}
-                  field={field}
-                  confidence={confidence[field.field as keyof ConfidenceMap]}
-                  onClick={() => handleFieldClick(field.field)}
-                  isSelected={selectedField === field.field}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </main>
   )
 }
