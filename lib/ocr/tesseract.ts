@@ -3,7 +3,7 @@ import { BoundingBox, BoundingBoxMap, ExtractedLabelData, OcrProvider, OcrResult
 
 type WordLike = { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }
 
-export function computeFieldBbox(words: WordLike[], fieldValue: string | null, W: number, H: number): BoundingBox | null {
+export function computeFieldBbox(words: WordLike[], fieldValue: string | null, W: number, H: number, imageIndex = 0): BoundingBox | null {
   if (!fieldValue || words.length === 0 || W === 0 || H === 0) return null
   const tokens = fieldValue.toLowerCase().split(/\s+/).filter(t => t.length > 1)
   if (tokens.length === 0) return null
@@ -13,7 +13,7 @@ export function computeFieldBbox(words: WordLike[], fieldValue: string | null, W
   const y0 = Math.min(...matched.map(w => w.bbox.y0))
   const x1 = Math.max(...matched.map(w => w.bbox.x1))
   const y1 = Math.max(...matched.map(w => w.bbox.y1))
-  return { x: x0 / W, y: y0 / H, width: (x1 - x0) / W, height: (y1 - y0) / H }
+  return { imageIndex, x: x0 / W, y: y0 / H, width: (x1 - x0) / W, height: (y1 - y0) / H }
 }
 
 const GOVERNMENT_WARNING_PREFIX = "GOVERNMENT WARNING:"
@@ -147,6 +147,6 @@ export const tesseractOcrProvider: OcrProvider = {
       boundingBoxes[field] = computeFieldBbox(words, extracted[field], W, H)
     }
 
-    return { data: extracted, confidence: {}, boundingBoxes }
+    return { data: extracted, confidence: {}, boundingBoxes, rawText: text }
   },
 }

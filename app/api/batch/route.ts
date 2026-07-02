@@ -23,7 +23,12 @@ export async function POST(request: NextRequest) {
     return new Response("Missing rows", { status: 400 })
   }
 
-  const rows: CsvRow[] = JSON.parse(rowsRaw)
+  let rows: CsvRow[]
+  try {
+    rows = JSON.parse(rowsRaw)
+  } catch {
+    return new Response("Invalid rows JSON", { status: 400 })
+  }
 
   const imageMap: Record<string, { base64: string; mimeType: string }> = {}
   for (const [key, value] of formData.entries()) {
@@ -76,8 +81,7 @@ export async function POST(request: NextRequest) {
               applicant: appData.bottler || "Batch import",
               submittedAt: new Date().toISOString(),
               applicationData: appData,
-              imageBase64: imageData.base64,
-              imageMimeType: imageData.mimeType,
+              images: [{ base64: imageData.base64, mimeType: imageData.mimeType }],
               status: "analyzed",
               analysis: {
                 extracted: ocrResult.data,

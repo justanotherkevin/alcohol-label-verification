@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — feat/rawocr-label-reorganization (PR #14)
+
+### Added
+
+- `rawOcrText` field on `LabelImage` (`lib/queue/types.ts`) — stores the full OCR text string alongside the base64 image; populated from `.vision.json` fixtures via `loadMockImage` and from live OCR via `analyzeApplication` (primary image only)
+- Per-image Google Vision fixtures (`tests/mocks/labels/*.vision.json`) — one fixture per label image; `loadMockImage` reads the `fullTextAnnotation.text` field to pre-populate `rawOcrText` so seed applications carry realistic OCR text without live API calls
+- `tests/mocks/labels/_extracted.json` — pre-computed `ExtractedLabelData` and `BoundingBoxMap` per image key, loaded at server startup by `seed-data.ts` to seed analyzed applications with deterministic field extraction results
+- Reset queue API route (`app/api/queue/reset/route.ts`, `DELETE /api/queue/reset`) — restores in-memory queue to seed state; paired with a "Reset seed data" button on the dashboard
+- `components/queue/` directory with four extracted sub-components: `ImageCarousel.tsx`, `FieldCard.tsx`, `OverrideModal.tsx`, `ResolutionPanel.tsx`
+
+### Changed
+
+- Mock label images reorganized from `tests/mocks/*.png/jpg` to `tests/mocks/labels/` — flat root is now clean; seed data and mock templates updated to use `labels/` paths
+- `lib/queue/seed-data.ts` — `loadExtracted()` now reads from `_extracted.json` instead of computing OCR inline; wrapped in try/catch so a missing fixture file doesn't crash server boot (returns `{}` fallback)
+- `app/api/batch/route.ts` — `JSON.parse(rowsRaw)` wrapped in try/catch; malformed JSON now returns 400 instead of an unhandled 500
+- `app/queue/[id]/page.tsx` — refactored from 546 lines to ~200 lines by extracting the four sub-components above; triple-nested ternary bg-color logic replaced with named `fieldBgColor` helper in `FieldCard`
+- `OcrResult` (`lib/ocr/types.ts`) — added optional `rawText?: string` field; both `tesseractOcrProvider` and `googleVisionOcrProvider` now return it
+
+---
+
 ## [2026-07-01] — feat/queue-based-review-flow (PR #13)
 
 ### Added

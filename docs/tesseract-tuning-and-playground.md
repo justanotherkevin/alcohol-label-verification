@@ -156,7 +156,7 @@ Use Tesseract (or a cloud OCR) for **pixel-accurate text + bounding boxes**, the
 
 ## 7. Lever 4 — Alternative engines (the next rung)
 
-When Tesseract plateaus, these read hard text better — at the cost of a Python runtime (which is why they aren't in the prototype; see the PaddleOCR note in `docs/superpowers/specs/2026-06-29-ttb-label-verification-design.md`).
+When Tesseract plateaus, these read hard text better — at the cost of a Python runtime (which is why they aren't in the prototype; see the PaddleOCR note in `docs/specs/2026-06-29-ttb-label-verification-design.md`).
 
 | Engine                | Strength                                                                     | Cost / runtime                               |
 | --------------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |

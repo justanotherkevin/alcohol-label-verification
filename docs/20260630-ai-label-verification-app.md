@@ -579,6 +579,7 @@ Significantly better accuracy than Tesseract for real-world label images (curved
 ---
 
 ### Step 0 — Scaffold the project foundation
+
 _Implements: Decisions #1, #2, #3, #5_
 
 ```
@@ -595,6 +596,7 @@ app/globals.css      — @import "tailwindcss" (v4 syntax)
 ---
 
 ### Step 1 — Define the `OcrProvider` interface
+
 _Implements: Decision #6_
 
 ```
@@ -609,6 +611,7 @@ These four types are the shared contract every provider and every consumer must 
 ---
 
 ### Step 2 — Wire `getProvider()` factory
+
 _Implements: Decision #7_
 
 ```
@@ -623,6 +626,7 @@ Maps a string name to a concrete provider instance at request time. Defaults to 
 ---
 
 ### Step 3 — Add the Tesseract default provider
+
 _Implements: Decision #8_
 
 ```
@@ -637,6 +641,7 @@ No API key. No network call. The free-forever fallback that guarantees a working
 ---
 
 ### Step 4 — Add the Mock provider
+
 _Implements: Decision #18 (test infrastructure)_
 
 ```
@@ -651,6 +656,7 @@ lib/ocr/mock.ts      — Fixed deterministic OcrResult; 800ms simulated delay
 ---
 
 ### Step 5 — Add LLM vision providers
+
 _Implements: Decision #9_
 
 ```
@@ -668,6 +674,7 @@ All three providers share one prompt and one JSON parser. Each is wired into `ge
 ---
 
 ### Step 6 — Write verification logic (Layers 1 & 2)
+
 _Implements: Decisions #12, #13, #14, #15_
 
 ```
@@ -683,6 +690,7 @@ Layer 2 runs independent regulatory checks against TTB CFR rules regardless of w
 ---
 
 ### Step 7 — Write TTB regulatory rules engine
+
 _Implements: Decision #13_
 
 ```
@@ -697,6 +705,7 @@ Pure lookup and parse functions. No I/O, no side effects. Called by `verifyLabel
 ---
 
 ### Step 8 — Unit test suite
+
 _Implements: Decision #18 (unit tests)_
 
 ```
@@ -712,6 +721,7 @@ lib/ttb-rules.test.ts     — class type lookup, product detection, ABV parse, f
 ---
 
 ### Step 9 — Single-label verify API route
+
 _Implements: Decision #1 (API server)_
 
 ```
@@ -724,6 +734,7 @@ app/api/verify/route.ts  — POST; reads X-Ocr-Provider + X-Api-Key headers; get
 ---
 
 ### Step 10 — Batch SSE API route
+
 _Implements: Decisions #16, #17_
 
 ```
@@ -738,6 +749,7 @@ CSV rows are pre-parsed client-side with PapaParse and sent as JSON. Images are 
 ---
 
 ### Step 11 — NavBar + Settings page
+
 _Implements: Decisions #3, #10_
 
 ```
@@ -753,6 +765,7 @@ Mock must appear in the provider list so E2E tests can select it without an API 
 ---
 
 ### Step 12 — Single-label verify page
+
 _Implements: Decisions #3, #11_
 
 ```
@@ -760,6 +773,7 @@ app/page.tsx             — Image upload (drag-and-drop + click); Application D
 ```
 
 `FieldRow` renders three zones:
+
 1. Status badge (✓ / ✗ / —) + field label + confidence % badge
 2. For non-pass: Expected vs. Found on label diff
 3. **Regulatory subsection** (if `field.regulatory` exists and is not `"skipped"`): regulatory status icon + note
@@ -770,6 +784,7 @@ app/page.tsx             — Image upload (drag-and-drop + click); Application D
 ---
 
 ### Step 13 — Batch verify page
+
 _Implements: Decisions #3, #16_
 
 ```
@@ -783,6 +798,7 @@ components/Notification.tsx — Top-right live counter "3 / 10 verified"; mini l
 ---
 
 ### Step 14 — E2E test suite
+
 _Implements: Decision #18 (E2E)_
 
 All E2E tests use the **Mock provider** — no API key needed in CI. Set `localStorage` in `beforeEach` via `page.addInitScript`.
@@ -800,29 +816,32 @@ tests/settings.spec.ts       — Provider select + Save → nav badge updates; s
 ---
 
 ### Step 15 — Bounding box field-source inspection
+
 _Implements: Flow 1 step 5a (docs/users-flow.md)_
 
 **What:** Clicking a field row in the results panel draws a highlight rectangle on the label image showing where the OCR extracted that field's text.
 
 **Files to change:**
 
-| File | Change |
-|---|---|
-| `lib/ocr/types.ts` | Add `BoundingBox { x, y, width, height: number (0.0–1.0 normalized) }` and `BoundingBoxMap` alongside `ConfidenceMap` |
-| `lib/ocr/llm-prompt.ts` | Update prompt to request `"boundingBox": { x, y, width, height }` per field (normalized 0–1); update `parseExtractionResponse()` to extract it |
-| `lib/ocr/claude.ts` / `gemini.ts` / `openai.ts` | Pass `boundingBoxes` from parsed response into `OcrResult` |
-| `lib/ocr/tesseract.ts` | After extracting field text, find matching words in `data.words`, compute union bbox, normalize by image dimensions |
-| `lib/ocr/mock.ts` | Add hardcoded `boundingBoxes` for each field so E2E tests can exercise the highlight interaction |
-| `app/api/verify/route.ts` | Include `boundingBoxes` in the JSON response alongside `extracted`, `confidence`, `result` |
-| `app/page.tsx` | (1) Keep `<img>`, add absolutely-positioned `<canvas>` overlay same dimensions; (2) add `selectedField` state; (3) pass `onClick` + `isSelected` to each `FieldRow`; (4) on field click, scale normalized bbox to rendered image dimensions and draw rectangle on canvas |
+| File                                            | Change                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `lib/ocr/types.ts`                              | Add `BoundingBox { x, y, width, height: number (0.0–1.0 normalized) }` and `BoundingBoxMap` alongside `ConfidenceMap`                                                                                                                                                    |
+| `lib/ocr/llm-prompt.ts`                         | Update prompt to request `"boundingBox": { x, y, width, height }` per field (normalized 0–1); update `parseExtractionResponse()` to extract it                                                                                                                           |
+| `lib/ocr/claude.ts` / `gemini.ts` / `openai.ts` | Pass `boundingBoxes` from parsed response into `OcrResult`                                                                                                                                                                                                               |
+| `lib/ocr/tesseract.ts`                          | After extracting field text, find matching words in `data.words`, compute union bbox, normalize by image dimensions                                                                                                                                                      |
+| `lib/ocr/mock.ts`                               | Add hardcoded `boundingBoxes` for each field so E2E tests can exercise the highlight interaction                                                                                                                                                                         |
+| `app/api/verify/route.ts`                       | Include `boundingBoxes` in the JSON response alongside `extracted`, `confidence`, `result`                                                                                                                                                                               |
+| `app/page.tsx`                                  | (1) Keep `<img>`, add absolutely-positioned `<canvas>` overlay same dimensions; (2) add `selectedField` state; (3) pass `onClick` + `isSelected` to each `FieldRow`; (4) on field click, scale normalized bbox to rendered image dimensions and draw rectangle on canvas |
 
 **Key constraints:**
+
 - Bounding box is purely additive — if `null` for a field, click does nothing; no error state
 - Use normalized coords (0.0–1.0) in the data model; scale to rendered px client-side
 - Canvas must match rendered `<img>` dimensions (use `onLoad` + `getBoundingClientRect`)
 - Only one field highlighted at a time; clicking same row again deselects
 
 **Verify:**
+
 1. Select Claude/Gemini/GPT-4o provider; upload a label; verify → click a passing field row → colored rectangle appears on the label image in the correct region
 2. Click a different field → highlight moves
 3. Click same field again → highlight clears
@@ -929,19 +948,20 @@ The prototype is stateless (decision #4), but that is a _prototype scoping choic
 ### Database: PostgreSQL
 
 PostgreSQL is the pick:
+
 - The verification / override / audit data is **relational** — Postgres models it directly with foreign keys and constraints.
 - The variable parts (`extracted`, `application_data`, `results`) fit Postgres **`jsonb`** columns — flexible shape without a migration per field change.
 - **Azure Database for PostgreSQL** is a managed, **FedRAMP-available** option that aligns with TTB's existing Azure infrastructure (Marcus) — no new cloud to certify.
 
 ### What this enables (from `docs/users-flow.md`)
 
-| Capability | Who | Source |
-| --- | --- | --- |
+| Capability                                                                    | Who                   | Source                                                       |
+| ----------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------ |
 | **Override** — override an AI `fail` on your own review with a written reason | Dave / any specialist | `users-flow.md` line 50 ("OVERRIDE — Dave's edge case flow") |
-| **Audit trail** — override history with timestamps + IDs | — | `users-flow.md` lines 132–134 |
-| **Supervisor dashboard** — aggregate pass/fail visibility (read-only) | Sarah | `users-flow.md` lines 122–125 |
+| **Audit trail** — override history with timestamps + IDs                      | —                     | `users-flow.md` lines 132–134                                |
+| **Supervisor dashboard** — aggregate pass/fail visibility (read-only)         | Sarah                 | `users-flow.md` lines 122–125                                |
 
-> **Override model = agent-over-AI** (per the literal requirement). A specialist overrides the **AI's** verdict on **their own** review — there is no review queue, no assignment, and no supervisor approving a subordinate's decision. Supervisors get *read-only* oversight (dashboards + audit drill-down), not an approval gate.
+> **Override model = agent-over-AI** (per the literal requirement). A specialist overrides the **AI's** verdict on **their own** review — there is no review queue, no assignment, and no supervisor approving a subordinate's decision. Supervisors get _read-only_ oversight (dashboards + audit drill-down), not an approval gate.
 
 ### Data model (non-PII; actor identity minimized to opaque IDs)
 

@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
   const analyzedIds: string[] = []
 
   for (const app of pending) {
-    const analysis = await analyzeApplication(app, providerName, apiKey)
-    updateApplication(app.id, { status: "analyzed", analysis })
+    const { analysis, images } = await analyzeApplication(app, providerName, apiKey)
+    updateApplication(app.id, { status: "analyzed", analysis, images })
     analyzedIds.push(app.id)
   }
 
