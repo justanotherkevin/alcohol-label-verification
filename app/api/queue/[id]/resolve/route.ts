@@ -22,6 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     rejectedFields: body.decision === "rejected" ? body.rejectedFields : [],
     note: body.note,
     resolvedAt: new Date().toISOString(),
+    specialistId: body.specialistId,
   }
 
   const updated = resolveApplication(id, resolution)

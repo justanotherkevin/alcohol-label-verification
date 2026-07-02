@@ -6,6 +6,7 @@ import { FieldResult } from "@/lib/verify";
 import { BoundingBoxMap } from "@/lib/ocr/types";
 import { isFieldFlagged } from "@/lib/queue/field-status";
 import { LabelImage, OcrData, QueueStatus } from "@/lib/queue/types";
+import { getCurrentSpecialist } from "@/lib/queue/specialist";
 import { ApplicationData } from "@/lib/verify";
 import { ImageCarousel } from "@/components/queue/ImageCarousel";
 import { FieldCard } from "@/components/queue/FieldCard";
@@ -126,6 +127,7 @@ export default function QueueDetailPage() {
     setSubmitting(true);
     const stillFlaggedKeys = new Set(stillFlagged.map((f) => f.field));
     const validRejectedFields = rejectedFieldsArg.filter((f) => stillFlaggedKeys.has(f));
+    const specialist = getCurrentSpecialist();
     const body = {
       decision,
       overrides: Object.entries(overrides).map(([field, entry]) => ({
@@ -135,6 +137,7 @@ export default function QueueDetailPage() {
       })),
       rejectedFields: decision === "rejected" ? validRejectedFields : [],
       note: decision === "rejected" ? note : "",
+      specialistId: specialist?.id,
     };
     const res = await fetch(`/api/queue/${app.id}/resolve`, {
       method: "POST",

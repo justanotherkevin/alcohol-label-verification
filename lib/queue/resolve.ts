@@ -6,6 +6,7 @@ export interface ResolveRequestBody {
   overrides: FieldOverride[];
   rejectedFields: string[];
   note: string;
+  specialistId?: string;
 }
 
 export type ValidationOutcome = { ok: true } | { ok: false; error: string };
