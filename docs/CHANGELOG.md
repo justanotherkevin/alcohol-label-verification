@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — feat/type-restructure-guided-ocr (PR #15)
+
+### Added
+
+- `GuidedSearchHints` interface (`lib/ocr/types.ts`) — optional per-field hints (`brandName`, `classType`, `abv`, etc.) passed into `OcrProvider.extract()` so providers can narrow their text search; enables guided extraction without changing callers that don't supply hints
+- `OcrData` type (`lib/queue/types.ts`) — replaces the old `QueueAnalysis` shape with the same `extracted`/`confidence`/`boundingBoxes`/`verification` fields; name better reflects what the data represents (raw OCR output, not a human decision)
+- `FieldReviewNote`, `ReviewSession`, `ApplicationReviewData` types (`lib/queue/types.ts`) — structured containers for specialist review sessions, per-field notes with flagged/decision/savedAt metadata, and the rolled-up resolution; decouples review state from OCR state
+- `scripts/regenerate-extracted.ts` — developer script (`npx tsx scripts/regenerate-extracted.ts`) that rebuilds `tests/mocks/labels/_extracted.json` from `.vision.json` fixtures using guided extraction with `SEED_HINTS`, so fixture data stays consistent with the live guided-OCR pipeline
+
+### Changed
+
+- `QueueApplication` (`lib/queue/types.ts`) — `analysis: QueueAnalysis | null` replaced by `ocrData: OcrData | null` and `reviewData: ApplicationReviewData`; `resolution` moved inside `reviewData`; `brandName` top-level field removed (already in `applicationData`)
+- `analyzeApplication` (`lib/queue/analyze.ts`) — now passes `app.applicationData` as hints to `provider.extract()`, enabling guided OCR on analysis; return type updated from `{ analysis, images }` to `{ ocrData, images }` to match renamed type
+- `lib/queue/store.ts`, `app/api/queue/*/route.ts`, `lib/queue/seed-data.ts`, `lib/queue/mock-templates.ts`, `app/queue/[id]/page.tsx` — cascading updates to field references (`analysis` → `ocrData`, `resolution` → `reviewData.resolution`) following the type rename
+- `docs/backlogs.md` — new backlog items added reflecting guided-OCR and review-session improvements identified during this refactor
+
+---
+
 ## [2026-07-02] — feat/rawocr-label-reorganization (PR #14)
 
 ### Added
