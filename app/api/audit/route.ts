@@ -1,30 +1,21 @@
 import { NextResponse } from "next/server";
-import { listResolvedApplications } from "@/lib/queue/store";
-import { getAuditSummary, getRecentActivity } from "@/lib/queue/audit";
-import { specialistNameById, AuditEntry } from "@/lib/queue/specialist";
+import { listAuditEntries, getAuditSummary, getRecentActivity } from "@/lib/queue/audit";
 
-export async function GET() {
-  const [resolved, summary, activity] = await Promise.all([
-    listResolvedApplications(),
+const DEFAULT_PAGE_SIZE = 25;
+const MAX_PAGE_SIZE = 100;
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const pageSize = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, Number(url.searchParams.get("pageSize")) || DEFAULT_PAGE_SIZE),
+  );
+
+  const [{ entries, total }, summary, activity] = await Promise.all([
+    listAuditEntries(page, pageSize),
     getAuditSummary(),
     getRecentActivity(),
   ]);
-  const entries: AuditEntry[] = resolved.map((app) => {
-    const res = app.reviewData.resolution!;
-    return {
-      id: app.id,
-      timestamp: new Date(res.resolvedAt).toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-      product: app.applicationData.brandName ?? app.applicant,
-      specialist: res.specialistId ? specialistNameById(res.specialistId) : "—",
-      status: res.decision === "approved" ? "Compliant" : "Violation",
-    };
-  });
-  return NextResponse.json({ entries, summary, activity });
+  return NextResponse.json({ entries, total, page, pageSize, summary, activity });
 }
