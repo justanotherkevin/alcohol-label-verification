@@ -17,8 +17,7 @@ const baseApp: QueueApplication = {
     countryOfOrigin: "USA",
     governmentWarning: REQUIRED_GOVERNMENT_WARNING,
   },
-  imageBase64: "",
-  imageMimeType: "image/png",
+  images: [{ base64: "", mimeType: "image/png" }],
   status: "pending",
   analysis: null,
   resolution: null,
@@ -26,13 +25,13 @@ const baseApp: QueueApplication = {
 
 describe("analyzeApplication", () => {
   it("produces a VerificationResult with all 7 fields via the mock provider", async () => {
-    const analysis = await analyzeApplication(baseApp, "mock")
+    const { analysis } = await analyzeApplication(baseApp, "mock")
     expect(analysis.result.fields).toHaveLength(7)
     expect(analysis.analyzedAt).toBeTruthy()
   })
 
   it("fails government warning against the mock provider's title-case text", async () => {
-    const analysis = await analyzeApplication(baseApp, "mock")
+    const { analysis } = await analyzeApplication(baseApp, "mock")
     const govField = analysis.result.fields.find((f) => f.field === "governmentWarning")
     expect(govField?.status).toBe("fail")
   })

@@ -64,9 +64,13 @@ export function addMockApplication(): QueueApplication {
   return app
 }
 
-/** Test-only: reset the store back to its seeded state between test runs. */
-export function __resetQueueForTests(): void {
+export function resetQueue(): void {
   applications = SEED_APPLICATIONS.map((app) => ({ ...app }))
   templateCursor = 0
   nextIdSuffix = 2000
+}
+
+/** Test-only alias — keeps existing test imports working. */
+export function __resetQueueForTests(): void {
+  resetQueue()
 }

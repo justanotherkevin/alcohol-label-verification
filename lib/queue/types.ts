@@ -1,11 +1,19 @@
 import { ApplicationData, VerificationResult } from "@/lib/verify"
 import { ExtractedLabelData, ConfidenceMap, BoundingBoxMap } from "@/lib/ocr/types"
 
+export interface LabelImage {
+  base64: string
+  mimeType: string
+  side?: "front" | "back" | string
+  rawOcrText?: string
+}
+
 export type QueueStatus = "pending" | "analyzed" | "resolved"
 
 export interface FieldOverride {
   field: string
   reason: string
+  decision?: "approve" | "flag"
 }
 
 export interface Resolution {
@@ -30,8 +38,7 @@ export interface QueueApplication {
   applicant: string
   submittedAt: string
   applicationData: ApplicationData
-  imageBase64: string
-  imageMimeType: string
+  images: LabelImage[]
   status: QueueStatus
   analysis: QueueAnalysis | null
   resolution: Resolution | null

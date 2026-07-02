@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [resetting, setResetting] = useState(false)
 
   async function loadQueue() {
     setLoading(true)
@@ -54,6 +55,13 @@ export default function DashboardPage() {
   useEffect(() => {
     loadQueue()
   }, [])
+
+  async function handleReset() {
+    setResetting(true)
+    await fetch("/api/queue/reset", { method: "DELETE" })
+    await loadQueue()
+    setResetting(false)
+  }
 
   async function handleAddMock() {
     setAdding(true)
@@ -95,6 +103,13 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleReset}
+            disabled={resetting}
+            className="text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
+          >
+            {resetting ? "Resetting…" : "Reset seed data"}
+          </button>
           <button
             onClick={handleAddMock}
             disabled={adding}

@@ -1,0 +1,245 @@
+{
+  "hollow-creek": {
+    "imageIndex": 0,
+    "bboxes": {
+      "brandName": null,
+      "classType": null,
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.4319526627218935,
+        "y": 0.9058333333333334,
+        "width": 0.13693998309382924,
+        "height": 0.025
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    }
+  },
+  "abc-distillery": {
+    "imageIndex": 0,
+    "bboxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.08514190317195326,
+        "y": 0.07005494505494506,
+        "width": 0.8013355592654424,
+        "height": 0.4107142857142857
+      },
+      "classType": null,
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.18113522537562604,
+        "y": 0.8461538461538461,
+        "width": 0.12270450751252086,
+        "height": 0.038461538461538464
+      },
+      "bottler": {
+        "imageIndex": 0,
+        "x": 0.08514190317195326,
+        "y": 0.07005494505494506,
+        "width": 0.8013355592654424,
+        "height": 0.4107142857142857
+      },
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 0,
+        "x": 0.5701168614357263,
+        "y": 0.3695054945054945,
+        "width": 0.1318864774624374,
+        "height": 0.03571428571428571
+      }
+    }
+  },
+  "malt-hop-brewery": {
+    "imageIndex": 0,
+    "bboxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.10968229954614221,
+        "y": 0.3668555240793201,
+        "width": 0.245839636913767,
+        "height": 0.28753541076487255
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.17246596066565809,
+        "y": 0.5269121813031161,
+        "width": 0.11649016641452345,
+        "height": 0.0339943342776204
+      },
+      "abv": null,
+      "netContents": null,
+      "bottler": {
+        "imageIndex": 0,
+        "x": 0.10968229954614221,
+        "y": 0.3668555240793201,
+        "width": 0.245839636913767,
+        "height": 0.28753541076487255
+      },
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 0,
+        "x": 0.602874432677761,
+        "y": 0.5368271954674221,
+        "width": 0.08396369137670197,
+        "height": 0.018413597733711047
+      }
+    }
+  },
+  "12345-imports": {
+    "imageIndex": 0,
+    "bboxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.08581436077057793,
+        "y": 0.2677595628415301,
+        "width": 0.8957968476357268,
+        "height": 0.26229508196721313
+      },
+      "classType": null,
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.3922942206654991,
+        "y": 0.8183060109289617,
+        "width": 0.04115586690017513,
+        "height": 0.031420765027322405
+      },
+      "bottler": {
+        "imageIndex": 0,
+        "x": 0.08581436077057793,
+        "y": 0.2677595628415301,
+        "width": 0.7644483362521891,
+        "height": 0.1885245901639344
+      },
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 0,
+        "x": 0.5753064798598949,
+        "y": 0.4262295081967213,
+        "width": 0.19527145359019266,
+        "height": 0.028688524590163935
+      }
+    }
+  },
+  "label-1-front": {
+    "imageIndex": 0,
+    "bboxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.6838487972508591,
+        "y": 0.8065476190476191,
+        "width": 0.11082474226804123,
+        "height": 0.04017857142857143
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.6838487972508591,
+        "y": 0.8065476190476191,
+        "width": 0.11082474226804123,
+        "height": 0.04017857142857143
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.7740549828178694,
+        "y": 0.890625,
+        "width": 0.14604810996563575,
+        "height": 0.03720238095238095
+      }
+    }
+  },
+  "label-1-back": {
+    "imageIndex": 1,
+    "bboxes": {
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 1,
+        "x": 0.09336823734729494,
+        "y": 0.3901345291479821,
+        "width": 0.23647469458987783,
+        "height": 0.030642750373692077
+      }
+    }
+  },
+  "label-2-front": {
+    "imageIndex": 0,
+    "bboxes": {
+      "brandName": null,
+      "classType": null,
+      "abv": {
+        "imageIndex": 0,
+        "x": 0.18760757314974183,
+        "y": 0.8916292974588939,
+        "width": 0.2099827882960413,
+        "height": 0.03961136023916293
+      },
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.7719449225473322,
+        "y": 0.8923766816143498,
+        "width": 0.14802065404475043,
+        "height": 0.03811659192825112
+      }
+    }
+  },
+  "label-2-back": {
+    "imageIndex": 1,
+    "bboxes": {
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 1,
+        "x": 0.08231173380035026,
+        "y": 0.5412912912912913,
+        "width": 0.22591943957968477,
+        "height": 0.03528528528528529
+      }
+    }
+  },
+  "label-3-front": {
+    "imageIndex": 0,
+    "bboxes": {
+      "brandName": null,
+      "classType": null,
+      "abv": {
+        "imageIndex": 0,
+        "x": 0.38311688311688313,
+        "y": 0.8256880733944955,
+        "width": 0.18089053803339517,
+        "height": 0.03746177370030581
+      },
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.6103896103896104,
+        "y": 0.8256880733944955,
+        "width": 0.11966604823747681,
+        "height": 0.03746177370030581
+      }
+    }
+  },
+  "label-3-back": {
+    "imageIndex": 1,
+    "bboxes": {
+      "bottler": {
+        "imageIndex": 1,
+        "x": 0.2768817204301075,
+        "y": 0.22568940493468795,
+        "width": 0.06810035842293907,
+        "height": 0.031204644412191583
+      },
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 1,
+        "x": 0.06989247311827956,
+        "y": 0.5522496371552975,
+        "width": 0.22849462365591397,
+        "height": 0.031204644412191583
+      }
+    }
+  }
+}

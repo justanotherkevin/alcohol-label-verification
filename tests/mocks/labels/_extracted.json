@@ -1,0 +1,440 @@
+{
+  "hollow-creek": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "HOLLOW CREEK",
+      "classType": "Moonshine",
+      "abv": "35% ALC./VOL.",
+      "netContents": "750 ML",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.1395,
+        "y": 0.0492,
+        "width": 0.7244,
+        "height": 0.0667
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.4404,
+        "y": 0.1142,
+        "width": 0.3694,
+        "height": 0.0858
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.432,
+        "y": 0.9058,
+        "width": 0.1369,
+        "height": 0.025
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    }
+  },
+  "abc-distillery": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "DISTILLED AND BOTTLED BY:",
+      "classType": "STRAIGHT RYE",
+      "abv": "45% ALC/VOL",
+      "netContents": "750 ML",
+      "bottler": "DISTILLED AND BOTTLED BY:",
+      "countryOfOrigin": null,
+      "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems. \\ &"
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.0676,
+        "y": 0.0865,
+        "width": 0.6352,
+        "height": 0.6374
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.0751,
+        "y": 0.2624,
+        "width": 0.7346,
+        "height": 0.4354
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.1811,
+        "y": 0.8462,
+        "width": 0.1227,
+        "height": 0.0385
+      },
+      "bottler": {
+        "imageIndex": 0,
+        "x": 0.0676,
+        "y": 0.0865,
+        "width": 0.6352,
+        "height": 0.6374
+      },
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 0,
+        "x": 0.2045,
+        "y": 0.0865,
+        "width": 0.7588,
+        "height": 0.6374
+      }
+    }
+  },
+  "malt-hop-brewery": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "REWED",
+      "classType": "Pale Ale",
+      "abv": null,
+      "netContents": "1 PINT",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL. WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY. AND MAY CAUSE HEALTH PROBLEMS."
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.1536,
+        "y": 0.1955,
+        "width": 0.0567,
+        "height": 0.1133
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.1725,
+        "y": 0.5269,
+        "width": 0.1165,
+        "height": 0.034
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.3139,
+        "y": 0.7635,
+        "width": 0.0401,
+        "height": 0.0312
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 0,
+        "x": 0.6021,
+        "y": 0.4377,
+        "width": 0.261,
+        "height": 0.3598
+      }
+    }
+  },
+  "12345-imports": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "12345",
+      "classType": "RUM WITH",
+      "abv": "18% ALC/VOL.",
+      "netContents": "200 ML",
+      "bottler": "IMPORTED BY: 12345 IMPORTS",
+      "countryOfOrigin": "PRODUCED IN CANADA",
+      "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.0858,
+        "y": 0.2678,
+        "width": 0.7644,
+        "height": 0.1885
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.1506,
+        "y": 0.6448,
+        "width": 0.1944,
+        "height": 0.0369
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.324,
+        "y": 0.8183,
+        "width": 0.1095,
+        "height": 0.0314
+      },
+      "bottler": {
+        "imageIndex": 0,
+        "x": 0.0858,
+        "y": 0.2678,
+        "width": 0.8958,
+        "height": 0.6831
+      },
+      "countryOfOrigin": {
+        "imageIndex": 0,
+        "x": 0.5762,
+        "y": 0.2022,
+        "width": 0.3625,
+        "height": 0.5724
+      },
+      "governmentWarning": {
+        "imageIndex": 0,
+        "x": 0.1366,
+        "y": 0.2678,
+        "width": 0.845,
+        "height": 0.6831
+      }
+    }
+  },
+  "label-1-front": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "ELDERBERRY",
+      "classType": "SMALL BATCH GIN",
+      "abv": "43% ALC./VOL.",
+      "netContents": "750ml",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.1091,
+        "y": 0.09,
+        "width": 0.7706,
+        "height": 0.0863
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.1916,
+        "y": 0.8065,
+        "width": 0.6031,
+        "height": 0.0402
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.7741,
+        "y": 0.8906,
+        "width": 0.146,
+        "height": 0.0372
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    }
+  },
+  "label-1-back": {
+    "imageIndex": 1,
+    "extracted": {
+      "brandName": "(1) ACCORDING TO THE SURGEON GENERAL, WOMEN",
+      "classType": "ELDERBERRY & OAK SMALL BATCH GIN,",
+      "abv": "43% ALC./VOL.",
+      "netContents": "750ml",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": "GOVERNMENT WARNING: (1) ADORNMENT WRANNM: ACADSHMIEK, SOUL ADBALCUM, ROUSOS, WODITROSN, OR ABILTE NCAITO PROBEZO. formula: \"E0-7734-23\" serialNumber: \"TTB-S-12345678\", INGREDIENT LIST: \"FRONT LABEL, SMALL ELDERBERRY & OAK SMALL BATCH GIN, COPPER-ENGRAVED & VIOLET, 750ml, 43% ABV.\" labelDescription: ! 43% ALC./VOL. uniqueSelling Points: 'SMALL BATCH GIN' 'LOCAL INGREDIENTS' 'COPPER-ENGRAVED LABEL'] N/A"
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 1,
+        "x": 0.1571,
+        "y": 0.1674,
+        "width": 0.767,
+        "height": 0.3057
+      },
+      "classType": {
+        "imageIndex": 1,
+        "x": 0.0812,
+        "y": 0.5762,
+        "width": 0.7339,
+        "height": 0.2765
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 1,
+        "x": 0.603,
+        "y": 0.6465,
+        "width": 0.1065,
+        "height": 0.0299
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 1,
+        "x": 0.0794,
+        "y": 0.1674,
+        "width": 0.8412,
+        "height": 0.7197
+      }
+    }
+  },
+  "label-2-front": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "DESERT LUNA",
+      "classType": "PREMIUM BOTANICAL SPIRIT",
+      "abv": "40% ALC./VOL.",
+      "netContents": "750ml",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.0981,
+        "y": 0.0859,
+        "width": 0.8029,
+        "height": 0.0904
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.0981,
+        "y": 0.8109,
+        "width": 0.7995,
+        "height": 0.0366
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.7719,
+        "y": 0.8924,
+        "width": 0.148,
+        "height": 0.0381
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    }
+  },
+  "label-2-back": {
+    "imageIndex": 1,
+    "extracted": {
+      "brandName": "DESERT LUNA & AGAVE Premium Botanical Spirit,",
+      "classType": "['SINGLE-ORIGIN AGAVE']",
+      "abv": "40% ALC./VOL.",
+      "netContents": "750ml",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, problems. INGREDIENT LIST: DESERT AGAVE PIÑAS, WILD LAVENDER, DRIED LEMON PEEL, CORIANDER SEEDS, ANGELICA ROOT. uniqueSellingPoints: ['SINGLE-ORIGIN AGAVE'] 'WILD-HARVESTED LAVENDER'] 'COPPER POT DISTILLED*] N/A"
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 1,
+        "x": 0.0841,
+        "y": 0.1674,
+        "width": 0.817,
+        "height": 0.7065
+      },
+      "classType": null,
+      "abv": null,
+      "netContents": {
+        "imageIndex": 1,
+        "x": 0.7119,
+        "y": 0.4775,
+        "width": 0.1016,
+        "height": 0.03
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 1,
+        "x": 0.0814,
+        "y": 0.1674,
+        "width": 0.845,
+        "height": 0.7725
+      }
+    }
+  },
+  "label-3-front": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "DESERT LUNA",
+      "classType": "PREMIUM SINGLE ESTATE AGAVE SPIRIT",
+      "abv": "40% ALC./VOL.",
+      "netContents": "750ml",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.0983,
+        "y": 0.0956,
+        "width": 0.8237,
+        "height": 0.091
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.1327,
+        "y": 0.2179,
+        "width": 0.7542,
+        "height": 0.7271
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.6104,
+        "y": 0.8257,
+        "width": 0.1197,
+        "height": 0.0375
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    }
+  },
+  "label-3-back": {
+    "imageIndex": 1,
+    "extracted": {
+      "brandName": "DESERT LUNA & AGAVE Premium Botanical Spirit,",
+      "classType": "SINGLE-ORIGIN AGAVE",
+      "abv": "40% ALC./VOL.",
+      "netContents": "750ml",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, problems. INGREDIENT LIST: DESERT AGAVE PIÑAS, WILD LAVENDER, DRIED LEMON PEEL, CORIANDER SEEDS, ANGELICA ROOT. ☐ • uniqueSellingPoints: SINGLE-ORIGIN AGAVE EST. WILD-HARVESTED LAVENDER 2024 •COPPER POT DISTILLED N/A"
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 1,
+        "x": 0.0699,
+        "y": 0.1901,
+        "width": 0.8351,
+        "height": 0.6792
+      },
+      "classType": {
+        "imageIndex": 1,
+        "x": 0.3513,
+        "y": 0.1901,
+        "width": 0.2679,
+        "height": 0.6792
+      },
+      "abv": null,
+      "netContents": {
+        "imageIndex": 1,
+        "x": 0.7142,
+        "y": 0.4898,
+        "width": 0.103,
+        "height": 0.0254
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": {
+        "imageIndex": 1,
+        "x": 0.0672,
+        "y": 0.1901,
+        "width": 0.8647,
+        "height": 0.7424
+      }
+    }
+  }
+}

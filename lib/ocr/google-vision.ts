@@ -101,7 +101,7 @@ export function googleVisionOcrProvider(apiKey: string): OcrProvider {
         boundingBoxes[field] = computeFieldBbox(words, extracted[field], W, H)
       }
 
-      return { data: extracted, confidence: {}, boundingBoxes }
+      return { data: extracted, confidence: {}, boundingBoxes, rawText: text }
     },
   }
 }
