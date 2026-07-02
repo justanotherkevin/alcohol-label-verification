@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server"
 import { listResolvedApplications } from "@/lib/queue/store"
+import { getAuditSummary, getRecentActivity } from "@/lib/queue/audit"
 import { specialistNameById, AuditEntry } from "@/lib/queue/specialist"
 
 export async function GET() {
-  const resolved = await listResolvedApplications()
+  const [resolved, summary, activity] = await Promise.all([
+    listResolvedApplications(),
+    getAuditSummary(),
+    getRecentActivity(),
+  ])
   const entries: AuditEntry[] = resolved.map((app) => {
     const res = app.reviewData.resolution!
     return {
@@ -21,5 +26,5 @@ export async function GET() {
       status: res.decision === "approved" ? "Compliant" : "Violation",
     }
   })
-  return NextResponse.json({ entries })
+  return NextResponse.json({ entries, summary, activity })
 }

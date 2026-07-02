@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — feat/revert-resolution-and-audit-data
+
+### Added
+
+- `lib/queue/store.ts` — `revertResolution(id)`: deletes the application's `resolutions` row and sets its status back to `"analyzed"` (transactional; destructive by design, no history preserved)
+- `app/api/queue/[id]/revert/route.ts` — new `POST` endpoint; 404 if the application doesn't exist, 409 if it isn't currently `"resolved"`
+- `components/queue/RevertConfirmModal.tsx` — confirm-before-revert overlay, following `OverrideModal`'s existing modal pattern
+- `lib/queue/audit.ts` / `lib/queue/audit-types.ts` — `getAuditSummary()` (total reviews, compliance rate, rejected count, avg response time) and `getRecentActivity()` (merged submission + resolution feed) computed from the `applications`/`resolutions` tables; types and the pure `formatTimeAgo()` helper split into `audit-types.ts` so the client-side Audit page doesn't transitively pull in the `pg`-backed store module
+- `lib/queue/seed-resolutions.ts` / `scripts/seed-resolutions.ts` (`npm run db:seed:resolutions`) — editable seed list of resolved applications; each run fully replaces the previously-seeded resolved set (reverts anything currently resolved, clears `resolutions`, re-applies the current list) so the revert flow has stable test data
+
+### Changed
+
+- `app/queue/[id]/page.tsx` — once an application is `"resolved"`, `ResolutionPanel` is replaced with a resolution summary (decision, specialist, note, timestamp) and a "Revert to Queue" button
+- `app/audit/page.tsx` — removed the hardcoded `SUMMARY`/`TIMELINE` fixtures in favor of real data from `/api/audit`; added an "Actions" column to the Review History table with a per-row "Revert" button (relabels "Revocations" → "Rejections", since the schema has no revocation concept)
+- `app/api/audit/route.ts` — now returns `summary` and `activity` alongside `entries`
+- `package.json` — `db:seed`/`db:seed:resolutions` now pass `--env-file=.env.development.local` to `tsx` (the existing `db:seed` script was silently broken the same way `vitest` was — neither picked up `DATABASE_URL`); added `tsx` as a proper devDependency (previously undeclared, only worked by luck via an `npx` cache)
+
+---
+
 ## [2026-07-02] — feat/postgres-queue-store
 
 ### Added

@@ -6,12 +6,13 @@ import { FieldResult } from "@/lib/verify";
 import { BoundingBoxMap } from "@/lib/ocr/types";
 import { isFieldFlagged } from "@/lib/queue/field-status";
 import { LabelImage, OcrData, QueueStatus } from "@/lib/queue/types";
-import { getCurrentSpecialist } from "@/lib/queue/specialist";
+import { getCurrentSpecialist, specialistNameById } from "@/lib/queue/specialist";
 import { ApplicationData } from "@/lib/verify";
 import { ImageCarousel } from "@/components/queue/ImageCarousel";
 import { FieldCard } from "@/components/queue/FieldCard";
 import { OverrideModal } from "@/components/queue/OverrideModal";
 import { ResolutionPanel } from "@/components/queue/ResolutionPanel";
+import { RevertConfirmModal } from "@/components/queue/RevertConfirmModal";
 
 interface QueueApplicationDetail {
   id: string;
@@ -21,6 +22,14 @@ interface QueueApplicationDetail {
   applicationData: ApplicationData;
   status: QueueStatus;
   ocrData: OcrData | null;
+  reviewData: {
+    resolution: {
+      decision: "approved" | "rejected";
+      note: string;
+      resolvedAt: string;
+      specialistId?: string;
+    } | null;
+  };
 }
 
 type OverrideDecision = "approve" | "flag";
@@ -40,6 +49,9 @@ export default function QueueDetailPage() {
   const [overrideDraftField, setOverrideDraftField] = useState<string | null>(null);
   const [rejectedFields, setRejectedFields] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
+  const [reverting, setReverting] = useState(false);
+  const [revertError, setRevertError] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -152,6 +164,24 @@ export default function QueueDetailPage() {
     router.push("/");
   }
 
+  async function handleRevert() {
+    if (!app) return;
+    setReverting(true);
+    setRevertError(null);
+    try {
+      const res = await fetch(`/api/queue/${app.id}/revert`, { method: "POST" });
+      if (!res.ok) {
+        const data = (await res.json()) as { error: string };
+        throw new Error(data.error);
+      }
+      router.push("/");
+    } catch (e) {
+      setRevertError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setReverting(false);
+    }
+  }
+
   const allFields = app?.ocrData?.result.fields ?? [];
   const naturallyStillFlagged = allFields.filter(
     (f) => isFieldFlagged(f) && overrides[f.field]?.decision !== "approve",
@@ -232,6 +262,44 @@ export default function QueueDetailPage() {
           onConfirmReject={(fields, note) => submitResolution("rejected", fields, note)}
         />
       )}
+
+      {app.status === "resolved" && app.reviewData.resolution && (
+        <div className="mt-8 border-t border-outline pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-on-surface">
+                {app.reviewData.resolution.decision === "approved" ? "Approved" : "Rejected"} by{" "}
+                {app.reviewData.resolution.specialistId
+                  ? specialistNameById(app.reviewData.resolution.specialistId)
+                  : "Unknown"}
+              </p>
+              <p className="text-xs text-on-surface-muted mt-1">
+                {new Date(app.reviewData.resolution.resolvedAt).toLocaleString()}
+              </p>
+              {app.reviewData.resolution.note && (
+                <p className="text-sm text-on-surface-dim mt-2">{app.reviewData.resolution.note}</p>
+              )}
+            </div>
+            <button
+              onClick={() => setRevertConfirmOpen(true)}
+              className="px-4 py-2 border border-outline text-on-surface-dim text-sm font-semibold rounded-lg">
+              Revert to Queue
+            </button>
+          </div>
+          {revertError && (
+            <div className="mt-4 bg-bp-error-surface border border-bp-error-border text-bp-error rounded-lg px-4 py-3 text-sm">
+              {revertError}
+            </div>
+          )}
+        </div>
+      )}
+
+      <RevertConfirmModal
+        open={revertConfirmOpen}
+        submitting={reverting}
+        onConfirm={handleRevert}
+        onClose={() => setRevertConfirmOpen(false)}
+      />
     </div>
   );
 }
