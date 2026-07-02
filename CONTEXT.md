@@ -22,6 +22,7 @@ A `null` field can originate from either layer: Layer 1 failed to read the text 
 **LLM providers skip this split entirely** — `lib/ocr/claude.ts`, `lib/ocr/gemini.ts`, `lib/ocr/openai.ts` return field values directly in one pass.
 
 **Guided OCR** (added in the type-restructure PR) lets Layer 2 use the submitted application data as search targets instead of blind regex heuristics:
+
 - `GuidedSearchHints` — `lib/ocr/types.ts:31-39`
 - `findInText()` — `lib/ocr/tesseract.ts:110-115`
 - `findAbvInText()` / `findNetContentsInText()` (numeric fallbacks) — `lib/ocr/tesseract.ts:119-129`, `:133-143`
@@ -49,3 +50,40 @@ Shown as separate "Verification" and "Regulatory" sections in the UI.
 ## `QueueApplication` (types restructure)
 
 - `lib/queue/types.ts` — `ocrData: OcrData | null` (line 62, extraction results) is separated from `reviewData: ApplicationReviewData` (line 63, specialist audit trail: `sessions[]`, `fieldNotes[]`, `resolution`).
+
+## File Inventory for Reference
+
+### Core Type Definitions:
+
+- /lib/queue/types.ts — QueueApplication, OcrData, FieldReviewNote
+- /lib/ocr/types.ts — ExtractedLabelData, BoundingBox, BoundingBoxMap, OcrResult, OcrProvider
+- /lib/verify.ts — FieldResult, VerificationResult, ApplicationData
+
+### OCR Providers (all under /lib/ocr/):
+
+- index.ts — Provider registry / factory
+- extraction.ts — Layer 2: extractFields() and computeFieldBbox()
+- tesseract.ts — Tesseract.js + extraction layer
+- google-vision.ts — Google Cloud Vision + extraction layer
+- claude.ts, gemini.ts, openai.ts — LLM single-pass extraction
+- llm-prompt.ts — Shared prompt template for LLM providers
+- mock.ts — Fixed mock data (used by tests)
+
+### Queue / Review System (under /lib/queue/ and app/queue/[id]/):
+
+- store.ts — In-memory application storage
+- analyze.ts — Main extraction entry point
+- field-status.ts — isFieldFlagged() logic
+- types.ts — Queue data structures
+- /app/queue/[id]/page.tsx — Detail page with field cards + canvas overlay
+- /components/queue/FieldCard.tsx — Individual field display
+- /components/queue/ImageCarousel.tsx — Image navigation with canvas overlay
+
+### Application Field Verification (deterministic rules):
+
+- /lib/verify.ts — Match application data against extracted data (fuzzy matching for most fields, strict for warning)
+- /lib/ttb-rules.ts — Regulatory validation (ABV bounds, fill sizes, class type designations)
+
+### Tests:
+
+<!-- list all folders path that contains tests -->

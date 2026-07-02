@@ -78,7 +78,10 @@ export function computeFieldBbox(
   if (!fieldValue || words.length === 0 || W === 0 || H === 0) return null
   const tokens = fieldValue.toLowerCase().split(/\s+/).filter((t) => t.length > 1)
   if (tokens.length === 0) return null
-  const matched = words.filter((w) => tokens.some((t) => w.text.toLowerCase().includes(t)))
+  const matched = words.filter((w) => {
+    const wordText = w.text.toLowerCase()
+    return wordText.length > 1 && tokens.some((t) => wordText.includes(t) || t.includes(wordText))
+  })
   if (matched.length === 0) return null
   const x0 = Math.min(...matched.map((w) => w.bbox.x0))
   const y0 = Math.min(...matched.map((w) => w.bbox.y0))
