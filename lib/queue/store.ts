@@ -70,6 +70,16 @@ export function addMockApplication(): QueueApplication {
   return app
 }
 
+export function listResolvedApplications(): QueueApplication[] {
+  return applications
+    .filter((app) => app.status === "resolved" && app.reviewData.resolution !== null)
+    .sort((a, b) => {
+      const aTime = a.reviewData.resolution?.resolvedAt ?? ""
+      const bTime = b.reviewData.resolution?.resolvedAt ?? ""
+      return bTime.localeCompare(aTime)
+    })
+}
+
 export function resetQueue(): void {
   applications = SEED_APPLICATIONS.map((app) => ({ ...app }))
   templateCursor = 0

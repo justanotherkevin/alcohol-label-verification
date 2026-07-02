@@ -1,11 +1,7 @@
-const AUDIT_ENTRIES = [
-  { id: "TTB-2024-8830", timestamp: "2024-01-15 14:32", product: "Blue Ridge Bourbon 750ml",    specialist: "M. Chen",   status: "Compliant" },
-  { id: "TTB-2024-8829", timestamp: "2024-01-15 13:10", product: "Pacific Coast IPA 12oz",      specialist: "J. Torres", status: "Violation" },
-  { id: "TTB-2024-8828", timestamp: "2024-01-15 11:55", product: "Sonoma Valley Pinot 750ml",   specialist: "A. Patel",  status: "Compliant" },
-  { id: "TTB-2024-8827", timestamp: "2024-01-15 10:22", product: "Gulf Coast White 750ml",      specialist: "L. Kim",    status: "Flagged" },
-  { id: "TTB-2024-8826", timestamp: "2024-01-15 09:48", product: "Cascade Mountain Gin 1L",     specialist: "M. Chen",   status: "Compliant" },
-  { id: "TTB-2024-8825", timestamp: "2024-01-15 08:30", product: "Whiskey Reserve 12yr 750ml",  specialist: "J. Torres", status: "Violation" },
-]
+"use client"
+
+import { useEffect, useState } from "react"
+import { AuditEntry } from "@/lib/queue/specialist"
 
 const SUMMARY = [
   { icon: "assignment_turned_in", label: "Total Reviews",   value: "1,284" },
@@ -28,6 +24,19 @@ const TIMELINE = [
 ]
 
 export default function AuditLogPage() {
+  const [entries, setEntries] = useState<AuditEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/audit")
+      .then((res) => res.json())
+      .then((data: { entries: AuditEntry[] }) => {
+        setEntries(data.entries)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
   return (
     <div className="px-8 py-8 max-w-7xl">
       <div className="mb-8">
@@ -88,26 +97,44 @@ export default function AuditLogPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline">
-              {AUDIT_ENTRIES.map((entry) => (
-                <tr key={entry.id} className="hover:bg-surface-dim transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-on-surface-dim">{entry.id}</td>
-                  <td className="px-6 py-4 text-xs text-on-surface-muted">{entry.timestamp}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-on-surface">{entry.product}</td>
-                  <td className="px-6 py-4 text-sm text-on-surface-dim">{entry.specialist}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[entry.status]}`}
-                    >
-                      {entry.status}
-                    </span>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-on-surface-muted">
+                    Loading…
                   </td>
                 </tr>
-              ))}
+              ) : entries.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-on-surface-muted">
+                    No completed reviews yet. Approve or reject an application from the queue to see it here.
+                  </td>
+                </tr>
+              ) : (
+                entries.map((entry) => (
+                  <tr key={entry.id} className="hover:bg-surface-dim transition-colors">
+                    <td className="px-6 py-4 font-mono text-xs text-on-surface-dim">{entry.id}</td>
+                    <td className="px-6 py-4 text-xs text-on-surface-muted">{entry.timestamp}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-on-surface">{entry.product}</td>
+                    <td className="px-6 py-4 text-sm text-on-surface-dim">{entry.specialist}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[entry.status]}`}
+                      >
+                        {entry.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
-          <div className="px-6 py-3 border-t border-outline">
-            <p className="text-xs text-on-surface-muted">Showing 6 of 1,284 entries</p>
-          </div>
+          {!loading && entries.length > 0 && (
+            <div className="px-6 py-3 border-t border-outline">
+              <p className="text-xs text-on-surface-muted">
+                Showing {entries.length} completed review{entries.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Timeline */}

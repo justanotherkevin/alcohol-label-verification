@@ -22,6 +22,7 @@ export interface Resolution {
   rejectedFields: string[]
   note: string
   resolvedAt: string
+  specialistId?: string
 }
 
 export interface OcrData {

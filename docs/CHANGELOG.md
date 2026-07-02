@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — feat/specialist-login-audit-log
+
+### Added
+
+- `components/SpecialistLoginModal.tsx` — demo login modal shown on first load; presents 5 selectable specialist personas (Jenny Park, Dave Morrison, Janet, Sarah Chen, Marcus Williams) as user cards with colored avatars; stores selection to `localStorage["ttb-specialist"]`; dismissible via Escape or ✕ when switching users
+- `lib/queue/specialist.ts` — shared specialist constants (`DEMO_SPECIALISTS`), `getCurrentSpecialist()` / `setCurrentSpecialist()` localStorage helpers, `specialistNameById()` lookup, and `AuditEntry` type
+- `app/api/audit/route.ts` — new `GET /api/audit` endpoint returning resolved applications as audit entries (`id`, `timestamp`, `product`, `specialist`, `status`)
+- `lib/queue/store.ts` — `listResolvedApplications()` returning applications with a non-null resolution, sorted newest-first
+
+### Changed
+
+- `components/Sidebar.tsx` — footer now shows active specialist's colored avatar + name; "Switch User" (⇄) button re-opens the login modal; modal auto-appears on first load when no specialist is in localStorage
+- `app/audit/page.tsx` — converted to client component; replaces hardcoded `AUDIT_ENTRIES` with live `fetch('/api/audit')`; shows loading state and graceful empty state ("No completed reviews yet")
+- `app/queue/[id]/page.tsx` — `submitResolution()` reads `getCurrentSpecialist()` and includes `specialistId` in the POST body
+- `app/api/queue/[id]/resolve/route.ts` — passes `body.specialistId` through to the stored `Resolution`
+- `lib/queue/types.ts` — added `specialistId?: string` to `Resolution` interface
+- `lib/queue/resolve.ts` — added `specialistId?: string` to `ResolveRequestBody`
+
+---
+
 ## [2026-07-02] — fix/abv-binding-rect
 
 ### Fixed
