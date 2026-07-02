@@ -32,6 +32,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${notoSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -41,7 +42,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=assignment_turned_in,check,close,edit,gavel,history,inbox,layers,memory,settings,swap_horiz,timer,upload,verified,warning"
         />
       </head>
-      <body className="min-h-full flex bg-surface">
+      <body className="min-h-full flex bg-surface" suppressHydrationWarning>
         <Sidebar />
         <main className="ml-64 flex-1 min-h-screen">{children}</main>
       </body>
