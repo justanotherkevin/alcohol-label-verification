@@ -293,19 +293,43 @@
   "label-3-back": {
     "imageIndex": 1,
     "extracted": {
-      "brandName": null,
-      "classType": null,
-      "abv": null,
-      "netContents": null,
+      "brandName": "DESERT LUNA & AGAVE",
+      "classType": "Premium Botanical Spirit",
+      "abv": "40% ALC./VOL.",
+      "netContents": "750ml",
       "bottler": null,
       "countryOfOrigin": null,
       "governmentWarning": null
     },
     "boundingBoxes": {
-      "brandName": null,
-      "classType": null,
-      "abv": null,
-      "netContents": null,
+      "brandName": {
+        "imageIndex": 1,
+        "x": 0.06989247311827956,
+        "y": 0.19013062409288825,
+        "width": 0.5492831541218638,
+        "height": 0.6792452830188679
+      },
+      "classType": {
+        "imageIndex": 1,
+        "x": 0.3951612903225806,
+        "y": 0.19013062409288825,
+        "width": 0.5259856630824373,
+        "height": 0.23149492017416545
+      },
+      "abv": {
+        "imageIndex": 1,
+        "x": 0.1603942652329749,
+        "y": 0.4898403483309144,
+        "width": 0.24731182795698925,
+        "height": 0.02539912917271408
+      },
+      "netContents": {
+        "imageIndex": 1,
+        "x": 0.71415770609319,
+        "y": 0.4898403483309144,
+        "width": 0.10304659498207885,
+        "height": 0.02539912917271408
+      },
       "bottler": null,
       "countryOfOrigin": null,
       "governmentWarning": null
@@ -314,8 +338,47 @@
   "label-3-front": {
     "imageIndex": 0,
     "extracted": {
-      "brandName": null,
+      "brandName": "DESERT LUNA & AGAVE",
       "classType": null,
+      "abv": "40% ALC./VOL.",
+      "netContents": "750ml",
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.09833024118738404,
+        "y": 0.095565749235474,
+        "width": 0.8237476808905381,
+        "height": 0.849388379204893
+      },
+      "classType": null,
+      "abv": {
+        "imageIndex": 0,
+        "x": 0.2857142857142857,
+        "y": 0.8256880733944955,
+        "width": 0.2782931354359926,
+        "height": 0.03746177370030581
+      },
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.6103896103896104,
+        "y": 0.8256880733944955,
+        "width": 0.11966604823747681,
+        "height": 0.03746177370030581
+      },
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    }
+  },
+  "label-4-back": {
+    "imageIndex": 1,
+    "extracted": {
+      "brandName": null,
+      "classType": "Orange Muscat",
       "abv": null,
       "netContents": null,
       "bottler": null,
@@ -324,11 +387,140 @@
     },
     "boundingBoxes": {
       "brandName": null,
-      "classType": null,
+      "classType": {
+        "imageIndex": 1,
+        "x": 0.12572254335260116,
+        "y": 0.2918181818181818,
+        "width": 0.6979768786127167,
+        "height": 0.5963636363636363
+      },
       "abv": null,
       "netContents": null,
       "bottler": null,
       "countryOfOrigin": null,
+      "governmentWarning": null
+    }
+  },
+  "label-4-front": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "HAWK'S SHADOW ESTATE WINERY",
+      "classType": "Orange Muscat",
+      "abv": null,
+      "netContents": null,
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.05504587155963303,
+        "y": 0.08574007220216606,
+        "width": 0.8669724770642202,
+        "height": 0.1796028880866426
+      },
+      "classType": {
+        "imageIndex": 0,
+        "x": 0.2324159021406728,
+        "y": 0.6570397111913358,
+        "width": 0.518348623853211,
+        "height": 0.05595667870036101
+      },
+      "abv": null,
+      "netContents": null,
+      "bottler": null,
+      "countryOfOrigin": null,
+      "governmentWarning": null
+    }
+  },
+  "label-5-back": {
+    "imageIndex": 1,
+    "extracted": {
+      "brandName": "CASAMIGOS",
+      "classType": null,
+      "abv": null,
+      "netContents": "750 mL",
+      "bottler": null,
+      "countryOfOrigin": "Mexico",
+      "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 1,
+        "x": 0.29609929078014185,
+        "y": 0.26706231454005935,
+        "width": 0.3475177304964539,
+        "height": 0.586053412462908
+      },
+      "classType": null,
+      "abv": null,
+      "netContents": {
+        "imageIndex": 1,
+        "x": 0.15602836879432624,
+        "y": 0.7166172106824926,
+        "width": 0.16134751773049646,
+        "height": 0.05192878338278932
+      },
+      "bottler": null,
+      "countryOfOrigin": {
+        "imageIndex": 1,
+        "x": 0.5638297872340425,
+        "y": 0.1201780415430267,
+        "width": 0.17198581560283688,
+        "height": 0.02225519287833828
+      },
+      "governmentWarning": {
+        "imageIndex": 1,
+        "x": 0.14361702127659576,
+        "y": 0.1201780415430267,
+        "width": 0.7287234042553191,
+        "height": 0.7329376854599406
+      }
+    }
+  },
+  "label-5-front": {
+    "imageIndex": 0,
+    "extracted": {
+      "brandName": "CASAMIGOS",
+      "classType": null,
+      "abv": "40% ALC/VOL.",
+      "netContents": "750ML",
+      "bottler": null,
+      "countryOfOrigin": "Mexico",
+      "governmentWarning": null
+    },
+    "boundingBoxes": {
+      "brandName": {
+        "imageIndex": 0,
+        "x": 0.31629392971246006,
+        "y": 0.1257396449704142,
+        "width": 0.36741214057507987,
+        "height": 0.5355029585798816
+      },
+      "classType": null,
+      "abv": {
+        "imageIndex": 0,
+        "x": 0.134185303514377,
+        "y": 0.8387573964497042,
+        "width": 0.1757188498402556,
+        "height": 0.03698224852071006
+      },
+      "netContents": {
+        "imageIndex": 0,
+        "x": 0.7971246006389776,
+        "y": 0.834319526627219,
+        "width": 0.05750798722044728,
+        "height": 0.028106508875739646
+      },
+      "bottler": null,
+      "countryOfOrigin": {
+        "imageIndex": 0,
+        "x": 0.7204472843450479,
+        "y": 0.3062130177514793,
+        "width": 0.12939297124600638,
+        "height": 0.042899408284023666
+      },
       "governmentWarning": null
     }
   },
