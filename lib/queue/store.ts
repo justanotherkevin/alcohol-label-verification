@@ -10,7 +10,6 @@ import {
   LabelImage,
   OcrData,
 } from "./types";
-import { MOCK_QUEUE_TEMPLATES } from "./mock-templates";
 
 // ── Assembly helper ───────────────────────────────────────────────────────────
 
@@ -423,15 +422,15 @@ export async function revertResolution(
   return assembleApplication(id);
 }
 
-let templateCursor = 0;
-
 export async function addMockApplication(): Promise<QueueApplication> {
+  const { SEED_APPLICATIONS } = await import("./seed-data");
   const template =
-    MOCK_QUEUE_TEMPLATES[templateCursor % MOCK_QUEUE_TEMPLATES.length];
-  templateCursor++;
+    SEED_APPLICATIONS[Math.floor(Math.random() * SEED_APPLICATIONS.length)];
   const id = `TTB-2026-${Date.now()}`;
   const app: QueueApplication = {
-    ...template,
+    applicant: template.applicant,
+    applicationData: template.applicationData,
+    images: template.images,
     id,
     submittedAt: new Date().toISOString(),
     status: "pending",
@@ -456,7 +455,6 @@ export async function listResolvedApplications(): Promise<QueueApplication[]> {
 
 export async function resetQueue(): Promise<void> {
   await pool.query(`DELETE FROM applications`);
-  templateCursor = 0;
   const { SEED_APPLICATIONS } = await import("./seed-data");
   for (const app of SEED_APPLICATIONS) {
     await insertApplication(app);

@@ -19,6 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `app/page.tsx`, `app/audit/page.tsx` — added Previous/Next pagination controls to the queue table and audit log table
 
 ---
+## [2026-07-02] — randomize mock application seed
+
+### Changed
+
+- `lib/queue/store.ts` — `addMockApplication` now picks a random entry from `SEED_APPLICATIONS` (`lib/queue/seed-data.ts`) instead of round-robining through a separate 2-item template list, so clicking "+ Add mock application" repeatedly yields varied applications instead of always the same one
+
+### Removed
+
+- `lib/queue/mock-templates.ts` — no longer referenced now that `addMockApplication` draws from `SEED_APPLICATIONS`
 
 ## [2026-07-02] — house-keeping
 
