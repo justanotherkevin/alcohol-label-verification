@@ -3,7 +3,7 @@ import { listResolvedApplications } from "@/lib/queue/store"
 import { specialistNameById, AuditEntry } from "@/lib/queue/specialist"
 
 export async function GET() {
-  const resolved = listResolvedApplications()
+  const resolved = await listResolvedApplications()
   const entries: AuditEntry[] = resolved.map((app) => {
     const res = app.reviewData.resolution!
     return {

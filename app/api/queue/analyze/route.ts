@@ -6,12 +6,12 @@ export async function POST(req: NextRequest) {
   const providerName = req.headers.get("X-Ocr-Provider") ?? "mock"
   const apiKey = req.headers.get("X-Api-Key") ?? undefined
 
-  const pending = unanalyzedApplications()
+  const pending = await unanalyzedApplications()
   const analyzedIds: string[] = []
 
   for (const app of pending) {
     const { ocrData, images } = await analyzeApplication(app, providerName, apiKey)
-    updateApplication(app.id, { status: "analyzed", ocrData, images })
+    await updateApplication(app.id, { status: "analyzed", ocrData, images })
     analyzedIds.push(app.id)
   }
 

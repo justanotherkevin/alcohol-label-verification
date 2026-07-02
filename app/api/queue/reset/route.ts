@@ -4,6 +4,6 @@ import { regenerateExtracted } from "@/lib/queue/regenerate-extracted"
 
 export async function DELETE() {
   regenerateExtracted()
-  resetQueue()
+  await resetQueue()
   return NextResponse.json({ ok: true })
 }
