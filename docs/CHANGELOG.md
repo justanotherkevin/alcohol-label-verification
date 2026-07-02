@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — house-keeping
+
+### Added
+
+- `docs/users-flow.md` — new "Flow 3: Correcting a Mistaken Decision (Revert)", documenting the case where an application is mistakenly approved/rejected and needs to be reverted and re-reviewed; matching row added to the Edge Cases table, and a note under the deferred "Full audit trail" item clarifying that reverts themselves aren't logged
+- `app/api/queue/[id]/revert/route.test.ts` — integration tests against real Postgres: 404 (unknown id), 409 (not resolved), and the full resolve → revert round-trip
+- `app/api/audit/route.test.ts` — integration tests for `GET /api/audit`: empty/zeroed state, and resolved applications correctly reflected in `entries`/`summary`/`activity`
+
+### Fixed
+
+- `vitest.config.ts` — widened `include` to pick up `app/**/*.test.ts` (route-level tests weren't being run at all), and set `fileParallelism: false` since multiple test files calling `__resetQueueForTests()` against the same shared Postgres instance were racing each other's `DELETE`/`INSERT` and hitting duplicate-key errors
+
+### Changed
+
+- `app/api/audit/route.ts`, `app/api/queue/[id]/resolve/route.ts`, `components/queue/ResolutionPanel.tsx`, `lib/queue/store.ts` — formatter-only changes (semicolons, line wrapping); no logic changes
+
+---
+
 ## [2026-07-02] — feat/revert-resolution-and-audit-data
 
 ### Added

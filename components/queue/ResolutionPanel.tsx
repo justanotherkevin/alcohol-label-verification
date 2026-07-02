@@ -72,7 +72,8 @@ export function ResolutionPanel({
           </button>
           {!canApprove && (
             <p className="text-xs text-on-surface-muted self-center">
-              {stillFlagged.length} field(s) still flagged — override or reject them first.
+              {stillFlagged.length} field(s) still flagged — override or reject
+              them first.
             </p>
           )}
         </div>
@@ -102,7 +103,11 @@ export function ResolutionPanel({
           <div className="flex gap-2">
             <button
               onClick={handleConfirmReject}
-              disabled={validRejectedFieldCount === 0 || !rejectNote.trim() || submitting}
+              disabled={
+                validRejectedFieldCount === 0 ||
+                !rejectNote.trim() ||
+                submitting
+              }
               className="px-5 py-2.5 bg-bp-error text-white text-sm font-semibold rounded-lg disabled:opacity-40">
               Confirm Reject
             </button>

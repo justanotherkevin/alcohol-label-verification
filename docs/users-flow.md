@@ -12,7 +12,7 @@
 
 > **Scope note:** User auth, role-based access, and data retention are out of scope for this prototype. Sarah and Marcus's admin journeys are deferred. Dave's override flow is included as a lightweight addition.
 
-> **Core model:** A Labeling Specialist never types or invents application data. Every application in the queue was already submitted by a producer/importer, with its label artwork attached — the specialist's job is to *review*, not to *enter data and wait for a result*. AI pre-analysis runs ahead of time (see below), so opening a queue item shows findings that are already computed.
+> **Core model:** A Labeling Specialist never types or invents application data. Every application in the queue was already submitted by a producer/importer, with its label artwork attached — the specialist's job is to _review_, not to _enter data and wait for a result_. AI pre-analysis runs ahead of time (see below), so opening a queue item shows findings that are already computed.
 
 ---
 
@@ -149,6 +149,44 @@
 
 ---
 
+## Flow 3: Correcting a Mistaken Decision (Revert)
+
+**Actors:** Jenny, Dave (any specialist who catches an incorrect Approve/Reject)
+**Goal:** Undo a mistaken decision and send the application back for re-review
+
+```
+1. NOTICE the mistake
+   ├── Via Audit Log: specialist scans Review History, spots a wrong
+   │   decision (e.g. rejected for a Govt Warning fuzzy-match that
+   │   should've passed)
+   └── Via the application's own detail page, if reopened directly by ID
+
+2. OPEN the resolved application (optional — Audit Log also allows reverting inline)
+   └── Detail page for a resolved application shows a summary block in
+       place of the Approve/Reject panel: decision, specialist, note,
+       timestamp
+
+3. REVERT to queue
+   ├── Specialist clicks "Revert to Queue" — available both on the
+   │   application detail page and as a row action in the Audit Log table
+   ├── Confirm dialog: "This will remove the resolution and return the
+   │   application to the queue for re-review. This cannot be undone."
+   └── On confirm: the resolution is discarded and the application's
+       status returns to "analyzed"
+
+4. RE-ENTERS the queue
+   └── Application reappears in the pending queue (Flow 1, step 2) with
+       its original AI findings intact — no re-analysis needed
+
+5. RE-REVIEW and correct
+   └── Specialist works the application through Flow 1 steps 3–7 again,
+       this time reaching the correct Approve/Reject decision
+```
+
+**Note:** Reverting is destructive — the discarded decision, note, and specialist attribution are not archived anywhere. There is no record that a revert happened, only whatever resolution (if any) replaces it. See "Full audit trail" under Deferred Journeys.
+
+---
+
 ## Dev/Demo Tools (prototype only)
 
 **Not part of any specialist persona's flow.** These exist only because the prototype has no real submission intake or scheduler:
@@ -168,17 +206,18 @@
 
 ## Edge Cases & States
 
-| Scenario                                | Behavior                                                                 |
-| --------------------------------------- | ------------------------------------------------------------------------ |
-| Image has glare / poor lighting         | AI attempts extraction; low-confidence fields flagged ⚠️                 |
-| Image is completely unreadable          | Returns "Unable to extract" per field; does not auto-reject              |
-| Minor brand name formatting diff        | Fuzzy match — passes (e.g. `STONE'S THROW` vs `Stone's Throw`)           |
-| Govt warning in title case              | Strict match — fails; diff shown                                         |
-| Govt warning in small/low-contrast text | Flagged ⚠️ but not auto-rejected                                         |
-| ABV format variation                    | Normalized match — passes (e.g. `45% Alc./Vol. (90 Proof)` vs `45% ABV`) |
-| Batch: CSV row has no matching image    | Flagged before processing begins                                         |
-| API timeout / error                     | Clear error message per label; does not silently fail                    |
-| Field bounding box unavailable          | Click on field row does nothing; no error shown                          |
+| Scenario                                 | Behavior                                                                                                                                       |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Image has glare / poor lighting          | AI attempts extraction; low-confidence fields flagged ⚠️                                                                                       |
+| Image is completely unreadable           | Returns "Unable to extract" per field; does not auto-reject                                                                                    |
+| Minor brand name formatting diff         | Fuzzy match — passes (e.g. `STONE'S THROW` vs `Stone's Throw`)                                                                                 |
+| Govt warning in title case               | Strict match — fails; diff shown                                                                                                               |
+| Govt warning in small/low-contrast text  | Flagged ⚠️ but not auto-rejected                                                                                                               |
+| ABV format variation                     | Normalized match — passes (e.g. `45% Alc./Vol. (90 Proof)` vs `45% ABV`)                                                                       |
+| Batch: CSV row has no matching image     | Flagged before processing begins                                                                                                               |
+| API timeout / error                      | Clear error message per label; does not silently fail                                                                                          |
+| Field bounding box unavailable           | Click on field row does nothing; no error shown                                                                                                |
+| Application mistakenly approved/rejected | Specialist reverts via "Revert to Queue" (detail page or Audit Log row action); application returns to the queue as re-reviewable — see Flow 3 |
 
 ---
 
@@ -199,4 +238,7 @@
 **Full audit trail**
 
 - Agent override history with timestamps and IDs
+- Reverting a decision (Flow 3) is supported, but the reversal itself isn't
+  logged — the prior decision is discarded, not archived, so there's no
+  history of _that_ a correction happened
 - Requires: user auth + data retention
