@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — feat/postgres-queue-store
+
+### Added
+
+- `lib/db.ts` — shared `pg` `Pool` (using `DATABASE_URL`); configures a `TIMESTAMPTZ` type parser so timestamps come back as ISO strings matching the app's existing string date types
+- `scripts/init-db.sql` — schema for `applications`, `application_data`, `application_images`, `ocr_data`, `review_sessions`, `field_notes`, and `resolutions` tables (drop-and-recreate)
+- `scripts/seed-db.ts` — CLI script (`npm run db:seed`) that clears and re-inserts `SEED_APPLICATIONS` into Postgres
+
+### Changed
+
+- `lib/queue/store.ts` — rewritten from an in-memory array-backed store to a Postgres-backed one; every exported function (`listQueue`, `getApplication`, `addApplication`, `updateApplication`, `unanalyzedApplications`, `resolveApplication`, `addMockApplication`, `listResolvedApplications`, `resetQueue`) is now `async` and reads/writes via parameterized queries, with multi-statement writes wrapped in `BEGIN`/`COMMIT`/`ROLLBACK` transactions
+- `app/api/audit/route.ts`, `app/api/batch/route.ts`, `app/api/queue/route.ts`, `app/api/queue/[id]/route.ts`, `app/api/queue/[id]/resolve/route.ts`, `app/api/queue/analyze/route.ts`, `app/api/queue/reset/route.ts` — added `await` for the now-async queue store calls
+- `lib/queue/store.test.ts` — updated to `await __resetQueueForTests()` and the store's async API
+- `package.json` — added `pg` / `@types/pg` dependencies and a `db:seed` script
+
+---
+
 ## [2026-07-02] — feat/specialist-login-audit-log
 
 ### Added
