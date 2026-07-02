@@ -2,32 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FieldResult, VerificationResult } from "@/lib/verify";
-import { BoundingBoxMap, ConfidenceMap } from "@/lib/ocr/types";
+import { FieldResult } from "@/lib/verify";
+import { BoundingBoxMap } from "@/lib/ocr/types";
 import { isFieldFlagged } from "@/lib/queue/field-status";
+import { LabelImage, OcrData, QueueStatus } from "@/lib/queue/types";
+import { ApplicationData } from "@/lib/verify";
 import { ImageCarousel } from "@/components/queue/ImageCarousel";
 import { FieldCard } from "@/components/queue/FieldCard";
 import { OverrideModal } from "@/components/queue/OverrideModal";
 import { ResolutionPanel } from "@/components/queue/ResolutionPanel";
 
-interface LabelImage {
-  base64: string;
-  mimeType: string;
-  side?: string;
-}
-
 interface QueueApplicationDetail {
   id: string;
-  brandName: string;
   applicant: string;
   submittedAt: string;
   images: LabelImage[];
-  status: "pending" | "analyzed" | "resolved";
-  analysis: {
-    confidence: ConfidenceMap;
-    boundingBoxes?: BoundingBoxMap;
-    result: VerificationResult;
-  } | null;
+  applicationData: ApplicationData;
+  status: QueueStatus;
+  ocrData: OcrData | null;
 }
 
 type OverrideDecision = "approve" | "flag";
@@ -70,8 +62,8 @@ export default function QueueDetailPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, w, h);
-    if (!selectedField || !app?.analysis?.boundingBoxes) return;
-    const bbox = app.analysis.boundingBoxes[selectedField as keyof BoundingBoxMap];
+    if (!selectedField || !app?.ocrData?.boundingBoxes) return;
+    const bbox = app.ocrData.boundingBoxes[selectedField as keyof BoundingBoxMap];
     if (!bbox || bbox.imageIndex !== activeImageIndex) return;
     ctx.strokeStyle = "#4c6080";
     ctx.lineWidth = 2;
@@ -85,8 +77,8 @@ export default function QueueDetailPage() {
   function handleFieldClick(fieldKey: string) {
     const newSelected = selectedField === fieldKey ? null : fieldKey;
     setSelectedField(newSelected);
-    if (newSelected && app?.analysis?.boundingBoxes) {
-      const bbox = app.analysis.boundingBoxes[newSelected as keyof BoundingBoxMap];
+    if (newSelected && app?.ocrData?.boundingBoxes) {
+      const bbox = app.ocrData.boundingBoxes[newSelected as keyof BoundingBoxMap];
       if (bbox && bbox.imageIndex !== activeImageIndex) {
         setActiveImageIndex(bbox.imageIndex);
       }
@@ -157,7 +149,7 @@ export default function QueueDetailPage() {
     router.push("/");
   }
 
-  const allFields = app?.analysis?.result.fields ?? [];
+  const allFields = app?.ocrData?.result.fields ?? [];
   const naturallyStillFlagged = allFields.filter(
     (f) => isFieldFlagged(f) && overrides[f.field]?.decision !== "approve",
   );
@@ -165,7 +157,7 @@ export default function QueueDetailPage() {
     (f) => !isFieldFlagged(f) && overrides[f.field]?.decision === "flag",
   );
   const stillFlagged = [...naturallyStillFlagged, ...manuallyFlagged];
-  const canApprove = app?.analysis !== null && stillFlagged.length === 0;
+  const canApprove = app?.ocrData !== null && stillFlagged.length === 0;
 
   if (loading)
     return <div className="px-8 py-8 text-sm text-on-surface-muted">Loading application…</div>;
@@ -178,14 +170,14 @@ export default function QueueDetailPage() {
         <h1
           className="text-2xl font-bold text-on-surface"
           style={{ fontFamily: "var(--font-inter)" }}>
-          {app.brandName}
+          {app.applicationData.brandName}
         </h1>
         <p className="text-sm text-on-surface-muted mt-1">
           {app.id} · {app.applicant} · submitted {new Date(app.submittedAt).toLocaleString()}
         </p>
       </div>
 
-      {!app.analysis ?
+      {!app.ocrData ?
         <p className="text-sm text-on-surface-muted">
           This application has not been analyzed yet. Run pre-analysis from the queue screen first.
         </p>
@@ -194,14 +186,14 @@ export default function QueueDetailPage() {
             images={app.images}
             activeImageIndex={activeImageIndex}
             selectedField={selectedField}
-            hasBoundingBoxes={Boolean(app.analysis.boundingBoxes)}
+            hasBoundingBoxes={Boolean(app.ocrData.boundingBoxes)}
             onImageChange={handleImageChange}
             imgRef={imgRef}
             canvasRef={canvasRef}
           />
 
           <div className="space-y-3">
-            {app.analysis.result.fields.map((f) => (
+            {app.ocrData.result.fields.map((f) => (
               <FieldCard
                 key={f.field}
                 field={f}
@@ -211,7 +203,7 @@ export default function QueueDetailPage() {
                 onFieldClick={handleFieldClick}
                 onOpenOverride={setOverrideDraftField}
                 onClearOverride={clearOverride}
-                fieldBbox={app.analysis?.boundingBoxes?.[f.field as keyof BoundingBoxMap]}
+                fieldBbox={app.ocrData?.boundingBoxes?.[f.field as keyof BoundingBoxMap]}
                 allImages={app.images}
               />
             ))}
@@ -226,7 +218,7 @@ export default function QueueDetailPage() {
         onClose={() => setOverrideDraftField(null)}
       />
 
-      {app.analysis && app.status !== "resolved" && (
+      {app.ocrData && app.status !== "resolved" && (
         <ResolutionPanel
           canApprove={canApprove ?? false}
           stillFlagged={stillFlagged}

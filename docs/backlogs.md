@@ -6,6 +6,24 @@ Each entry: **Why** it matters, **Affected files**, and any **Findings** from th
 
 ---
 
+## Replace in-memory lock store with Redis
+
+**Why:** `lib/queue/lock.ts` uses an in-memory `Map` with manual TTL checks to prevent two specialists from reviewing the same application simultaneously. This works for a single-process dev environment but is not safe under multiple server instances or restarts — a process restart clears all locks, and two instances can grant the same lock independently.
+
+**Affected files:**
+
+- `lib/queue/lock.ts` — swap `Map<string, Lock>` for `ioredis` client; use native key TTL (`SET lock:application:{id} ... EX 300`) and `DEL` for supervisor break; `getLock` becomes a Redis `GET` + JSON parse
+
+**Findings:**
+
+- Key pattern: `lock:application:{id}`, value: `JSON.stringify({ specialistId, specialistName, acquiredAt })`, TTL: 300s
+- `acquireLock` → Redis `SET ... NX EX` (atomic compare-and-set)
+- `refreshLock` → `GET` to verify owner, then `EXPIRE` to reset TTL
+- `releaseLock` → `GET` owner check, then `DEL` (or skip check for supervisor break)
+- No Lua scripting needed for this simple case — `GET` + `DEL` sequence is safe since only the lock holder calls release
+
+---
+
 ## Wire Audit Log to real resolved applications
 
 **Why:** The Audit Log page (`/audit`) currently renders hardcoded static data. Resolved applications (approved or rejected) disappear from the Queue but don't surface anywhere real — they're stored in memory via `resolveApplication()` but never exposed to the UI.

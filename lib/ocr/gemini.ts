@@ -1,11 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
-import { OcrProvider, OcrResult } from "./types"
+import { GuidedSearchHints, OcrProvider, OcrResult } from "./types"
 import { EXTRACTION_SYSTEM_PROMPT, parseExtractionResponse, stripCodeFences } from "./llm-prompt"
 
 export function geminiOcrProvider(apiKey: string): OcrProvider {
   return {
     name: "gemini",
-    async extract(imageBase64: string, mimeType: string): Promise<OcrResult> {
+    async extract(imageBase64: string, mimeType: string, _hints?: GuidedSearchHints): Promise<OcrResult> {
       const genAI = new GoogleGenerativeAI(apiKey)
       const model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash",

@@ -24,7 +24,7 @@ export interface Resolution {
   resolvedAt: string
 }
 
-export interface QueueAnalysis {
+export interface OcrData {
   extracted: ExtractedLabelData
   confidence: ConfidenceMap
   boundingBoxes?: BoundingBoxMap
@@ -32,16 +32,36 @@ export interface QueueAnalysis {
   analyzedAt: string
 }
 
+export interface FieldReviewNote {
+  field: string
+  note: string
+  flagged: boolean
+  decision?: "approve" | "reject"
+  specialistId: string
+  savedAt: string
+}
+
+export interface ReviewSession {
+  specialistId: string
+  startedAt: string
+  completedAt?: string
+}
+
+export interface ApplicationReviewData {
+  sessions: ReviewSession[]
+  fieldNotes: FieldReviewNote[]
+  resolution: Resolution | null
+}
+
 export interface QueueApplication {
   id: string
-  brandName: string
   applicant: string
   submittedAt: string
-  applicationData: ApplicationData
   images: LabelImage[]
+  applicationData: ApplicationData
+  ocrData: OcrData | null
+  reviewData: ApplicationReviewData
   status: QueueStatus
-  analysis: QueueAnalysis | null
-  resolution: Resolution | null
 }
 
 export interface QueueSummary {

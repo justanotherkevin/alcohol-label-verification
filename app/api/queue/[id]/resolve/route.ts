@@ -6,12 +6,12 @@ import { Resolution } from "@/lib/queue/types"
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const app = getApplication(id)
-  if (!app || !app.analysis) {
+  if (!app || !app.ocrData) {
     return NextResponse.json({ error: "Application not found or not yet analyzed" }, { status: 404 })
   }
 
   const body = (await req.json()) as ResolveRequestBody
-  const outcome = validateResolution(app.analysis, body)
+  const outcome = validateResolution(app.ocrData, body)
   if (!outcome.ok) {
     return NextResponse.json({ error: outcome.error }, { status: 400 })
   }

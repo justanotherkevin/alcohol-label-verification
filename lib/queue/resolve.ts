@@ -1,4 +1,4 @@
-import { FieldOverride, QueueAnalysis } from "./types";
+import { FieldOverride, OcrData } from "./types";
 import { isFieldFlagged } from "./field-status";
 
 export interface ResolveRequestBody {
@@ -11,7 +11,7 @@ export interface ResolveRequestBody {
 export type ValidationOutcome = { ok: true } | { ok: false; error: string };
 
 export function validateResolution(
-  analysis: QueueAnalysis,
+  analysis: OcrData,
   body: ResolveRequestBody,
 ): ValidationOutcome {
   const approvedFields = new Set(

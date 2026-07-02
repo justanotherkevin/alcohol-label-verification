@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
-import { OcrProvider, OcrResult } from "./types"
+import { GuidedSearchHints, OcrProvider, OcrResult } from "./types"
 import { EXTRACTION_SYSTEM_PROMPT, parseExtractionResponse, stripCodeFences } from "./llm-prompt"
 
 const SUPPORTED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const
@@ -8,7 +8,7 @@ type SupportedMimeType = (typeof SUPPORTED_MIME_TYPES)[number]
 export function claudeOcrProvider(apiKey: string): OcrProvider {
   return {
     name: "claude",
-    async extract(imageBase64: string, mimeType: string): Promise<OcrResult> {
+    async extract(imageBase64: string, mimeType: string, _hints?: GuidedSearchHints): Promise<OcrResult> {
       if (!SUPPORTED_MIME_TYPES.includes(mimeType as SupportedMimeType)) {
         throw new Error(`Claude does not support mime type: ${mimeType}`)
       }
