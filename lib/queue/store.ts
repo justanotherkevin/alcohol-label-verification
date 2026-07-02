@@ -313,6 +313,23 @@ export async function resolveApplication(
   return assembleApplication(id)
 }
 
+export async function revertResolution(id: string): Promise<QueueApplication | undefined> {
+  const client = await pool.connect()
+  try {
+    await client.query("BEGIN")
+    // prototype: revert is destructive; the resolution row is discarded, no history is preserved
+    await client.query(`DELETE FROM resolutions WHERE application_id = $1`, [id])
+    await client.query(`UPDATE applications SET status = 'analyzed' WHERE id = $1`, [id])
+    await client.query("COMMIT")
+  } catch (e) {
+    await client.query("ROLLBACK")
+    throw e
+  } finally {
+    client.release()
+  }
+  return assembleApplication(id)
+}
+
 let templateCursor = 0
 
 export async function addMockApplication(): Promise<QueueApplication> {

@@ -4,6 +4,7 @@ import {
   getApplication,
   unanalyzedApplications,
   resolveApplication,
+  revertResolution,
   addMockApplication,
   __resetQueueForTests,
 } from "./store"
@@ -54,5 +55,23 @@ describe("queue store", () => {
     })
     expect((await listQueue()).find((i) => i.id === target.id)).toBeUndefined()
     expect((await getApplication(target.id))?.status).toBe("resolved")
+  })
+
+  it("revertResolution returns application to analyzed and restores it to listQueue", async () => {
+    const target = (await listQueue()).find((i) => i.status === "analyzed")!
+    await resolveApplication(target.id, {
+      decision: "approved",
+      overrides: [],
+      rejectedFields: [],
+      note: "",
+      resolvedAt: new Date().toISOString(),
+    })
+    expect((await getApplication(target.id))?.status).toBe("resolved")
+
+    await revertResolution(target.id)
+    const reverted = await getApplication(target.id)
+    expect(reverted?.status).toBe("analyzed")
+    expect(reverted?.reviewData.resolution).toBeNull()
+    expect((await listQueue()).find((i) => i.id === target.id)).toBeDefined()
   })
 })

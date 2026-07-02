@@ -10,7 +10,8 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:unit": "vitest run",
-    "db:seed": "tsx scripts/seed-db.ts"
+    "db:seed": "tsx --env-file=.env.development.local scripts/seed-db.ts",
+    "db:seed:resolutions": "tsx --env-file=.env.development.local scripts/seed-resolutions.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.107.0",
@@ -27,13 +28,14 @@
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/pg": "^8.20.0",
     "@types/papaparse": "^5.5.2",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.22.5",
     "typescript": "^5",
     "vitest": "^4.1.9"
   }
