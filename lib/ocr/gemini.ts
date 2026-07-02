@@ -5,7 +5,7 @@ import { EXTRACTION_SYSTEM_PROMPT, parseExtractionResponse, stripCodeFences } fr
 export function geminiOcrProvider(apiKey: string): OcrProvider {
   return {
     name: "gemini",
-    async extract(imageBase64: string, mimeType: string): Promise<OcrResult> {
+    async extract(imageBase64: string, mimeType: string, _hints?: import("./types").GuidedSearchHints): Promise<OcrResult> {
       const genAI = new GoogleGenerativeAI(apiKey)
       const model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash",

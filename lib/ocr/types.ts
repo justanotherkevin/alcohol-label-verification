@@ -28,7 +28,17 @@ export interface OcrResult {
   rawText?: string
 }
 
+export interface GuidedSearchHints {
+  brandName?: string | null
+  classType?: string | null
+  abv?: string | null
+  netContents?: string | null
+  bottler?: string | null
+  countryOfOrigin?: string | null
+  governmentWarning?: string | null
+}
+
 export interface OcrProvider {
   name: string
-  extract: (imageBase64: string, mimeType: string) => Promise<OcrResult>
+  extract: (imageBase64: string, mimeType: string, hints?: GuidedSearchHints) => Promise<OcrResult>
 }

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { validateResolution } from "./resolve"
-import { QueueAnalysis } from "./types"
+import { OcrData } from "./types"
 
-const analysis: QueueAnalysis = {
+const analysis: OcrData = {
   extracted: {
     brandName: "X",
     classType: null,
@@ -70,7 +70,7 @@ describe("validateResolution", () => {
   })
 
   it("rejects approval when a field passes text match but fails its regulatory check", () => {
-    const regulatoryAnalysis: QueueAnalysis = {
+    const regulatoryAnalysis: OcrData = {
       ...analysis,
       result: {
         overallPass: true,

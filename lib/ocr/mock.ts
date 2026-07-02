@@ -25,7 +25,7 @@ const MOCK_BOUNDING_BOXES: BoundingBoxMap = {
 
 export const mockOcrProvider: OcrProvider = {
   name: "mock",
-  async extract(_imageBase64: string, _mimeType: string): Promise<OcrResult> {
+  async extract(_imageBase64: string, _mimeType: string, _hints?: import("./types").GuidedSearchHints): Promise<OcrResult> {
     await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS))
     return { data: MOCK_EXTRACTED, confidence: {}, boundingBoxes: MOCK_BOUNDING_BOXES }
   },

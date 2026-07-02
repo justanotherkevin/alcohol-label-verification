@@ -1,4 +1,4 @@
-import { QueueApplication, QueueSummary, Resolution } from "./types"
+import { QueueApplication, QueueSummary, Resolution, ApplicationReviewData } from "./types"
 import { SEED_APPLICATIONS } from "./seed-data"
 import { MOCK_QUEUE_TEMPLATES } from "./mock-templates"
 import { isFieldFlagged } from "./field-status"
@@ -12,12 +12,12 @@ export function listQueue(): QueueSummary[] {
     .filter((app) => app.status !== "resolved")
     .map((app) => ({
       id: app.id,
-      brandName: app.brandName,
+      brandName: app.applicationData.brandName ?? app.applicant,
       applicant: app.applicant,
       submittedAt: app.submittedAt,
       status: app.status,
-      flagCount: app.analysis ? app.analysis.result.fields.filter(isFieldFlagged).length : 0,
-      overallPass: app.analysis ? app.analysis.result.overallPass : null,
+      flagCount: app.ocrData ? app.ocrData.result.fields.filter(isFieldFlagged).length : 0,
+      overallPass: app.ocrData ? app.ocrData.result.overallPass : null,
     }))
     .sort((a, b) => b.flagCount - a.flagCount)
 }
@@ -45,20 +45,26 @@ export function unanalyzedApplications(): QueueApplication[] {
 }
 
 export function resolveApplication(id: string, resolution: Resolution): QueueApplication | undefined {
-  return updateApplication(id, { status: "resolved", resolution })
+  const app = getApplication(id)
+  if (!app) return undefined
+  return updateApplication(id, {
+    status: "resolved",
+    reviewData: { ...app.reviewData, resolution },
+  })
 }
 
 export function addMockApplication(): QueueApplication {
   const template = MOCK_QUEUE_TEMPLATES[templateCursor % MOCK_QUEUE_TEMPLATES.length]
   templateCursor += 1
   nextIdSuffix += 1
+  const emptyReviewData: ApplicationReviewData = { sessions: [], fieldNotes: [], resolution: null }
   const app: QueueApplication = {
     ...template,
     id: `TTB-2026-${nextIdSuffix}`,
     submittedAt: new Date().toISOString(),
     status: "pending",
-    analysis: null,
-    resolution: null,
+    ocrData: null,
+    reviewData: emptyReviewData,
   }
   applications.push(app)
   return app

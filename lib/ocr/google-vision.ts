@@ -1,15 +1,9 @@
 import {
   computeFieldBbox,
-  extractAbv,
-  extractBottler,
-  extractBrandName,
-  extractClassType,
-  extractCountryOfOrigin,
-  extractGovernmentWarning,
-  extractNetContents,
+  extractWithHints,
   logRawOcrText,
 } from "./tesseract"
-import { BoundingBoxMap, ExtractedLabelData, OcrProvider, OcrResult } from "./types"
+import { BoundingBoxMap, ExtractedLabelData, GuidedSearchHints, OcrProvider, OcrResult } from "./types"
 
 type Vertex = { x?: number; y?: number }
 
@@ -39,7 +33,7 @@ type VisionResponse = {
 export function googleVisionOcrProvider(apiKey: string): OcrProvider {
   return {
     name: "google-vision",
-    async extract(imageBase64: string, _mimeType: string): Promise<OcrResult> {
+    async extract(imageBase64: string, _mimeType: string, hints?: GuidedSearchHints): Promise<OcrResult> {
       const res = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -85,16 +79,7 @@ export function googleVisionOcrProvider(apiKey: string): OcrProvider {
         })
 
       const lines = text.split("\n").filter((l) => l.trim().length > 0)
-
-      const extracted: ExtractedLabelData = {
-        brandName: extractBrandName(lines),
-        classType: extractClassType(text),
-        abv: extractAbv(text),
-        netContents: extractNetContents(text),
-        bottler: extractBottler(text),
-        countryOfOrigin: extractCountryOfOrigin(text),
-        governmentWarning: extractGovernmentWarning(text),
-      }
+      const extracted: ExtractedLabelData = extractWithHints(text, lines, hints)
 
       const boundingBoxes: BoundingBoxMap = {}
       for (const field of Object.keys(extracted) as (keyof ExtractedLabelData)[]) {

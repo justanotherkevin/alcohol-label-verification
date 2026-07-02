@@ -5,7 +5,7 @@ import { EXTRACTION_SYSTEM_PROMPT, parseExtractionResponse, stripCodeFences } fr
 export function openaiOcrProvider(apiKey: string): OcrProvider {
   return {
     name: "openai",
-    async extract(imageBase64: string, mimeType: string): Promise<OcrResult> {
+    async extract(imageBase64: string, mimeType: string, _hints?: import("./types").GuidedSearchHints): Promise<OcrResult> {
       const client = new OpenAI({ apiKey })
       const response = await client.chat.completions.create({
         model: "gpt-4o",

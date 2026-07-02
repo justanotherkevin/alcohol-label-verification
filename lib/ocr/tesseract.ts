@@ -1,5 +1,5 @@
 import { createWorker } from "tesseract.js"
-import { BoundingBox, BoundingBoxMap, ExtractedLabelData, OcrProvider, OcrResult } from "./types"
+import { BoundingBox, BoundingBoxMap, ExtractedLabelData, GuidedSearchHints, OcrProvider, OcrResult } from "./types"
 
 type WordLike = { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }
 
@@ -107,9 +107,68 @@ export function extractCountryOfOrigin(text: string): string | null {
   return match ? match[0].trim() : null
 }
 
+// Returns the submitted value if found in OCR text (case-insensitive), otherwise null.
+function findInText(text: string, target: string | null | undefined): string | null {
+  if (!target) return null
+  const normalTarget = target.trim().toLowerCase().replace(/\s+/g, " ")
+  const normalText = text.toLowerCase().replace(/\s+/g, " ")
+  return normalText.includes(normalTarget) ? target : null
+}
+
+// Guided ABV: exact text search first, then numeric fallback for format variants like "45% ALC./VOL."
+function findAbvInText(text: string, submitted: string | null | undefined): string | null {
+  const guided = findInText(text, submitted)
+  if (guided) return guided
+  if (submitted) {
+    const num = submitted.match(/(\d+(?:\.\d+)?)/)?.[1]
+    if (num) {
+      const m = text.match(new RegExp(`${num}\\s*%\\s*(?:Alc\\.?\\/Vol\\.?|alc\\.?\\/vol\\.?|ABV|alcohol by volume)`, "i"))
+      if (m) return m[0].trim()
+    }
+  }
+  return extractAbv(text)
+}
+
+// Guided net contents: exact search first, then unit-aware regex fallback.
+function findNetContentsInText(text: string, submitted: string | null | undefined): string | null {
+  const guided = findInText(text, submitted)
+  if (guided) return guided
+  if (submitted) {
+    const num = submitted.match(/(\d+(?:\.\d+)?)/)?.[1]
+    if (num) {
+      const m = text.match(new RegExp(`${num}\\s*(?:mL|ml|ML|L\\b|fl\\.?\\s*oz|oz)`, "i"))
+      if (m) return m[0].trim()
+    }
+  }
+  return extractNetContents(text)
+}
+
+export function extractWithHints(text: string, lines: string[], hints?: GuidedSearchHints): ExtractedLabelData {
+  if (!hints) {
+    return {
+      brandName: extractBrandName(lines),
+      classType: extractClassType(text),
+      abv: extractAbv(text),
+      netContents: extractNetContents(text),
+      bottler: extractBottler(text),
+      countryOfOrigin: extractCountryOfOrigin(text),
+      governmentWarning: extractGovernmentWarning(text),
+    }
+  }
+  return {
+    brandName: findInText(text, hints.brandName) ?? extractBrandName(lines),
+    classType: findInText(text, hints.classType) ?? extractClassType(text),
+    abv: findAbvInText(text, hints.abv),
+    netContents: findNetContentsInText(text, hints.netContents),
+    bottler: findInText(text, hints.bottler) ?? extractBottler(text),
+    countryOfOrigin: findInText(text, hints.countryOfOrigin) ?? extractCountryOfOrigin(text),
+    governmentWarning: extractGovernmentWarning(text),
+  }
+}
+
 export const tesseractOcrProvider: OcrProvider = {
   name: "tesseract",
-  async extract(imageBase64: string, _mimeType: string): Promise<OcrResult> {
+  async extract(imageBase64: string, _mimeType: string, hints?: GuidedSearchHints): Promise<OcrResult> {
     const buffer = Buffer.from(imageBase64, "base64")
     const worker = await createWorker("eng")
     let text = ""
@@ -131,16 +190,7 @@ export const tesseractOcrProvider: OcrProvider = {
     }
 
     const lines = text.split("\n").filter((l) => l.trim().length > 0)
-
-    const extracted: ExtractedLabelData = {
-      brandName: extractBrandName(lines),
-      classType: extractClassType(text),
-      abv: extractAbv(text),
-      netContents: extractNetContents(text),
-      bottler: extractBottler(text),
-      countryOfOrigin: extractCountryOfOrigin(text),
-      governmentWarning: extractGovernmentWarning(text),
-    }
+    const extracted = extractWithHints(text, lines, hints)
 
     const boundingBoxes: BoundingBoxMap = {}
     for (const field of Object.keys(extracted) as (keyof ExtractedLabelData)[]) {

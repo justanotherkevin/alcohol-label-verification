@@ -77,20 +77,19 @@ export async function POST(request: NextRequest) {
             queueId = `TTB-BATCH-${Date.now()}-${i}`
             const queueApp: QueueApplication = {
               id: queueId,
-              brandName: appData.brandName || filename,
               applicant: appData.bottler || "Batch import",
               submittedAt: new Date().toISOString(),
               applicationData: appData,
               images: [{ base64: imageData.base64, mimeType: imageData.mimeType }],
               status: "analyzed",
-              analysis: {
+              ocrData: {
                 extracted: ocrResult.data,
                 confidence: ocrResult.confidence,
                 boundingBoxes: ocrResult.boundingBoxes,
                 result,
                 analyzedAt: new Date().toISOString(),
               },
-              resolution: null,
+              reviewData: { sessions: [], fieldNotes: [], resolution: null },
             }
             addApplication(queueApp)
           }

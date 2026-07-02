@@ -8,7 +8,7 @@ type SupportedMimeType = (typeof SUPPORTED_MIME_TYPES)[number]
 export function claudeOcrProvider(apiKey: string): OcrProvider {
   return {
     name: "claude",
-    async extract(imageBase64: string, mimeType: string): Promise<OcrResult> {
+    async extract(imageBase64: string, mimeType: string, _hints?: import("./types").GuidedSearchHints): Promise<OcrResult> {
       if (!SUPPORTED_MIME_TYPES.includes(mimeType as SupportedMimeType)) {
         throw new Error(`Claude does not support mime type: ${mimeType}`)
       }

@@ -5,7 +5,6 @@ import { REQUIRED_GOVERNMENT_WARNING } from "@/lib/verify"
 
 const baseApp: QueueApplication = {
   id: "TEST-1",
-  brandName: "Test Brand",
   applicant: "Test Applicant",
   submittedAt: new Date().toISOString(),
   applicationData: {
@@ -19,20 +18,20 @@ const baseApp: QueueApplication = {
   },
   images: [{ base64: "", mimeType: "image/png" }],
   status: "pending",
-  analysis: null,
-  resolution: null,
+  ocrData: null,
+  reviewData: { sessions: [], fieldNotes: [], resolution: null },
 }
 
 describe("analyzeApplication", () => {
   it("produces a VerificationResult with all 7 fields via the mock provider", async () => {
-    const { analysis } = await analyzeApplication(baseApp, "mock")
-    expect(analysis.result.fields).toHaveLength(7)
-    expect(analysis.analyzedAt).toBeTruthy()
+    const { ocrData } = await analyzeApplication(baseApp, "mock")
+    expect(ocrData.result.fields).toHaveLength(7)
+    expect(ocrData.analyzedAt).toBeTruthy()
   })
 
   it("fails government warning against the mock provider's title-case text", async () => {
-    const { analysis } = await analyzeApplication(baseApp, "mock")
-    const govField = analysis.result.fields.find((f) => f.field === "governmentWarning")
+    const { ocrData } = await analyzeApplication(baseApp, "mock")
+    const govField = ocrData.result.fields.find((f) => f.field === "governmentWarning")
     expect(govField?.status).toBe("fail")
   })
 })
