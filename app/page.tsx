@@ -37,36 +37,49 @@ function verdictBadge(item: QueueSummary) {
   )
 }
 
+const PAGE_SIZE = 25
+
 export default function DashboardPage() {
   const [items, setItems] = useState<QueueSummary[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [counts, setCounts] = useState({ pending: 0, flagged: 0, clean: 0 })
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [resetting, setResetting] = useState(false)
 
-  async function loadQueue() {
+  async function loadQueue(targetPage = page) {
     setLoading(true)
-    const res = await fetch("/api/queue")
-    const data = (await res.json()) as { items: QueueSummary[] }
+    const res = await fetch(`/api/queue?page=${targetPage}&pageSize=${PAGE_SIZE}`)
+    const data = (await res.json()) as {
+      items: QueueSummary[]
+      total: number
+      counts: { pending: number; flagged: number; clean: number }
+    }
     setItems(data.items)
+    setTotal(data.total)
+    setCounts(data.counts)
+    setPage(targetPage)
     setLoading(false)
   }
 
   useEffect(() => {
-    loadQueue()
+    loadQueue(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleReset() {
     setResetting(true)
     await fetch("/api/queue/reset", { method: "DELETE" })
-    await loadQueue()
+    await loadQueue(1)
     setResetting(false)
   }
 
   async function handleAddMock() {
     setAdding(true)
     await fetch("/api/queue", { method: "POST" })
-    await loadQueue()
+    await loadQueue(1)
     setAdding(false)
   }
 
@@ -83,13 +96,12 @@ export default function DashboardPage() {
         ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
       },
     })
-    await loadQueue()
+    await loadQueue(page)
     setAnalyzing(false)
   }
 
-  const pendingCount = items.filter((i) => i.status === "pending").length
-  const flaggedCount = items.filter((i) => i.status === "analyzed" && i.flagCount > 0).length
-  const cleanCount = items.filter((i) => i.status === "analyzed" && i.flagCount === 0).length
+  const { pending: pendingCount, flagged: flaggedCount, clean: cleanCount } = counts
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return (
     <div className="px-8 py-8 max-w-7xl">
@@ -195,6 +207,32 @@ export default function DashboardPage() {
               ))}
             </tbody>
           </table>
+        )}
+        {!loading && total > 0 && (
+          <div className="px-6 py-3 border-t border-outline flex items-center justify-between">
+            <p className="text-xs text-on-surface-muted">
+              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => loadQueue(page - 1)}
+                disabled={page <= 1}
+                className="text-xs px-3 py-1.5 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-on-surface-muted px-2 py-1.5">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => loadQueue(page + 1)}
+                disabled={page >= totalPages}
+                className="text-xs px-3 py-1.5 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

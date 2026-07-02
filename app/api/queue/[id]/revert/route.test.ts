@@ -29,7 +29,7 @@ describe("POST /api/queue/[id]/revert", () => {
   });
 
   it("returns 409 when the application is not resolved", async () => {
-    const target = (await listQueue()).find((i) => i.status === "analyzed")!;
+    const target = (await listQueue(1, 1000)).items.find((i) => i.status === "analyzed")!;
     const res = await callRevert(target.id);
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -37,7 +37,7 @@ describe("POST /api/queue/[id]/revert", () => {
   });
 
   it("reverts a resolved application back to analyzed and returns it", async () => {
-    const target = (await listQueue()).find((i) => i.status === "analyzed")!;
+    const target = (await listQueue(1, 1000)).items.find((i) => i.status === "analyzed")!;
     await resolveApplication(target.id, {
       decision: "approved",
       overrides: [],
@@ -54,6 +54,6 @@ describe("POST /api/queue/[id]/revert", () => {
 
     const persisted = await getApplication(target.id);
     expect(persisted?.status).toBe("analyzed");
-    expect((await listQueue()).find((i) => i.id === target.id)).toBeDefined();
+    expect((await listQueue(1, 1000)).items.find((i) => i.id === target.id)).toBeDefined();
   });
 });

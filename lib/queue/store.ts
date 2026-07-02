@@ -4,6 +4,7 @@ import { isFieldFlagged } from "./field-status";
 import {
   QueueApplication,
   QueueSummary,
+  QueueStatus,
   Resolution,
   ApplicationReviewData,
   LabelImage,
@@ -202,7 +203,22 @@ async function insertApplication(app: QueueApplication): Promise<void> {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-export async function listQueue(): Promise<QueueSummary[]> {
+export interface QueueStatusCounts {
+  pending: number;
+  flagged: number;
+  clean: number;
+}
+
+export interface QueuePage {
+  items: QueueSummary[];
+  total: number;
+  counts: QueueStatusCounts;
+}
+
+export async function listQueue(
+  page = 1,
+  pageSize = 25,
+): Promise<QueuePage> {
   const { rows } = await pool.query(`
     SELECT
       a.id, a.applicant, a.submitted_at, a.status,
@@ -217,7 +233,7 @@ export async function listQueue(): Promise<QueueSummary[]> {
     WHERE a.status != 'resolved'
   `);
 
-  return rows
+  const summaries = rows
     .map((row) => {
       let flagCount = 0;
       let overallPass: boolean | null = null;
@@ -246,12 +262,29 @@ export async function listQueue(): Promise<QueueSummary[]> {
         brandName: row.brand_name ?? row.applicant,
         applicant: row.applicant,
         submittedAt: row.submitted_at,
-        status: row.status,
+        status: row.status as QueueStatus,
         flagCount,
         overallPass,
       };
     })
     .sort((a, b) => b.flagCount - a.flagCount);
+
+  const counts = summaries.reduce<QueueStatusCounts>(
+    (acc, item) => {
+      if (item.status === "pending") acc.pending++;
+      else if (item.status === "analyzed" && item.flagCount > 0) acc.flagged++;
+      else if (item.status === "analyzed" && item.flagCount === 0) acc.clean++;
+      return acc;
+    },
+    { pending: 0, flagged: 0, clean: 0 },
+  );
+
+  const offset = (page - 1) * pageSize;
+  return {
+    items: summaries.slice(offset, offset + pageSize),
+    total: summaries.length,
+    counts,
+  };
 }
 
 export async function getApplication(

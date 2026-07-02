@@ -11,8 +11,12 @@ const STATUS_BADGE: Record<string, string> = {
   Flagged:   "bg-bp-warning-surface text-bp-warning border border-bp-warning-border",
 }
 
+const PAGE_SIZE = 25
+
 export default function AuditLogPage() {
   const [entries, setEntries] = useState<AuditEntry[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
   const [summary, setSummary] = useState<AuditSummary | null>(null)
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -20,21 +24,27 @@ export default function AuditLogPage() {
   const [reverting, setReverting] = useState(false)
   const [revertError, setRevertError] = useState<string | null>(null)
 
-  const loadAudit = useCallback(() => {
-    return fetch("/api/audit")
+  const loadAudit = useCallback((targetPage = page) => {
+    setLoading(true)
+    return fetch(`/api/audit?page=${targetPage}&pageSize=${PAGE_SIZE}`)
       .then((res) => res.json())
-      .then((data: { entries: AuditEntry[]; summary: AuditSummary; activity: ActivityItem[] }) => {
+      .then((data: { entries: AuditEntry[]; total: number; summary: AuditSummary; activity: ActivityItem[] }) => {
         setEntries(data.entries)
+        setTotal(data.total)
+        setPage(targetPage)
         setSummary(data.summary)
         setActivity(data.activity)
         setLoading(false)
       })
       .catch(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    loadAudit()
+    loadAudit(1)
   }, [loadAudit])
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   async function handleRevert() {
     if (!revertTargetId) return
@@ -47,7 +57,7 @@ export default function AuditLogPage() {
         throw new Error(data.error)
       }
       setRevertTargetId(null)
-      await loadAudit()
+      await loadAudit(page)
     } catch (e) {
       setRevertError(e instanceof Error ? e.message : "Unknown error")
     } finally {
@@ -169,11 +179,30 @@ export default function AuditLogPage() {
               )}
             </tbody>
           </table>
-          {!loading && entries.length > 0 && (
-            <div className="px-6 py-3 border-t border-outline">
+          {!loading && total > 0 && (
+            <div className="px-6 py-3 border-t border-outline flex items-center justify-between">
               <p className="text-xs text-on-surface-muted">
-                Showing {entries.length} completed review{entries.length !== 1 ? "s" : ""}
+                Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
               </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => loadAudit(page - 1)}
+                  disabled={page <= 1}
+                  className="text-xs px-3 py-1.5 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-on-surface-muted px-2 py-1.5">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => loadAudit(page + 1)}
+                  disabled={page >= totalPages}
+                  className="text-xs px-3 py-1.5 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
