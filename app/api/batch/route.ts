@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
               },
               reviewData: { sessions: [], fieldNotes: [], resolution: null },
             }
-            addApplication(queueApp)
+            await addApplication(queueApp)
           }
 
           controller.enqueue(

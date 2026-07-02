@@ -5,7 +5,7 @@ import { Resolution } from "@/lib/queue/types"
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const app = getApplication(id)
+  const app = await getApplication(id)
   if (!app || !app.ocrData) {
     return NextResponse.json({ error: "Application not found or not yet analyzed" }, { status: 404 })
   }
@@ -25,6 +25,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     specialistId: body.specialistId,
   }
 
-  const updated = resolveApplication(id, resolution)
+  const updated = await resolveApplication(id, resolution)
   return NextResponse.json({ application: updated })
 }
