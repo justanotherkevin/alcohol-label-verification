@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — docs/codebase-glossary
+
+### Added
+
+- `CONTEXT.md` (repo root) — running glossary of codebase terminology for fast context-loading in future sessions; first entry documents the overloaded "Layer 1"/"Layer 2" terms, which mean different things in the OCR extraction pipeline (`lib/ocr/tesseract.ts`) versus the verification pipeline (`lib/verify.ts`, `lib/ttb-rules.ts`)
+
+### Changed
+
+- `docs/context.md` renamed to `docs/TTB-COLA-context.md` — disambiguates it from the new root `CONTEXT.md`; this file covers TTB/COLA regulatory domain knowledge, not code terminology. No other files referenced the old path.
+
+---
+
 ## [2026-07-02] — feat/rawocr-label-reorganization (PR #14)
 
 ### Added
