@@ -1,8 +1,5 @@
-import {
-  computeFieldBbox,
-  extractWithHints,
-  logRawOcrText,
-} from "./tesseract"
+import { computeFieldBbox, extractFields, WordLike } from "./extraction"
+import { logRawOcrText } from "./tesseract"
 import { BoundingBoxMap, ExtractedLabelData, GuidedSearchHints, OcrProvider, OcrResult } from "./types"
 
 type Vertex = { x?: number; y?: number }
@@ -59,7 +56,7 @@ export function googleVisionOcrProvider(apiKey: string): OcrProvider {
       const W = page?.width ?? 0
       const H = page?.height ?? 0
 
-      const words = (page?.blocks ?? [])
+      const words: WordLike[] = (page?.blocks ?? [])
         .flatMap((b) => b.paragraphs ?? [])
         .flatMap((p) => p.words ?? [])
         .map((w) => {
@@ -78,8 +75,7 @@ export function googleVisionOcrProvider(apiKey: string): OcrProvider {
           }
         })
 
-      const lines = text.split("\n").filter((l) => l.trim().length > 0)
-      const extracted: ExtractedLabelData = extractWithHints(text, lines, hints)
+      const extracted = extractFields(text, hints)
 
       const boundingBoxes: BoundingBoxMap = {}
       for (const field of Object.keys(extracted) as (keyof ExtractedLabelData)[]) {

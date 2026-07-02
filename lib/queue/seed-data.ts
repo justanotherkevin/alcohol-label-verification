@@ -92,13 +92,13 @@ export const SEED_HINTS: Record<string, ApplicationData> = {
     governmentWarning: REQUIRED_GOVERNMENT_WARNING,
   },
   "abc-distillery": {
-    brandName: "ABC",
-    classType: "Whisky",
+    brandName: "ABC DISTILLERY",
+    classType: "Single Barrel Straight Rye Whisky",
     abv: "45% ABV",
-    netContents: "750 ml",
-    bottler: "ABC Distillery, Frederick, MD",
+    netContents: "750 ML",
+    bottler: "Distilled and Bottled by: ABC Distillery",
     countryOfOrigin: "",
-    governmentWarning: "GOVERNMENT WARNING",
+    governmentWarning: REQUIRED_GOVERNMENT_WARNING,
   },
   "malt-hop-brewery": {
     brandName: "MALT & HOP BREWERY",
