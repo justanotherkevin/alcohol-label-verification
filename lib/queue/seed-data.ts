@@ -118,25 +118,19 @@ export const SEED_HINTS: Record<string, ApplicationData> = {
     countryOfOrigin: "Canada",
     governmentWarning: REQUIRED_GOVERNMENT_WARNING,
   },
-  "label-1-front": {
-    brandName: "ELDERBERRY & OAK",
-    classType: "Small Batch Gin",
-    abv: "43% ABV",
-    netContents: "750 mL",
-    bottler: "Elderberry & Oak Distillers, Portland, OR",
-    countryOfOrigin: "USA",
-    governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-  },
-  "label-1-back": {
-    brandName: "ELDERBERRY & OAK",
-    classType: "Small Batch Gin",
-    abv: "43% ABV",
-    netContents: "750 mL",
-    bottler: "Elderberry & Oak Distillers, Portland, OR",
-    countryOfOrigin: "USA",
-    governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-  },
 }
+
+const ELDERBERRY_OAK_DATA: ApplicationData = {
+  brandName: "ELDERBERRY & OAK",
+  classType: "Small Batch Gin",
+  abv: "43% ABV",
+  netContents: "750 mL",
+  bottler: "Elderberry & Oak Distillers, Portland, OR",
+  countryOfOrigin: "USA",
+  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
+}
+SEED_HINTS["label-1-front"] = ELDERBERRY_OAK_DATA
+SEED_HINTS["label-1-back"] = ELDERBERRY_OAK_DATA
 
 export const SEED_APPLICATIONS: QueueApplication[] = [
   // 1. Hollow Creek — visible fields pass, but bottler / country / gov warning not on label

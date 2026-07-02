@@ -2,29 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FieldResult, VerificationResult } from "@/lib/verify";
-import { BoundingBoxMap, ConfidenceMap } from "@/lib/ocr/types";
+import { FieldResult } from "@/lib/verify";
+import { BoundingBoxMap } from "@/lib/ocr/types";
 import { isFieldFlagged } from "@/lib/queue/field-status";
+import { LabelImage, OcrData, QueueStatus } from "@/lib/queue/types";
+import { ApplicationData } from "@/lib/verify";
 import { ImageCarousel } from "@/components/queue/ImageCarousel";
 import { FieldCard } from "@/components/queue/FieldCard";
 import { OverrideModal } from "@/components/queue/OverrideModal";
 import { ResolutionPanel } from "@/components/queue/ResolutionPanel";
-
-interface LabelImage {
-  base64: string;
-  mimeType: string;
-  side?: string;
-}
-
-interface ApplicationData {
-  brandName: string;
-}
-
-interface OcrDataDetail {
-  confidence: ConfidenceMap;
-  boundingBoxes?: BoundingBoxMap;
-  result: VerificationResult;
-}
 
 interface QueueApplicationDetail {
   id: string;
@@ -32,8 +18,8 @@ interface QueueApplicationDetail {
   submittedAt: string;
   images: LabelImage[];
   applicationData: ApplicationData;
-  status: "pending" | "analyzed" | "resolved";
-  ocrData: OcrDataDetail | null;
+  status: QueueStatus;
+  ocrData: OcrData | null;
 }
 
 type OverrideDecision = "approve" | "flag";
