@@ -8,7 +8,7 @@
 
 import fs from "fs"
 import path from "path"
-import { computeFieldBbox, extractWithHints } from "../lib/ocr/tesseract"
+import { computeFieldBbox, extractFields } from "../lib/ocr/extraction"
 import { BoundingBoxMap, ExtractedLabelData } from "../lib/ocr/types"
 import { SEED_HINTS } from "../lib/queue/seed-data"
 
@@ -52,9 +52,8 @@ function processVisionFile(
       }
     })
 
-  const lines = text.split("\n").filter((l) => l.trim().length > 0)
   const hints = SEED_HINTS[key]
-  const extracted = extractWithHints(text, lines, hints)
+  const extracted = extractFields(text, hints)
 
   const boundingBoxes: BoundingBoxMap = {}
   for (const field of Object.keys(extracted) as (keyof ExtractedLabelData)[]) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { computeFieldBbox } from "./tesseract"
+import { computeFieldBbox } from "./extraction"
 
 type MockWord = { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }
 
