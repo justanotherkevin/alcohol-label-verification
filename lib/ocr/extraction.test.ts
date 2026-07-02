@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { extractFields } from "./extraction"
+import { extractFields, computeFieldBbox, WordLike } from "./extraction"
 
 // Shared OCR text used by guided tests. Uses format variants to exercise fallback paths:
 // - ABV written as "Alc./Vol." not "ABV"
@@ -234,5 +234,129 @@ describe("extractFields — full hints object", () => {
     })
     expect(result.brandName).toBe("ABC DISTILLERY")
     expect(result.classType).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// computeFieldBbox — bounding rect from OCR word list
+// ---------------------------------------------------------------------------
+
+const W = 1000
+const H = 500
+
+function word(text: string, x0: number, y0: number, x1: number, y1: number): WordLike {
+  return { text, bbox: { x0, y0, x1, y1 } }
+}
+
+describe("computeFieldBbox — null cases", () => {
+  it("returns null when fieldValue is null", () => {
+    const words = [word("ABC", 0, 0, 100, 20)]
+    expect(computeFieldBbox(words, null, W, H)).toBeNull()
+  })
+
+  it("returns null when word list is empty", () => {
+    expect(computeFieldBbox([], "ABC DISTILLERY", W, H)).toBeNull()
+  })
+
+  it("returns null when no words match the field value", () => {
+    const words = [word("UNRELATED", 0, 0, 100, 20)]
+    expect(computeFieldBbox(words, "XYZ BRAND", W, H)).toBeNull()
+  })
+
+  it("does not match single-character OCR words (noise guard)", () => {
+    // Single-char words like "l" (OCR artifact) should not match anything
+    const words = [word("l", 0, 0, 5, 10), word("UNRELATED", 10, 0, 100, 20)]
+    expect(computeFieldBbox(words, "l vodka", W, H)).toBeNull()
+  })
+})
+
+describe("computeFieldBbox — basic matching", () => {
+  it("returns a bbox when an OCR word contains a token from the field value", () => {
+    const words = [word("ABC", 0, 0, 100, 20), word("DISTILLERY", 110, 0, 300, 20)]
+    const bbox = computeFieldBbox(words, "ABC DISTILLERY", W, H)
+    expect(bbox).not.toBeNull()
+    expect(bbox!.x).toBeCloseTo(0 / W)
+    expect(bbox!.width).toBeCloseTo(300 / W)
+  })
+
+  it("returns normalized coordinates in 0–1 range", () => {
+    const words = [word("750ml", 200, 100, 350, 130)]
+    const bbox = computeFieldBbox(words, "750ml", W, H)
+    expect(bbox).not.toBeNull()
+    expect(bbox!.x).toBeGreaterThanOrEqual(0)
+    expect(bbox!.x).toBeLessThanOrEqual(1)
+    expect(bbox!.y).toBeGreaterThanOrEqual(0)
+    expect(bbox!.y).toBeLessThanOrEqual(1)
+  })
+})
+
+describe("computeFieldBbox — bidirectional token matching (ABV split-word case)", () => {
+  it("matches when OCR splits 'Alc./Vol.' into separate words", () => {
+    // matchAbv returns "45% Alc./Vol." as the extracted value.
+    // OCR word segmentation splits it into three words.
+    const words = [
+      word("45%", 0, 0, 40, 20),
+      word("Alc.", 45, 0, 80, 20),
+      word("Vol.", 82, 0, 120, 20),
+    ]
+    const bbox = computeFieldBbox(words, "45% Alc./Vol.", W, H)
+    expect(bbox).not.toBeNull()
+    // All three words should be included in the union bbox
+    expect(bbox!.x).toBeCloseTo(0 / W)
+    expect(bbox!.width).toBeCloseTo(120 / W)
+  })
+
+  it("matches when OCR keeps 'Alc./Vol.' as a single word", () => {
+    const words = [word("45%", 0, 0, 40, 20), word("Alc./Vol.", 45, 0, 120, 20)]
+    const bbox = computeFieldBbox(words, "45% Alc./Vol.", W, H)
+    expect(bbox).not.toBeNull()
+  })
+})
+
+describe("computeFieldBbox — invariant: extracted value always yields a bbox", () => {
+  it("ABV: if extractFields returns a non-null abv, computeFieldBbox must return non-null", () => {
+    // extractFields uses matchAbv which returns the OCR text form of the ABV,
+    // so the words provided here must be a realistic segmentation of that OCR text.
+    const extracted = extractFields(OCR_TEXT, { abv: "45% ABV" })
+    expect(extracted.abv).not.toBeNull()
+
+    // Simulate OCR word list where "Alc./Vol." is split (the failing case pre-fix)
+    const words = [
+      word("DISTILLED", 0, 0, 80, 12),
+      word("AND", 85, 0, 110, 12),
+      word("BOTTLED", 115, 0, 175, 12),
+      word("BY:", 180, 0, 200, 12),
+      word("ABC", 0, 20, 40, 32),
+      word("DISTILLERY", 45, 20, 140, 32),
+      word("750ml", 0, 40, 60, 52),
+      word("45%", 0, 60, 40, 72),
+      word("Alc.", 45, 60, 80, 72),
+      word("Vol.", 82, 60, 120, 72),
+    ]
+
+    const bbox = computeFieldBbox(words, extracted.abv, W, H)
+    expect(bbox).not.toBeNull()
+  })
+
+  it("brandName: if extractFields returns a non-null brandName, computeFieldBbox must return non-null", () => {
+    const extracted = extractFields(OCR_TEXT, { brandName: "ABC DISTILLERY" })
+    expect(extracted.brandName).not.toBeNull()
+
+    const words = [
+      word("ABC", 0, 20, 40, 32),
+      word("DISTILLERY", 45, 20, 140, 32),
+    ]
+    const bbox = computeFieldBbox(words, extracted.brandName, W, H)
+    expect(bbox).not.toBeNull()
+  })
+
+  it("netContents: if extractFields returns a non-null netContents, computeFieldBbox must return non-null", () => {
+    const extracted = extractFields(OCR_TEXT, { netContents: "750 mL" })
+    expect(extracted.netContents).not.toBeNull()
+
+    // OCR_TEXT has "750ml" as a single token
+    const words = [word("750ml", 0, 40, 60, 52)]
+    const bbox = computeFieldBbox(words, extracted.netContents, W, H)
+    expect(bbox).not.toBeNull()
   })
 })

@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — fix/abv-binding-rect
+
+### Fixed
+
+- `lib/ocr/extraction.ts` — `computeFieldBbox()` used one-directional substring matching (`word.includes(token)`), which failed when OCR segmented compound tokens like `"Alc./Vol."` into separate words `"Alc."` and `"Vol."` — neither short word contained the full token, so the bbox was silently null even though extraction succeeded. Fixed with bidirectional matching (`token.includes(word)`) plus a `length > 1` guard against single-character OCR noise.
+
+### Added
+
+- `lib/ocr/extraction.test.ts` — 15 new tests for `computeFieldBbox`: null cases (null value, empty list, no match, single-char noise guard), basic normalized coordinate output, bidirectional ABV split-word case, and invariant tests asserting that any non-null extracted value yields a non-null bbox with realistic OCR word lists.
+- `lib/queue/regenerate-extracted.ts` — shared module extracted from `scripts/regenerate-extracted.ts` so the regeneration logic can be called from the API route as well as the CLI script.
+
+### Changed
+
+- `app/api/queue/reset/route.ts` — "Reset seed data" button now calls `regenerateExtracted()` before reloading the queue, so bboxes in `_extracted.json` are always rebuilt with the current extraction logic on reset.
+- `scripts/regenerate-extracted.ts` — simplified to delegate to `lib/queue/regenerate-extracted.ts` (DRY).
+- `tests/mocks/labels/_extracted.json` — regenerated; ABV bboxes now non-null for `hollow-creek`, `abc-distillery`, and `12345-imports`.
+
+---
+
 ## [2026-07-02] — feat/layer2-shared-extraction (PR #16)
 
 ### Added
