@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — feat/layer2-shared-extraction (PR #16)
+
+### Added
+
+- `lib/ocr/extraction.ts` — shared Layer 2 module imported by all text-based OCR providers; exports `extractFields()` (hint-required field matching) and `computeFieldBbox()` (bounding box union); single source of truth replaces duplicated logic in `tesseract.ts` and `google-vision.ts`
+- `lib/ocr/extraction.test.ts` — 89 unit tests covering: no-hint → null, brand name regression (ABC Distillery first-line bug), ABV format variants (ABV↔ALC/VOL↔Alc./Vol.), net contents unit variants (mL↔ml↔ML), government warning whitespace normalization across OCR line breaks
+
+### Changed
+
+- `lib/ocr/tesseract.ts` — all blind extractors (`extractBrandName`, `extractAbv`, `extractWithHints`, etc.) removed; now imports `extractFields`/`computeFieldBbox` from `extraction.ts`; provider signature and logic unchanged
+- `lib/ocr/google-vision.ts` — was calling blind extractors directly and ignoring the `hints` parameter entirely; now imports from `extraction.ts` and passes hints correctly; `logRawOcrText` restored for dev consistency with Tesseract provider
+- `lib/ocr/tesseract.test.ts` — import of `computeFieldBbox` updated from `./tesseract` → `./extraction`
+- `lib/queue/seed-data.ts` — `SEED_HINTS["abc-distillery"]` corrected: `brandName` `"ABC"` → `"ABC DISTILLERY"`, `classType` `"Whisky"` → `"Single Barrel Straight Rye Whisky"`, `netContents` `"750 ml"` → `"750 ML"`, `governmentWarning` partial string → `REQUIRED_GOVERNMENT_WARNING`
+- `scripts/regenerate-extracted.ts` — updated to import `extractFields` from `extraction.ts` (replaces `extractWithHints` from `tesseract.ts`); `lines` variable removed as `extractFields` doesn't need it
+- `tests/mocks/labels/_extracted.json` — regenerated with corrected hint-based output; `abc-distillery.brandName` now `"ABC DISTILLERY"` (was `"DISTILLED AND BOTTLED BY:"`)
+
+### Fixed
+
+- `google-vision.ts` was silently ignoring application hints and running blind extraction — root cause of `abc-distillery` brand name being extracted as the first OCR line (`"DISTILLED AND BOTTLED BY:"`) instead of `"ABC DISTILLERY"`
+
+---
+
 ## [2026-07-02] — feat/type-restructure-guided-ocr (PR #15)
 
 ### Added
