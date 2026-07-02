@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-02] — queue-audit-pagination
+
+### Added
+
+- `lib/queue/audit.ts` — `listAuditEntries(page, pageSize)`: paginated `LIMIT`/`OFFSET` query for the audit log that reads only the columns the table needs (id, decision, resolved timestamp, specialist, product), replacing the previous path that reassembled every resolved application in full (including base64 label images) just to render a row
+- `app/api/queue/route.ts`, `app/api/audit/route.ts` — accept `?page=&pageSize=` query params (default page size 25, capped at 100 server-side)
+
+### Changed
+
+- `lib/queue/store.ts` — `listQueue(page, pageSize)` now returns `{ items, total, counts }`; `pending`/`flagged`/`clean` status counts are computed server-side so the client no longer needs the full unpaginated row set to render the summary tiles
+- `app/page.tsx`, `app/audit/page.tsx` — added Previous/Next pagination controls to the queue table and audit log table
+
+---
+
 ## [2026-07-02] — house-keeping
 
 ### Added
