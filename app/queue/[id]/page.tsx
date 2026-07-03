@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FieldResult } from "@/lib/verify";
 import { BoundingBoxMap } from "@/lib/ocr/types";
 import { isFieldFlagged } from "@/lib/queue/field-status";
@@ -41,6 +41,9 @@ interface OverrideEntry {
 export default function QueueDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const batchIds = searchParams.get("batch")?.split(",").filter(Boolean) ?? [];
+  const batchIndex = batchIds.indexOf(params.id);
   const [app, setApp] = useState<QueueApplicationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -56,6 +59,12 @@ export default function QueueDetailPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setApp(null);
+    setActiveImageIndex(0);
+    setSelectedField(null);
+    setOverrides({});
+    setRejectedFields([]);
     fetch(`/api/queue/${params.id}`)
       .then((res) => res.json())
       .then((data: { application: QueueApplicationDetail }) => {
@@ -63,6 +72,15 @@ export default function QueueDetailPage() {
         setLoading(false);
       });
   }, [params.id]);
+
+  function goToNextOrExit() {
+    const nextId = batchIndex >= 0 ? batchIds[batchIndex + 1] : undefined;
+    if (nextId) {
+      router.push(`/queue/${nextId}?batch=${batchIds.join(",")}`);
+    } else {
+      router.push("/");
+    }
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -161,7 +179,7 @@ export default function QueueDetailPage() {
       const data = (await res.json()) as { error: string };
       throw new Error(data.error);
     }
-    router.push("/");
+    goToNextOrExit();
   }
 
   async function handleRevert() {
@@ -208,6 +226,11 @@ export default function QueueDetailPage() {
         <p className="text-sm text-on-surface-muted mt-1">
           {app.id} · {app.applicant} · submitted {new Date(app.submittedAt).toLocaleString()}
         </p>
+        {batchIndex >= 0 && (
+          <p className="text-xs text-primary font-medium mt-2">
+            Batch review — application {batchIndex + 1} of {batchIds.length}
+          </p>
+        )}
       </div>
 
       {!app.ocrData ?
@@ -253,6 +276,7 @@ export default function QueueDetailPage() {
 
       {app.ocrData && app.status !== "resolved" && (
         <ResolutionPanel
+          key={app.id}
           canApprove={canApprove ?? false}
           stillFlagged={stillFlagged}
           rejectedFields={rejectedFields}

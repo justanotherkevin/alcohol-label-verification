@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface QueueSummary {
   id: string
@@ -40,6 +41,7 @@ function verdictBadge(item: QueueSummary) {
 const PAGE_SIZE = 25
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [items, setItems] = useState<QueueSummary[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -48,6 +50,8 @@ export default function DashboardPage() {
   const [analyzing, setAnalyzing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [startingBatch, setStartingBatch] = useState(false)
 
   async function loadQueue(targetPage = page) {
     setLoading(true)
@@ -61,7 +65,55 @@ export default function DashboardPage() {
     setTotal(data.total)
     setCounts(data.counts)
     setPage(targetPage)
+    setSelected(new Set())
     setLoading(false)
+  }
+
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelected((prev) =>
+      prev.size === items.length ? new Set() : new Set(items.map((item) => item.id))
+    )
+  }
+
+  async function handleStartBatchReview() {
+    const batchIds = items.filter((item) => selected.has(item.id)).map((item) => item.id)
+    if (batchIds.length === 0) return
+
+    setStartingBatch(true)
+    const pendingIds = batchIds.filter((id) => {
+      const item = items.find((i) => i.id === id)
+      return item?.status === "pending"
+    })
+
+    if (pendingIds.length > 0) {
+      let settings: { provider?: string; apiKey?: string } = {}
+      try {
+        settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}") as typeof settings
+      } catch { /* ignore malformed localStorage */ }
+      await fetch("/api/queue/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Ocr-Provider": settings.provider ?? "mock",
+          ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
+        },
+        body: JSON.stringify({ ids: pendingIds }),
+      })
+    }
+
+    router.push(`/queue/${batchIds[0]}?batch=${batchIds.join(",")}`)
   }
 
   useEffect(() => {
@@ -136,6 +188,15 @@ export default function DashboardPage() {
           >
             {analyzing ? "Analyzing…" : `Run pre-analysis now (${pendingCount} pending)`}
           </button>
+          {selected.size > 0 && (
+            <button
+              onClick={handleStartBatchReview}
+              disabled={startingBatch}
+              className="text-xs px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+            >
+              {startingBatch ? "Starting…" : `Start batch review (${selected.size})`}
+            </button>
+          )}
         </div>
       </div>
 
@@ -174,6 +235,14 @@ export default function DashboardPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-outline bg-surface-dim">
+                <th className="px-6 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    checked={items.length > 0 && selected.size === items.length}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all applications on this page"
+                  />
+                </th>
                 {["App ID", "Brand Name", "Applicant", "Submitted", "Verdict", "Action"].map((h) => (
                   <th key={h} className="px-6 py-3 text-left text-xs font-semibold text-on-surface-muted uppercase tracking-wider">
                     {h}
@@ -184,6 +253,14 @@ export default function DashboardPage() {
             <tbody className="divide-y divide-outline">
               {items.map((item) => (
                 <tr key={item.id} className="hover:bg-surface-dim transition-colors">
+                  <td className="px-6 py-4">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(item.id)}
+                      onChange={() => toggleSelected(item.id)}
+                      aria-label={`Select ${item.id}`}
+                    />
+                  </td>
                   <td className="px-6 py-4 font-mono text-xs text-on-surface-dim">{item.id}</td>
                   <td className="px-6 py-4 text-sm font-medium text-on-surface">{item.brandName}</td>
                   <td className="px-6 py-4 text-sm text-on-surface-dim">{item.applicant}</td>
