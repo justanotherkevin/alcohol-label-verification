@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-03] — batch review selection
+
+### Added
+
+- `app/page.tsx` — checkbox column and "select all on page" control on the queue table, plus a "Start batch review (N)" button that appears once at least one application is selected
+- `app/api/queue/analyze/route.ts` — accepts an optional `{ ids: string[] }` request body to analyze only a specific subset of pending applications, instead of always analyzing every pending application
+- `app/queue/[id]/page.tsx` — reads a `batch` query param (an ordered list of application IDs), shows a "Batch review — application X of N" progress indicator, and auto-advances to the next application in the batch after a resolution instead of returning to the dashboard
+- `tests/batch-review.spec.ts` — end-to-end test covering select → batch review → reject each in sequence with auto-advance → return to dashboard → applications leave the queue → applications appear in the audit log
+
+### Changed
+
+- `components/queue/ResolutionPanel` usage in `app/queue/[id]/page.tsx` — now keyed by `app.id` so its internal reject-mode state resets between applications instead of leaking from one batch application into the next
+
+### Removed
+
+- `/batch` — the CSV + image bulk-upload page (`app/batch/page.tsx`, `app/api/batch/route.ts`) and its nav entry in `components/Sidebar.tsx`. It created new applications rather than helping review existing queued ones, which is a different feature from batch review; batch review is now selection-based on the queue dashboard
+- `papaparse` / `@types/papaparse` dependencies, no longer used after removing the CSV upload flow
+- `tests/batch.spec.ts`, `tests/mocks/labels.csv` — fixtures/tests for the removed upload flow
+
+---
+
 ## [2026-07-02] — queue-audit-pagination
 
 ### Added
