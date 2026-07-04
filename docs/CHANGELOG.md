@@ -11,6 +11,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - `lib/db.ts` — enables TLS for non-localhost connections and falls back to `POSTGRES_URL` when `DATABASE_URL` is unset, so the app can connect to the pooled Supabase Postgres instance injected by Vercel's integration in production while local Docker Postgres (via `DATABASE_URL`) is unaffected
+## [2026-07-04] — development tools settings panel
+
+### Added
+
+- `app/settings/page.tsx` — "Development tools" section: moves "Reset seed data", "+ Add mock application", and "Run pre-analysis now" off the dashboard, with a subtext explaining why the tools exist and a per-button description of what it does and when to use it
+- `lib/env.ts` — `isProductionEnvironment()`, checks `VERCEL_ENV === "production"`
+- `app/api/queue/reset/route.test.ts`, `app/api/queue/route.test.ts`, `app/api/queue/analyze/route.test.ts` — integration tests against real Postgres for all three queue dev-tool routes, including the new production guard behavior
+
+### Changed
+
+- `app/api/queue/reset/route.ts` (`DELETE`), `app/api/queue/route.ts` (`POST`) — return 403 and no-op when `VERCEL_ENV=production`, since these were previously unauthenticated and destructive/data-polluting against whatever database is live, including the production deployment
+- `app/api/queue/analyze/route.ts` — left unguarded intentionally; it's the only mechanism that ever moves an application from "pending" to "analyzed" (no cron/automatic trigger exists), so it's core functionality rather than a dev-only convenience
+- `app/page.tsx` — dashboard header now only shows the batch-review button; the three dev-tool buttons live on the Settings page instead
 
 ---
 

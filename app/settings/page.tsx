@@ -53,6 +53,11 @@ export default function SettingsPage() {
   const [provider, setProvider] = useState("tesseract")
   const [apiKey, setApiKey] = useState("")
   const [saved, setSaved] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const [devMessage, setDevMessage] = useState<{ text: string; ok: boolean } | null>(null)
 
   useEffect(() => {
     const raw = localStorage.getItem(SETTINGS_KEY)
@@ -63,10 +68,65 @@ export default function SettingsPage() {
     }
   }, [])
 
+  async function loadPendingCount() {
+    const res = await fetch("/api/queue?page=1&pageSize=1")
+    const data = (await res.json()) as { counts: { pending: number } }
+    setPendingCount(data.counts.pending)
+  }
+
+  useEffect(() => {
+    loadPendingCount()
+  }, [])
+
   function handleSave() {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ provider, apiKey }))
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function handleReset() {
+    setResetting(true)
+    const res = await fetch("/api/queue/reset", { method: "DELETE" })
+    await loadPendingCount()
+    setResetting(false)
+    setDevMessage({
+      text: res.ok ? "Queue reset to seed data." : "Resetting seed data is disabled in production.",
+      ok: res.ok,
+    })
+    setTimeout(() => setDevMessage(null), 3000)
+  }
+
+  async function handleAddMock() {
+    setAdding(true)
+    const res = await fetch("/api/queue", { method: "POST" })
+    await loadPendingCount()
+    setAdding(false)
+    setDevMessage({
+      text: res.ok
+        ? "Mock application added to the queue."
+        : "Adding mock applications is disabled in production.",
+      ok: res.ok,
+    })
+    setTimeout(() => setDevMessage(null), 3000)
+  }
+
+  async function handleAnalyze() {
+    setAnalyzing(true)
+    let settings: { provider?: string; apiKey?: string } = {}
+    try {
+      settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}") as typeof settings
+    } catch { /* ignore malformed localStorage */ }
+    await fetch("/api/queue/analyze", {
+      method: "POST",
+      headers: {
+        "X-Ocr-Provider": settings.provider ?? "mock",
+        ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
+      },
+    })
+    await loadPendingCount()
+    setAnalyzing(false)
+    setDevMessage({ text: "Pre-analysis complete.", ok: true })
+    setTimeout(() => setDevMessage(null), 3000)
   }
 
   const selectedProvider = PROVIDERS.find((p) => p.id === provider)
@@ -143,6 +203,87 @@ export default function SettingsPage() {
           Save Settings
         </button>
         {saved && <span className="text-sm text-bp-success">Saved!</span>}
+      </div>
+
+      <div className="mt-10 pt-8 border-t border-outline">
+        <h2
+          className="text-lg font-bold text-on-surface"
+          style={{ fontFamily: "var(--font-inter)" }}
+        >
+          Development tools
+        </h2>
+        <p className="text-sm text-on-surface-muted mt-1">
+          These buttons manipulate the queue directly and exist to make it easy to demo and test
+          this app without a real intake pipeline. &quot;Reset seed data&quot; and &quot;Add mock
+          application&quot; are disabled on the production deployment to avoid wiping real queue
+          data. &quot;Run pre-analysis now&quot; stays enabled everywhere — it&apos;s the only way
+          pending applications get analyzed, not just a demo convenience.
+        </p>
+
+        <div className="mt-4 space-y-3">
+          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border border-outline bg-surface-card">
+            <div>
+              <p className="text-sm font-medium text-on-surface">Reset seed data</p>
+              <p className="text-sm text-on-surface-muted mt-0.5">
+                Deletes every application currently in the queue and replaces them with the
+                original fixed set of sample applications. Use this to return to a known-clean
+                starting point after testing — for example, after you&apos;ve resolved or rejected
+                several applications and want the dashboard to look like a fresh install again.
+              </p>
+            </div>
+            <button
+              onClick={handleReset}
+              disabled={resetting}
+              className="shrink-0 text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
+            >
+              {resetting ? "Resetting…" : "Reset seed data"}
+            </button>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border border-outline bg-surface-card">
+            <div>
+              <p className="text-sm font-medium text-on-surface">+ Add mock application</p>
+              <p className="text-sm text-on-surface-muted mt-0.5">
+                Inserts one randomly-generated application (based on the sample templates) into
+                the queue in &quot;pending&quot; status. Use this when you want to test the
+                pre-analysis or review flow on a new application without waiting for a real
+                submission.
+              </p>
+            </div>
+            <button
+              onClick={handleAddMock}
+              disabled={adding}
+              className="shrink-0 text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
+            >
+              {adding ? "Adding…" : "+ Add mock application"}
+            </button>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border border-outline bg-surface-card">
+            <div>
+              <p className="text-sm font-medium text-on-surface">Run pre-analysis now</p>
+              <p className="text-sm text-on-surface-muted mt-0.5">
+                Normally, pending applications are pre-analyzed automatically. This button lets
+                you trigger that analysis on demand using the OCR provider selected above, instead
+                of waiting — useful when you&apos;ve just added a mock application or changed the
+                OCR provider and want to see results immediately.
+              </p>
+            </div>
+            <button
+              onClick={handleAnalyze}
+              disabled={analyzing || pendingCount === 0}
+              className="shrink-0 text-xs px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+            >
+              {analyzing ? "Analyzing…" : `Run pre-analysis now (${pendingCount} pending)`}
+            </button>
+          </div>
+        </div>
+
+        {devMessage && (
+          <p className={`mt-3 text-sm ${devMessage.ok ? "text-bp-success" : "text-bp-warning"}`}>
+            {devMessage.text}
+          </p>
+        )}
       </div>
     </div>
   )
