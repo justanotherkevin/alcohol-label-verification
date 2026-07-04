@@ -3,7 +3,7 @@
 import { RefObject } from "react";
 
 interface LabelImage {
-  base64: string;
+  path: string;
   mimeType: string;
   side?: string;
 }
@@ -38,7 +38,7 @@ export function ImageCarousel({
       <div className="relative inline-block">
         <img
           ref={imgRef}
-          src={`data:${activeImage.mimeType};base64,${activeImage.base64}`}
+          src={activeImage.path}
           alt={activeImage.side ? `${activeImage.side} label` : `Label ${activeImageIndex + 1}`}
           className="max-h-96 rounded-lg object-contain block border border-outline"
         />

@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-04] — store demo label images as static files, seed production demo data
+
+### Changed
+
+- Moved the 14 demo label images from `tests/mocks/labels/` to `public/demo-labels/` and stopped storing image bytes in Postgres. `LabelImage.base64` → `LabelImage.path` (a public URL path); `application_images.base64` column renamed to `image_path`. `lib/queue/analyze.ts` now reads image bytes from `public/` only at OCR-call time (with a path-traversal guard, since `image_path` comes from the DB). This shrank the seed payload from ~20MB of base64 to a few KB of paths, which is what made seeding production directly via the Supabase MCP practical (previously blocked — see Fixed below).
+- Seed application ids now prefixed with `demo-` (e.g. `demo-TTB-2026-1001`), and `scripts/seed-db.ts` / `scripts/seed-resolutions.ts` scope their `DELETE`/`UPDATE` statements to `id LIKE 'demo-%'` instead of wiping the whole `applications` table.
+- Added `scripts/seed-guard.ts`: seed scripts now refuse to run against a non-local `DATABASE_URL`/`POSTGRES_URL` unless `SEED_ALLOW_REMOTE=true` is explicitly set. Added `db:seed:remote` / `db:seed:resolutions:remote` npm scripts for intentional remote runs.
+- Seeded the 9 demo applications (7 analyzed/pending + 2 resolved) directly into the production Supabase project via `execute_sql`.
+
+### Fixed
+
+- Production `/api/queue` and `/api/audit` were 500ing with `password authentication failed for user "postgres"` after the Supabase database password was reset while retrieving a connection string for local seeding. Vercel's `POSTGRES_URL` (managed by the Supabase integration) had already auto-synced the new password, but the running serverless instances had a `pg.Pool` created at cold start with the old password baked in. Fixed by redeploying the existing production commit (no code change) to force fresh instances to pick up the current env var.
+
+### Security note
+
+- `lib/queue/analyze.ts`'s image reader now validates the resolved path stays inside `public/` before calling `fs.readFileSync`, since the path comes from a DB column rather than a hardcoded value.
+
+---
+
+## [2026-07-04] — initialize production Supabase schema
+
+### Fixed
+
+- Production Supabase Postgres database (`supabase-ttb-labeling`, project `tjyfcwzfgkivknlzfjlz`) had an empty `public` schema — `scripts/init-db.sql` had never been run against it, only against local Docker Postgres. `/api/queue` and `/api/audit` were 500ing in production with `error: relation "applications" does not exist` (surfaced as browser console errors), separate from the SSL connection issue fixed below. Applied `scripts/init-db.sql` directly to the production database via the Supabase MCP (`apply_migration`), creating `applications`, `application_data`, `application_images`, `ocr_data`, `review_sessions`, `field_notes`, and `resolutions`. Verified fixed: Vercel runtime errors for `/api/queue` stopped, and browser console errors are gone.
+
+### Docs
+
+- `docs/backlogs.md` — closed out the "Preview deployment env vars" entry; the real gap was production itself missing schema, not just a Preview-vs-Production env var mismatch.
+
+### Security note (not yet addressed)
+
+- All 7 new tables have Row Level Security disabled (Supabase advisor flags this as `ERROR` severity, since Supabase exposes every `public` table via PostgREST to the anon role by default). The app currently connects via `pg.Pool` directly against `DATABASE_URL` (not the Supabase client/anon key), so this isn't an active exploit path today, but it becomes one the moment any Supabase client-side/anon-key usage is introduced. Tracked as a backlog item.
+
+---
+
 ## [2026-07-04] — fix production SSL connection actually rejecting self-signed certs
 
 ### Fixed

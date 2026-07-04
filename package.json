@@ -11,7 +11,9 @@
     "test:ui": "playwright test --ui",
     "test:unit": "vitest run",
     "db:seed": "tsx --env-file=.env.development.local scripts/seed-db.ts",
-    "db:seed:resolutions": "tsx --env-file=.env.development.local scripts/seed-resolutions.ts"
+    "db:seed:resolutions": "tsx --env-file=.env.development.local scripts/seed-resolutions.ts",
+    "db:seed:remote": "SEED_ALLOW_REMOTE=true tsx scripts/seed-db.ts",
+    "db:seed:resolutions:remote": "SEED_ALLOW_REMOTE=true tsx scripts/seed-resolutions.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.107.0",

@@ -1,31 +1,51 @@
 import { test, expect } from '@playwright/test'
 
 const MOCK_SETTINGS = JSON.stringify({ provider: 'mock', apiKey: '' })
+const MOCK_SPECIALIST = JSON.stringify({ id: 'jenny-park', name: 'Jenny Park', role: 'Junior Compliance Agent' })
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript((settings) => {
+  await page.addInitScript(({ settings, specialist }) => {
     localStorage.setItem('ttb-ocr-settings', settings)
-  }, MOCK_SETTINGS)
+    localStorage.setItem('ttb-specialist', specialist)
+  }, { settings: MOCK_SETTINGS, specialist: MOCK_SPECIALIST })
 })
+
+async function overrideAllFlaggedFields(page: import('@playwright/test').Page) {
+  const overrideButtons = page.getByRole('button', { name: 'Override', exact: true })
+  await expect(overrideButtons.first()).toBeVisible({ timeout: 15000 })
+  const count = await overrideButtons.count()
+  for (let i = 0; i < count; i++) {
+    await page.getByRole('button', { name: 'Override', exact: true }).first().click()
+    const modal = page.locator('div', { hasText: 'Override field' }).last()
+    await modal.getByPlaceholder('Reason for this override…').fill('Confirmed acceptable on manual review')
+    await modal.getByRole('button', { name: 'Approve', exact: true }).click()
+  }
+}
 
 test('queue screen loads with seeded applications', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Verification Queue' })).toBeVisible()
-  await expect(page.getByText('Old Tom Distillery').first()).toBeVisible()
+  // Avoid demo-TTB-2026-1001/1002/1003 — batch-review.spec.ts resolves those,
+  // which removes them from the active queue by the time this test runs.
+  await expect(page.getByText('12345 IMPORTS').first()).toBeVisible()
 })
 
 test('add mock application increases the pending count', async ({ page }) => {
   await page.goto('/')
-  const pendingBtn = page.getByRole('button', { name: /Run pre-analysis now/ })
-  const before = await pendingBtn.textContent()
+  const pendingStat = page.locator('p:has-text("Awaiting analysis") + p')
+  const before = await pendingStat.textContent()
+
+  await page.goto('/settings')
   await page.getByRole('button', { name: '+ Add mock application' }).click()
-  await expect(pendingBtn).not.toHaveText(before ?? '')
+
+  await page.goto('/')
+  await expect(pendingStat).not.toHaveText(before ?? '')
 })
 
 test('run pre-analysis clears the pending count', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/settings')
   await page.getByRole('button', { name: /Run pre-analysis now/ }).click()
-  await expect(page.getByText(/Run pre-analysis now \(0 pending\)/)).toBeVisible({ timeout: 15000 })
+  await expect(page.getByRole('button', { name: /Run pre-analysis now \(0 pending\)/ })).toBeVisible({ timeout: 15000 })
 })
 
 test('opening a flagged application shows field rows with an Override option', async ({ page }) => {
@@ -43,14 +63,7 @@ test('approve is disabled until all flagged fields are overridden', async ({ pag
 test('overriding all flagged fields enables Approve', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: 'Review →' }).first().click()
-  const overrideButtons = page.getByRole('button', { name: 'Override', exact: true })
-  await expect(overrideButtons.first()).toBeVisible({ timeout: 15000 })
-  const count = await overrideButtons.count()
-  for (let i = 0; i < count; i++) {
-    await page.getByRole('button', { name: 'Override', exact: true }).first().click()
-    await page.getByPlaceholder('Reason for overriding this mismatch…').fill('Confirmed acceptable on manual review')
-    await page.getByRole('button', { name: 'Save override' }).click()
-  }
+  await overrideAllFlaggedFields(page)
   await expect(page.getByRole('button', { name: 'Approve' })).toBeEnabled()
 })
 
@@ -72,14 +85,7 @@ test('approving a resolved application returns to the queue and removes its row'
   const brandName = (await firstRow.locator('td').nth(1).textContent())?.trim()
   await firstRow.getByRole('link', { name: 'Review →' }).click()
 
-  const overrideButtons = page.getByRole('button', { name: 'Override', exact: true })
-  await expect(overrideButtons.first()).toBeVisible({ timeout: 15000 })
-  const count = await overrideButtons.count()
-  for (let i = 0; i < count; i++) {
-    await page.getByRole('button', { name: 'Override', exact: true }).first().click()
-    await page.getByPlaceholder('Reason for overriding this mismatch…').fill('Confirmed acceptable on manual review')
-    await page.getByRole('button', { name: 'Save override' }).click()
-  }
+  await overrideAllFlaggedFields(page)
   await expect(page.getByRole('button', { name: 'Approve' })).toBeEnabled()
   await page.getByRole('button', { name: 'Approve' }).click()
 

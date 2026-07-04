@@ -12,7 +12,7 @@ interface OverrideEntry {
 }
 
 interface LabelImage {
-  base64: string;
+  path: string;
   mimeType: string;
   side?: string;
 }

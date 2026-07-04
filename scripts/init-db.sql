@@ -29,7 +29,7 @@ CREATE TABLE application_images (
   id             SERIAL PRIMARY KEY,
   application_id TEXT        NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
   position       INTEGER     NOT NULL,
-  base64         TEXT        NOT NULL,
+  image_path     TEXT        NOT NULL,
   mime_type      TEXT        NOT NULL,
   side           TEXT,
   raw_ocr_text   TEXT

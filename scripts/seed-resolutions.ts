@@ -1,15 +1,20 @@
 import { pool } from "../lib/db"
 import { SEED_RESOLUTIONS } from "../lib/queue/seed-resolutions"
+import { assertSeedTargetAllowed } from "./seed-guard"
 
 async function seedResolutions() {
+  assertSeedTargetAllowed()
+
   const client = await pool.connect()
   try {
     await client.query("BEGIN")
 
-    // Revert anything currently resolved back into the queue, then clear
-    // the resolutions table entirely so this run fully replaces prior data.
-    await client.query(`UPDATE applications SET status = 'analyzed' WHERE status = 'resolved'`)
-    await client.query(`DELETE FROM resolutions`)
+    // Revert demo applications currently resolved back into the queue, then
+    // clear their resolutions so this run fully replaces prior demo data.
+    await client.query(
+      `UPDATE applications SET status = 'analyzed' WHERE status = 'resolved' AND id LIKE 'demo-%'`,
+    )
+    await client.query(`DELETE FROM resolutions WHERE application_id LIKE 'demo-%'`)
 
     for (const { applicationId, resolution } of SEED_RESOLUTIONS) {
       const appRes = await client.query(`SELECT id FROM applications WHERE id = $1`, [applicationId])

@@ -1,7 +1,7 @@
 import { Resolution } from "./types"
 
 export interface SeedResolution {
-  /** Must match an id from SEED_APPLICATIONS (lib/queue/seed-data.ts) */
+  /** Must match a "demo-*" id from SEED_APPLICATIONS (lib/queue/seed-data.ts) */
   applicationId: string
   resolution: Resolution
 }
@@ -12,7 +12,7 @@ export interface SeedResolution {
 // are cleared, then this list is (re-)applied from scratch.
 export const SEED_RESOLUTIONS: SeedResolution[] = [
   {
-    applicationId: "TTB-2026-1001",
+    applicationId: "demo-TTB-2026-1001",
     resolution: {
       decision: "approved",
       overrides: [],
@@ -23,7 +23,7 @@ export const SEED_RESOLUTIONS: SeedResolution[] = [
     },
   },
   {
-    applicationId: "TTB-2026-1002",
+    applicationId: "demo-TTB-2026-1002",
     resolution: {
       decision: "rejected",
       overrides: [],

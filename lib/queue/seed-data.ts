@@ -178,7 +178,7 @@ SEED_HINTS["label-5-back"] = CASAMIGOS_DATA;
 export const SEED_APPLICATIONS: QueueApplication[] = [
   // 1. Hollow Creek — visible fields pass, but bottler / country / gov warning not on label
   seed(
-    "TTB-2026-1001",
+    "demo-TTB-2026-1001",
     "Hollow Creek Distillery LLC",
     "2026-06-29T14:00:00.000Z",
     ["labels/hollow-creek.jpg"],
@@ -187,7 +187,7 @@ export const SEED_APPLICATIONS: QueueApplication[] = [
 
   // 2. ABC Distillery — brand name OCR misfired on first line; gov warning has trailing OCR noise
   seed(
-    "TTB-2026-1002",
+    "demo-TTB-2026-1002",
     "ABC Distillery Inc.",
     "2026-06-29T15:30:00.000Z",
     ["labels/abc-distillery.png"],
@@ -196,7 +196,7 @@ export const SEED_APPLICATIONS: QueueApplication[] = [
 
   // 3. Malt & Hop Brewery — brand OCR error ("REWED"), ABV not extracted, gov warning body in ALL CAPS
   seed(
-    "TTB-2026-1003",
+    "demo-TTB-2026-1003",
     "Malt & Hop Brewing Co.",
     "2026-06-30T09:15:00.000Z",
     ["labels/malt-hop-brewery.png"],
@@ -205,7 +205,7 @@ export const SEED_APPLICATIONS: QueueApplication[] = [
 
   // 4. 12345 Imports — most complete label; gov warning passes; brand/class/bottler/country partially extracted
   seed(
-    "TTB-2026-1004",
+    "demo-TTB-2026-1004",
     "12345 Imports LLC",
     "2026-06-30T11:00:00.000Z",
     ["labels/12345-imports.png"],
@@ -214,7 +214,7 @@ export const SEED_APPLICATIONS: QueueApplication[] = [
 
   // 5. Elderberry & Oak Gin — front+back pair; brand partial, gov warning garbled OCR on back
   seed(
-    "TTB-2026-1005",
+    "demo-TTB-2026-1005",
     "Elderberry & Oak Distillers",
     "2026-06-30T13:45:00.000Z",
     ["labels/label-1-front.png", "labels/label-1-back.png"],
@@ -224,7 +224,7 @@ export const SEED_APPLICATIONS: QueueApplication[] = [
   // 7. Desert Luna & Agave (resubmission) — front+back pair; gov warning on back is missing the
   // "and may cause health" clause entirely, a genuine strict-match fail
   seed(
-    "TTB-2026-1007",
+    "demo-TTB-2026-1007",
     "Desert Luna Spirits",
     "2026-07-01T10:00:00.000Z",
     ["labels/label-3-front.png", "labels/label-3-back.png"],
@@ -234,7 +234,7 @@ export const SEED_APPLICATIONS: QueueApplication[] = [
   // 8. Hawk's Shadow Estate Winery — front+back pair; net contents cut off ("375 AL"),
   // gov warning body OCR'd with dropped leading characters per line ("OULD", "PEDANCY")
   seed(
-    "TTB-2026-1008",
+    "demo-TTB-2026-1008",
     "Hawk's Shadow Estate Winery",
     "2026-07-01T11:30:00.000Z",
     ["labels/label-4-front.png", "labels/label-4-back.png"],
@@ -243,7 +243,7 @@ export const SEED_APPLICATIONS: QueueApplication[] = [
 
   // 9. Casamigos Blanco Tequila — front+back pair; clean, complete label, should pass every field
   seed(
-    "TTB-2026-1009",
+    "demo-TTB-2026-1009",
     "Casamigos Spirits Company",
     "2026-07-01T13:00:00.000Z",
     ["labels/label-5-front.png", "labels/label-5-back.png"],
@@ -253,7 +253,7 @@ export const SEED_APPLICATIONS: QueueApplication[] = [
 
 // 6. Desert Luna & Agave — pending, front+back pair, no analysis yet
 const pendingSeed: QueueApplication = {
-  id: "TTB-2026-1006",
+  id: "demo-TTB-2026-1006",
   applicant: "Desert Luna Spirits",
   submittedAt: "2026-06-30T16:00:00.000Z",
   applicationData: {

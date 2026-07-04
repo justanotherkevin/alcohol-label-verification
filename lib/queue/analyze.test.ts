@@ -16,7 +16,7 @@ const baseApp: QueueApplication = {
     countryOfOrigin: "USA",
     governmentWarning: REQUIRED_GOVERNMENT_WARNING,
   },
-  images: [{ base64: "", mimeType: "image/png" }],
+  images: [{ path: "/demo-labels/hollow-creek.jpg", mimeType: "image/jpeg" }],
   status: "pending",
   ocrData: null,
   reviewData: { sessions: [], fieldNotes: [], resolution: null },

@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test'
 
+const MOCK_SPECIALIST = JSON.stringify({ id: 'jenny-park', name: 'Jenny Park', role: 'Junior Compliance Agent' })
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript((specialist) => {
+    localStorage.setItem('ttb-specialist', specialist)
+  }, MOCK_SPECIALIST)
+})
+
 test('settings page loads with all 5 provider options', async ({ page }) => {
   await page.goto('/settings')
   await expect(page.getByText('Tesseract (Local)')).toBeVisible()
@@ -14,9 +22,9 @@ test('selecting Mock and saving updates nav badge after navigation', async ({ pa
   await page.getByText('Mock (Testing)').click()
   await page.getByRole('button', { name: 'Save Settings' }).click()
   await expect(page.getByText('Saved!')).toBeVisible()
-  // NavBar re-reads localStorage on pathname change
+  // Sidebar re-reads localStorage on pathname change
   await page.goto('/')
-  await expect(page.getByText('Using: Mock')).toBeVisible()
+  await expect(page.locator('p:has-text("OCR Engine") + p')).toHaveText('Mock')
 })
 
 test('API key input hidden for Tesseract provider', async ({ page }) => {

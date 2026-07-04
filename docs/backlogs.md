@@ -73,17 +73,50 @@ Each entry: **Why** it matters, **Affected files**, and any **Findings** from th
 
 ---
 
-## Preview deployments hit a database with no schema
+## ~~Preview deployment env vars need to point at the Supabase (production) database~~ — RESOLVED 2026-07-04
 
-**Why:** While verifying the `sslmode=no-verify` fix (see `fix/pg-ssl-no-verify`) on a Vercel preview deployment, `/api/queue` returned a 500 with `error: relation "applications" does not exist`. The preview environment's `DATABASE_URL`/`POSTGRES_URL` appears to point at a database that never had the schema created — there are no migration scripts in this repo, so nothing runs the `CREATE TABLE applications (...)` (and any other tables) against a fresh preview/branch database. This blocks any future preview-deployment verification of database-touching changes.
+**Resolution:** The actual root cause was broader than first thought — production itself had an empty `public` schema (`scripts/init-db.sql` had only ever been run against local Docker Postgres), which is why `/api/queue`/`/api/audit` were 500ing in production (visible as browser console errors) as well as on preview. Fixed by applying `scripts/init-db.sql` directly to the production Supabase project (`tjyfcwzfgkivknlzfjlz`) via the Supabase MCP. See `docs/CHANGELOG.md` [2026-07-04] "initialize production Supabase schema" for details. Confirmed fixed in the browser.
+
+Still worth checking separately if preview deployments recur: whether Vercel's Preview environment scope has `DATABASE_URL`/`POSTGRES_URL` set identically to Production (Project → Settings → Environment Variables) — that was the original theory and may still cause preview-specific connection issues (e.g. `ECONNREFUSED 127.0.0.1:5432` seen on `dpl_46TU9xha5J54dxsuG1J5JrNobwSt`) independent of the schema gap.
+
+---
+
+## RLS disabled on all production Supabase tables
+
+**Why:** Supabase's schema-init migration (`scripts/init-db.sql`, applied 2026-07-04) created all 7 tables with Row Level Security disabled. Supabase's advisor flags this as `ERROR` severity — every `public` schema table is exposed via PostgREST to the `anon` role by default, meaning anyone with the project's anon/publishable key could read/write every row directly, bypassing the app's API routes entirely. Not an active exploit today since `lib/db.ts` connects via `pg.Pool` + `DATABASE_URL` rather than the Supabase JS client, but it's a live risk the moment any client-side Supabase usage (anon key) is introduced, and it's flagged by Supabase's own security linter regardless.
 
 **Affected files:**
 
-- No migration tooling exists yet — likely needs a `migrations/` directory (or a tool like `node-pg-migrate`/`drizzle-kit`) plus a build/deploy step that runs migrations against whichever `DATABASE_URL` is active
-- `lib/db.ts` — pool config, would need to coordinate with wherever migrations run
-- `lib/queue/store.ts` — has the only known `CREATE TABLE`-shaped assumptions (`applications` table schema), which would become the first migration
+- Supabase project `tjyfcwzfgkivknlzfjlz`, tables: `applications`, `application_data`, `application_images`, `ocr_data`, `review_sessions`, `field_notes`, `resolutions`
 
 **Findings:**
 
-- Confirmed on preview deployment `dpl_5QNZ8NnRx3DYtQtmpmEP1ik5Nzfz` (branch `fix/pg-ssl-no-verify`) on 2026-07-04 — SSL connection succeeded (fix confirmed working), but query failed on missing table, so this is a distinct, pre-existing gap in preview-environment setup, not caused by the SSL fix.
-- Likely low-effort root cause: Preview environment variables in Vercel project settings point at a database/branch that was never seeded, as opposed to whatever database Production uses.
+- Remediation SQL is just `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` per table, but enabling RLS with zero policies blocks all access outright — needs policies defined first (or continue restricting all access to the service-role/direct-`pg` connection and explicitly accept the current model, documented rather than silently open).
+
+---
+
+## Consider migrating `lib/db.ts` from `pg.Pool` to `@supabase/supabase-js`
+
+**Why:** Currently deferred — the direct `pg.Pool` connection works fine against production Supabase Postgres (confirmed 2026-07-04 after the schema-init fix above), so there's no functional problem to solve today. This is a discretionary architecture change, not a bug fix.
+
+**Affected files (if pursued):**
+
+- `lib/db.ts` — replace `pg.Pool` with a `supabase-js` client (`createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)`)
+- `lib/queue/store.ts`, `lib/queue/audit.ts` (572 lines combined) — every function rewritten to call `supabase.rpc(...)` instead of `pool.query`/transactional `client.query`
+- New Postgres functions (`assemble_application`, `insert_application`, `update_application`, `resolve_application`, `revert_resolution`, `list_queue_rows`, `list_audit_entries`, `get_audit_summary`, `get_recent_activity`) added to `scripts/init-db.sql`, since `supabase-js`/PostgREST can't express the existing multi-table `BEGIN`/`COMMIT` transactions or raw joins/`FILTER`/`AVG(EXTRACT(...))` aggregates directly — these have to move into `RETURNS jsonb` SQL functions and get called via RPC
+- `scripts/seed-db.ts`, `scripts/seed-resolutions.ts` — client swap
+- `package.json` — drop `pg`/`@types/pg`, add `@supabase/supabase-js`
+- Local dev tooling — the ad hoc Postgres Docker container would need to become the Supabase CLI's local stack (`supabase start`, itself Docker-based) since `supabase-js` talks to PostgREST, which a bare Postgres container doesn't run
+
+**Pros:**
+
+- Lets RLS be turned on with a deny-all policy while only the backend's service-role key (which bypasses RLS) can read/write — closes the "RLS disabled" advisory finding above cleanly, rather than leaving direct raw-SQL access as the sole safeguard
+- Opens the door to Supabase-native features if ever needed later (Storage for label images instead of base64-in-column, Realtime subscriptions, client-side Auth) without a second client library
+- One connection-management layer (`supabase-js`) instead of hand-rolling `sslmode=no-verify` string surgery in `lib/db.ts` to work around `pg`'s SSL-mode quirks (see [2026-07-04] CHANGELOG fixes)
+
+**Cons:**
+
+- Real rewrite, not a swap: ~9 new Postgres RPC functions need to reproduce existing transactional/join logic exactly, with matching behavior under test
+- Local dev setup changes from a plain Postgres container to the Supabase CLI stack — a bigger onboarding/tooling change than it sounds, and diverges further from "just Docker Postgres" if that simplicity was intentional
+- No functional bug is being fixed — purely a bet on future Supabase-feature needs or RLS posture, both of which can also be addressed narrowly (e.g. RLS can be enabled today with a service-role-only policy without touching the `pg` client at all)
+- Existing integration tests (`app/api/queue/*.test.ts`, `lib/queue/store.test.ts`) run directly against Postgres today; they'd need the local Supabase stack running to pass post-migration
