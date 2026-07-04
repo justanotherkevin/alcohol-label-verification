@@ -47,9 +47,6 @@ export default function DashboardPage() {
   const [page, setPage] = useState(1)
   const [counts, setCounts] = useState({ pending: 0, flagged: 0, clean: 0 })
   const [loading, setLoading] = useState(true)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [adding, setAdding] = useState(false)
-  const [resetting, setResetting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [startingBatch, setStartingBatch] = useState(false)
 
@@ -121,37 +118,6 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleReset() {
-    setResetting(true)
-    await fetch("/api/queue/reset", { method: "DELETE" })
-    await loadQueue(1)
-    setResetting(false)
-  }
-
-  async function handleAddMock() {
-    setAdding(true)
-    await fetch("/api/queue", { method: "POST" })
-    await loadQueue(1)
-    setAdding(false)
-  }
-
-  async function handleAnalyze() {
-    setAnalyzing(true)
-    let settings: { provider?: string; apiKey?: string } = {}
-    try {
-      settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}") as typeof settings
-    } catch { /* ignore malformed localStorage */ }
-    await fetch("/api/queue/analyze", {
-      method: "POST",
-      headers: {
-        "X-Ocr-Provider": settings.provider ?? "mock",
-        ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
-      },
-    })
-    await loadQueue(page)
-    setAnalyzing(false)
-  }
-
   const { pending: pendingCount, flagged: flaggedCount, clean: cleanCount } = counts
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
@@ -167,27 +133,6 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={handleReset}
-            disabled={resetting}
-            className="text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
-          >
-            {resetting ? "Resetting…" : "Reset seed data"}
-          </button>
-          <button
-            onClick={handleAddMock}
-            disabled={adding}
-            className="text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50"
-          >
-            {adding ? "Adding…" : "+ Add mock application"}
-          </button>
-          <button
-            onClick={handleAnalyze}
-            disabled={analyzing || pendingCount === 0}
-            className="text-xs px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
-          >
-            {analyzing ? "Analyzing…" : `Run pre-analysis now (${pendingCount} pending)`}
-          </button>
           {selected.size > 0 && (
             <button
               onClick={handleStartBatchReview}
