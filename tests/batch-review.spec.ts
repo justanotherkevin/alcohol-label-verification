@@ -6,7 +6,7 @@ const MOCK_SPECIALIST = JSON.stringify({ id: 'jenny-park', name: 'Jenny Park', r
 // Three seeded, already-analyzed applications that are each guaranteed to have
 // at least one flagged field, so a reject can always cite a field without
 // needing a manual override first.
-const BATCH_IDS = ['TTB-2026-1001', 'TTB-2026-1002', 'TTB-2026-1003']
+const BATCH_IDS = ['demo-TTB-2026-1001', 'demo-TTB-2026-1002', 'demo-TTB-2026-1003']
 
 test.beforeEach(async ({ page, request }) => {
   // Reset to known seed data so the 3 target applications exist, are
@@ -27,7 +27,7 @@ test('batch review: select 3, reject each in sequence, auto-advance, return home
   await page.getByRole('button', { name: /Start batch review \(3\)/ }).click()
 
   // Batch kicked off — land on the first selected application with a `batch` param.
-  await expect(page).toHaveURL(/\/queue\/TTB-2026-\d+\?batch=/)
+  await expect(page).toHaveURL(/\/queue\/demo-TTB-2026-\d+\?batch=/)
   const batchParam = new URL(page.url()).searchParams.get('batch')
   const orderedIds = batchParam?.split(',') ?? []
   expect([...orderedIds].sort()).toEqual([...BATCH_IDS].sort())

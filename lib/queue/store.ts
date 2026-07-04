@@ -60,7 +60,7 @@ async function assembleApplication(
     };
 
     const images: LabelImage[] = imagesRes.rows.map((r) => ({
-      base64: r.base64,
+      path: r.image_path,
       mimeType: r.mime_type,
       side: r.side ?? undefined,
       rawOcrText: r.raw_ocr_text ?? undefined,
@@ -163,12 +163,12 @@ async function insertApplication(app: QueueApplication): Promise<void> {
 
     for (const [i, img] of app.images.entries()) {
       const imgRes = await client.query(
-        `INSERT INTO application_images (application_id, position, base64, mime_type, side, raw_ocr_text)
+        `INSERT INTO application_images (application_id, position, image_path, mime_type, side, raw_ocr_text)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
         [
           app.id,
           i,
-          img.base64,
+          img.path,
           img.mimeType,
           img.side ?? null,
           img.rawOcrText ?? null,

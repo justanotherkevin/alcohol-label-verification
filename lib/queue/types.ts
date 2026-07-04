@@ -2,7 +2,8 @@ import { ApplicationData, VerificationResult } from "@/lib/verify"
 import { ExtractedLabelData, ConfidenceMap, BoundingBoxMap } from "@/lib/ocr/types"
 
 export interface LabelImage {
-  base64: string
+  /** Public URL path to the image, e.g. "/demo-labels/hollow-creek.jpg" */
+  path: string
   mimeType: string
   side?: "front" | "back" | string
   rawOcrText?: string

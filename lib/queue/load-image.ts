@@ -14,10 +14,9 @@ function loadVisionText(relPath: string): string | undefined {
 }
 
 export function loadMockImage(relPath: string): LabelImage {
-  const filePath = path.join(process.cwd(), "tests", "mocks", relPath)
-  const buffer = fs.readFileSync(filePath)
+  const filename = path.basename(relPath)
   const mimeType = relPath.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg"
   const side = relPath.includes("front") ? "front" : relPath.includes("back") ? "back" : undefined
   const rawOcrText = loadVisionText(relPath)
-  return { base64: buffer.toString("base64"), mimeType, side, ...(rawOcrText ? { rawOcrText } : {}) }
+  return { path: `/demo-labels/${filename}`, mimeType, side, ...(rawOcrText ? { rawOcrText } : {}) }
 }

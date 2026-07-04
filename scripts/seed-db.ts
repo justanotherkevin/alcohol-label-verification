@@ -1,8 +1,11 @@
 import { pool } from "../lib/db"
 import { SEED_APPLICATIONS } from "../lib/queue/seed-data"
+import { assertSeedTargetAllowed } from "./seed-guard"
 
 async function seed() {
-  await pool.query(`DELETE FROM applications`)
+  assertSeedTargetAllowed()
+
+  await pool.query(`DELETE FROM applications WHERE id LIKE 'demo-%'`)
 
   for (const app of SEED_APPLICATIONS) {
     const client = await pool.connect()
@@ -24,9 +27,9 @@ async function seed() {
 
       for (const [i, img] of app.images.entries()) {
         const imgRes = await client.query(
-          `INSERT INTO application_images (application_id, position, base64, mime_type, side, raw_ocr_text)
+          `INSERT INTO application_images (application_id, position, image_path, mime_type, side, raw_ocr_text)
            VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-          [app.id, i, img.base64, img.mimeType, img.side ?? null, img.rawOcrText ?? null]
+          [app.id, i, img.path, img.mimeType, img.side ?? null, img.rawOcrText ?? null]
         )
         if (i === 0 && app.ocrData) {
           const payload = {
