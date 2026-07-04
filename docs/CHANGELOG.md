@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-04] — fix production SSL connection actually rejecting self-signed certs
+
+### Fixed
+
+- `lib/db.ts` — the previous fix (below) passed `ssl: { rejectUnauthorized: false }` alongside `connectionString`, but `pg` re-derives `ssl` from the connection string's `sslmode` param and silently overrides any explicit `ssl` option, so that setting was never applied. Now forces `sslmode=no-verify` directly in the connection string for non-localhost connections, since that's the only mode current `pg-connection-string` still treats as "accept self-signed." Verified against a Vercel preview deployment: `SELF_SIGNED_CERT_IN_CHAIN` and the associated `pg` SSL-mode deprecation warning no longer occur.
+
+### Docs
+
+- `docs/backlogs.md` — added entry for a separate, pre-existing issue found during verification: preview deployments hit a database with no `applications` table, since no migration tooling exists in this repo.
+
+---
+
 ## [2026-07-04] — production database connection
 
 ### Changed
