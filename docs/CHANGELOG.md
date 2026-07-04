@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-04] — production database connection
+
+### Changed
+
+- `lib/db.ts` — enables TLS for non-localhost connections and falls back to `POSTGRES_URL` when `DATABASE_URL` is unset, so the app can connect to the pooled Supabase Postgres instance injected by Vercel's integration in production while local Docker Postgres (via `DATABASE_URL`) is unaffected
 ## [2026-07-04] — development tools settings panel
 
 ### Added
