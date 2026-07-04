@@ -70,3 +70,20 @@ Each entry: **Why** it matters, **Affected files**, and any **Findings** from th
 - `governmentWarning` returned `null` because Vision read the warning text as "GOHENNMENT WARNING" (OCR garbling on a low-quality/placeholder label), and `extractGovernmentWarning`'s `GOVERNMENT WARNING:` prefix match correctly rejected it — this is a stricter, higher-stakes field per `docs/ocr-comparison.md` §6.2, which recommends switching this field specifically to a Levenshtein edit-distance check against the fixed TTB warning text instead of an exact prefix match, so near-miss OCR garbling can still pass.
 - `extractBrandName` is the most fragile pattern — "first non-empty line under 80 chars" is a heuristic, not a real signal, and will misfire on labels where the brand isn't the first line (e.g. a tagline or vintage year printed above it).
 - No visibility today into _why_ a field is null (bad OCR vs. no regex match vs. regex too strict) — worth considering whether `OcrResult` should eventually distinguish these cases for the UI, rather than collapsing both to `null`.
+
+---
+
+## Preview deployments hit a database with no schema
+
+**Why:** While verifying the `sslmode=no-verify` fix (see `fix/pg-ssl-no-verify`) on a Vercel preview deployment, `/api/queue` returned a 500 with `error: relation "applications" does not exist`. The preview environment's `DATABASE_URL`/`POSTGRES_URL` appears to point at a database that never had the schema created — there are no migration scripts in this repo, so nothing runs the `CREATE TABLE applications (...)` (and any other tables) against a fresh preview/branch database. This blocks any future preview-deployment verification of database-touching changes.
+
+**Affected files:**
+
+- No migration tooling exists yet — likely needs a `migrations/` directory (or a tool like `node-pg-migrate`/`drizzle-kit`) plus a build/deploy step that runs migrations against whichever `DATABASE_URL` is active
+- `lib/db.ts` — pool config, would need to coordinate with wherever migrations run
+- `lib/queue/store.ts` — has the only known `CREATE TABLE`-shaped assumptions (`applications` table schema), which would become the first migration
+
+**Findings:**
+
+- Confirmed on preview deployment `dpl_5QNZ8NnRx3DYtQtmpmEP1ik5Nzfz` (branch `fix/pg-ssl-no-verify`) on 2026-07-04 — SSL connection succeeded (fix confirmed working), but query failed on missing table, so this is a distinct, pre-existing gap in preview-environment setup, not caused by the SSL fix.
+- Likely low-effort root cause: Preview environment variables in Vercel project settings point at a database/branch that was never seeded, as opposed to whatever database Production uses.
