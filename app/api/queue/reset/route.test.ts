@@ -23,17 +23,16 @@ describe("DELETE /api/queue/reset", () => {
     expect(after.total).toBe(seedTotal)
   })
 
-  it("returns 403 and leaves the queue untouched when running in production", async () => {
+  it("still resets demo data when running in production (skips filesystem regeneration)", async () => {
     process.env.VERCEL_ENV = "production"
     await addMockApplication()
     const before = await listQueue(1, 1000)
+    const seedTotal = before.total - 1
 
     const res = await DELETE()
-    expect(res.status).toBe(403)
-    const body = await res.json()
-    expect(body.error).toMatch(/disabled in production/i)
+    expect(res.status).toBe(200)
 
     const after = await listQueue(1, 1000)
-    expect(after.total).toBe(before.total)
+    expect(after.total).toBe(seedTotal)
   })
 })

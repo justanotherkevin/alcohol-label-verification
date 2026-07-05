@@ -426,7 +426,7 @@ export async function addMockApplication(): Promise<QueueApplication> {
   const { SEED_APPLICATIONS } = await import("./seed-data");
   const template =
     SEED_APPLICATIONS[Math.floor(Math.random() * SEED_APPLICATIONS.length)];
-  const id = `TTB-2026-${Date.now()}`;
+  const id = `demo-TTB-2026-${Date.now()}`;
   const app: QueueApplication = {
     applicant: template.applicant,
     applicationData: template.applicationData,
@@ -454,7 +454,7 @@ export async function listResolvedApplications(): Promise<QueueApplication[]> {
 }
 
 export async function resetQueue(): Promise<void> {
-  await pool.query(`DELETE FROM applications`);
+  await pool.query(`DELETE FROM applications WHERE id LIKE 'demo-%'`);
   const { SEED_APPLICATIONS } = await import("./seed-data");
   for (const app of SEED_APPLICATIONS) {
     await insertApplication(app);
