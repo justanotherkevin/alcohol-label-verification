@@ -10,15 +10,17 @@ test.beforeEach(async ({ page }) => {
   }, { settings: MOCK_SETTINGS, specialist: MOCK_SPECIALIST })
 })
 
-async function overrideAllFlaggedFields(page: import('@playwright/test').Page) {
-  const overrideButtons = page.getByRole('button', { name: 'Override', exact: true })
-  await expect(overrideButtons.first()).toBeVisible({ timeout: 15000 })
-  const count = await overrideButtons.count()
-  for (let i = 0; i < count; i++) {
-    await page.getByRole('button', { name: 'Override', exact: true }).first().click()
-    const modal = page.locator('div', { hasText: 'Override field' }).last()
-    await modal.getByPlaceholder('Reason for this override…').fill('Confirmed acceptable on manual review')
-    await modal.getByRole('button', { name: 'Approve', exact: true }).click()
+async function acceptAllFlaggedFields(page: import('@playwright/test').Page) {
+  const acceptButton = page.getByRole('button', { name: '✓ Accept', exact: true })
+  await expect(acceptButton).toBeVisible({ timeout: 15000 })
+  const nextButton = page.getByRole('button', { name: 'next flag →', exact: true })
+  while (await acceptButton.isVisible()) {
+    await acceptButton.click()
+    if ((await nextButton.isVisible()) && (await nextButton.isEnabled())) {
+      await nextButton.click()
+    } else {
+      break
+    }
   }
 }
 
@@ -48,32 +50,32 @@ test('run pre-analysis clears the pending count', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Run pre-analysis now \(0 pending\)/ })).toBeVisible({ timeout: 15000 })
 })
 
-test('opening a flagged application shows field rows with an Override option', async ({ page }) => {
+test('opening a flagged application shows a field review card with an Accept option', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: 'Review →' }).first().click()
-  await expect(page.getByRole('button', { name: 'Override' }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: '✓ Accept', exact: true })).toBeVisible()
 })
 
-test('approve is disabled until all flagged fields are overridden', async ({ page }) => {
+test('approve is disabled until all flagged fields are accepted', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: 'Review →' }).first().click()
-  await expect(page.getByRole('button', { name: 'Approve' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Approve Application' })).toBeDisabled()
 })
 
-test('overriding all flagged fields enables Approve', async ({ page }) => {
+test('accepting all flagged fields enables Approve', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: 'Review →' }).first().click()
-  await overrideAllFlaggedFields(page)
-  await expect(page.getByRole('button', { name: 'Approve' })).toBeEnabled()
+  await acceptAllFlaggedFields(page)
+  await expect(page.getByRole('button', { name: 'Approve Application' })).toBeEnabled()
 })
 
-test('reject requires citing a field and a note', async ({ page }) => {
+test('deny requires rejecting a field and a note', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: 'Review →' }).first().click()
-  await page.getByRole('button', { name: 'Reject' }).click()
-  const confirmBtn = page.getByRole('button', { name: 'Confirm Reject' })
-  await expect(confirmBtn).toBeDisabled()
-  await page.getByRole('checkbox').first().check()
+  await page.getByRole('button', { name: '✗ Reject', exact: true }).click()
+  await page.getByRole('button', { name: 'Skip to summary' }).click()
+  await page.getByRole('button', { name: '✗ Deny' }).click()
+  const confirmBtn = page.getByRole('button', { name: 'Confirm Deny' })
   await expect(confirmBtn).toBeDisabled()
   await page.getByPlaceholder('Rejection note (required)…').fill('Government warning is not compliant')
   await expect(confirmBtn).toBeEnabled()
@@ -85,9 +87,9 @@ test('approving a resolved application returns to the queue and removes its row'
   const brandName = (await firstRow.locator('td').nth(1).textContent())?.trim()
   await firstRow.getByRole('link', { name: 'Review →' }).click()
 
-  await overrideAllFlaggedFields(page)
-  await expect(page.getByRole('button', { name: 'Approve' })).toBeEnabled()
-  await page.getByRole('button', { name: 'Approve' }).click()
+  await acceptAllFlaggedFields(page)
+  await expect(page.getByRole('button', { name: 'Approve Application' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Approve Application' }).click()
 
   await expect(page).toHaveURL('/')
   if (brandName) {
@@ -101,10 +103,11 @@ test('rejecting a resolved application returns to the queue and removes its row'
   const brandName = (await firstRow.locator('td').nth(1).textContent())?.trim()
   await firstRow.getByRole('link', { name: 'Review →' }).click()
 
-  await page.getByRole('button', { name: 'Reject' }).click()
-  await page.getByRole('checkbox').first().check()
+  await page.getByRole('button', { name: '✗ Reject', exact: true }).click()
+  await page.getByRole('button', { name: 'Skip to summary' }).click()
+  await page.getByRole('button', { name: '✗ Deny' }).click()
   await page.getByPlaceholder('Rejection note (required)…').fill('Government warning is not compliant')
-  await page.getByRole('button', { name: 'Confirm Reject' }).click()
+  await page.getByRole('button', { name: 'Confirm Deny' }).click()
 
   await expect(page).toHaveURL('/')
   if (brandName) {

@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FieldResult } from "@/lib/verify";
 import { BoundingBoxMap } from "@/lib/ocr/types";
-import { isFieldFlagged } from "@/lib/queue/field-status";
+import { isFieldFlagged, effectiveSeverity } from "@/lib/queue/field-status";
 import { LabelImage, OcrData, QueueStatus } from "@/lib/queue/types";
 import { getCurrentSpecialist, specialistNameById } from "@/lib/queue/specialist";
 import { ApplicationData } from "@/lib/verify";
-import { ImageCarousel } from "@/components/queue/ImageCarousel";
-import { FieldCard } from "@/components/queue/FieldCard";
-import { OverrideModal } from "@/components/queue/OverrideModal";
-import { ResolutionPanel } from "@/components/queue/ResolutionPanel";
+import { FieldStatusStrip } from "@/components/queue/FieldStatusStrip";
+import { LabelRegionPanel } from "@/components/queue/LabelRegionPanel";
+import { FieldReviewCard, MarkedAction } from "@/components/queue/FieldReviewCard";
+import { PassedFieldPanel } from "@/components/queue/PassedFieldPanel";
+import { ReviewSummaryPanel } from "@/components/queue/ReviewSummaryPanel";
+import { ReviewSummaryBar } from "@/components/queue/ReviewSummaryBar";
+import { DenyNoteModal } from "@/components/queue/DenyNoteModal";
 import { RevertConfirmModal } from "@/components/queue/RevertConfirmModal";
 
 interface QueueApplicationDetail {
@@ -46,25 +49,27 @@ export default function QueueDetailPage() {
   const batchIndex = batchIds.indexOf(params.id);
   const [app, setApp] = useState<QueueApplicationDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [selectedField, setSelectedField] = useState<string | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [pinnedFieldKey, setPinnedFieldKey] = useState<string | null>(null);
+  const [actionedFields, setActionedFields] = useState<Set<string>>(new Set());
   const [overrides, setOverrides] = useState<Record<string, OverrideEntry>>({});
-  const [overrideDraftField, setOverrideDraftField] = useState<string | null>(null);
   const [rejectedFields, setRejectedFields] = useState<string[]>([]);
+  const [denyModalOpen, setDenyModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
   const [reverting, setReverting] = useState(false);
   const [revertError, setRevertError] = useState<string | null>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     setLoading(true);
     setApp(null);
-    setActiveImageIndex(0);
-    setSelectedField(null);
+    setCurrentStepIndex(0);
+    setPinnedFieldKey(null);
+    setActionedFields(new Set());
     setOverrides({});
     setRejectedFields([]);
+    setSubmitError(null);
     fetch(`/api/queue/${params.id}`)
       .then((res) => res.json())
       .then((data: { application: QueueApplicationDetail }) => {
@@ -72,6 +77,151 @@ export default function QueueDetailPage() {
         setLoading(false);
       });
   }, [params.id]);
+
+  const allFields = app?.ocrData?.result.fields ?? [];
+
+  // Captured once per application load so the stepper's denominator doesn't
+  // shift as the reviewer accepts/rejects fields mid-review.
+  const flaggedFieldKeys = useMemo(
+    () => allFields.filter(isFieldFlagged).map((f) => f.field),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [app?.id],
+  );
+
+  const fieldByKey = new Map(allFields.map((f) => [f.field, f]));
+  const orderedFields: FieldResult[] = [
+    ...flaggedFieldKeys.map((k) => fieldByKey.get(k)!).filter(Boolean),
+    ...allFields.filter((f) => !flaggedFieldKeys.includes(f.field)),
+  ];
+
+  const totalFlagged = flaggedFieldKeys.length;
+  const atSummary = currentStepIndex >= totalFlagged;
+  const currentFieldKey = !atSummary ? flaggedFieldKeys[currentStepIndex] : null;
+  const currentField = currentFieldKey ? (fieldByKey.get(currentFieldKey) ?? null) : null;
+
+  // What's actually on screen: a manually pinned field (clicked via a pill or
+  // a Summary "Review" link) takes priority over the flagged stepper's
+  // current position.
+  const displayedFieldKey = pinnedFieldKey ?? currentFieldKey;
+  const displayedField = displayedFieldKey ? (fieldByKey.get(displayedFieldKey) ?? null) : null;
+  const displayedBbox =
+    displayedFieldKey ?
+      (app?.ocrData?.boundingBoxes?.[displayedFieldKey as keyof BoundingBoxMap] ?? undefined)
+    : undefined;
+  const isDisplayedNaturallyFlagged = displayedFieldKey ?
+    flaggedFieldKeys.includes(displayedFieldKey)
+  : false;
+  const displayedFieldNumber =
+    displayedFieldKey ? orderedFields.findIndex((f) => f.field === displayedFieldKey) + 1 : 0;
+
+  const naturallyStillFlagged = allFields.filter(
+    (f) => isFieldFlagged(f) && overrides[f.field]?.decision !== "approve",
+  );
+  const manuallyFlagged = allFields.filter(
+    (f) => !isFieldFlagged(f) && overrides[f.field]?.decision === "flag",
+  );
+  const stillFlagged = [...naturallyStillFlagged, ...manuallyFlagged];
+  const canApprove = app?.ocrData !== null && stillFlagged.length === 0;
+  const canDeny = rejectedFields.length > 0;
+
+  const reviewedCount = flaggedFieldKeys.filter((k) => actionedFields.has(k)).length;
+  const leftCount = totalFlagged - reviewedCount;
+
+  const severityCounts = allFields.reduce(
+    (acc, f) => {
+      const sev = effectiveSeverity(f, overrides[f.field]);
+      acc[sev] += 1;
+      return acc;
+    },
+    { pass: 0, warn: 0, fail: 0 },
+  );
+
+  function getMarkedAction(key: string): MarkedAction {
+    if (overrides[key]?.decision === "approve") return "accept";
+    if (rejectedFields.includes(key)) return "reject";
+    if (actionedFields.has(key)) return "skip";
+    return null;
+  }
+
+  const markedAction: MarkedAction = currentFieldKey ? getMarkedAction(currentFieldKey) : null;
+
+  function markActioned(key: string) {
+    setActionedFields((prev) => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }
+
+  function handleAccept() {
+    if (!currentFieldKey) return;
+    setOverrides((prev) => ({ ...prev, [currentFieldKey]: { reason: "", decision: "approve" } }));
+    setRejectedFields((prev) => prev.filter((f) => f !== currentFieldKey));
+    markActioned(currentFieldKey);
+  }
+
+  function handleReject() {
+    if (!currentFieldKey) return;
+    setOverrides((prev) => {
+      if (prev[currentFieldKey]?.decision !== "approve") return prev;
+      const next = { ...prev };
+      delete next[currentFieldKey];
+      return next;
+    });
+    setRejectedFields((prev) => (prev.includes(currentFieldKey) ? prev : [...prev, currentFieldKey]));
+    markActioned(currentFieldKey);
+  }
+
+  function handleSkip() {
+    if (!currentFieldKey) return;
+    setOverrides((prev) => {
+      if (!(currentFieldKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[currentFieldKey];
+      return next;
+    });
+    setRejectedFields((prev) => prev.filter((f) => f !== currentFieldKey));
+    markActioned(currentFieldKey);
+  }
+
+  function handlePrev() {
+    setPinnedFieldKey(null);
+    setCurrentStepIndex((i) => Math.max(0, i - 1));
+  }
+
+  function handleNext() {
+    setPinnedFieldKey(null);
+    setCurrentStepIndex((i) => Math.min(totalFlagged, i + 1));
+  }
+
+  function handleSkipToSummary() {
+    setPinnedFieldKey(null);
+    setCurrentStepIndex(totalFlagged);
+  }
+
+  function handleViewField(fieldKey: string) {
+    const flaggedIndex = flaggedFieldKeys.indexOf(fieldKey);
+    if (flaggedIndex >= 0) {
+      setPinnedFieldKey(null);
+      setCurrentStepIndex(flaggedIndex);
+    } else {
+      setPinnedFieldKey(fieldKey);
+    }
+  }
+
+  function handleFlagPassed(fieldKey: string) {
+    setOverrides((prev) => ({ ...prev, [fieldKey]: { reason: "", decision: "flag" } }));
+  }
+
+  function handleClearFlag(fieldKey: string) {
+    setOverrides((prev) => {
+      if (!(fieldKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[fieldKey];
+      return next;
+    });
+  }
 
   function goToNextOrExit() {
     const nextId = batchIndex >= 0 ? batchIds[batchIndex + 1] : undefined;
@@ -82,81 +232,10 @@ export default function QueueDetailPage() {
     }
   }
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const img = imgRef.current;
-    if (!canvas || !img) return;
-    const w = img.offsetWidth;
-    const h = img.offsetHeight;
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, w, h);
-    if (!selectedField || !app?.ocrData?.boundingBoxes) return;
-    const bbox = app.ocrData.boundingBoxes[selectedField as keyof BoundingBoxMap];
-    if (!bbox || bbox.imageIndex !== activeImageIndex) return;
-    ctx.strokeStyle = "#4c6080";
-    ctx.lineWidth = 2;
-    ctx.fillStyle = "rgba(76, 96, 128, 0.12)";
-    ctx.beginPath();
-    ctx.rect(bbox.x * w, bbox.y * h, bbox.width * w, bbox.height * h);
-    ctx.fill();
-    ctx.stroke();
-  }, [selectedField, app, activeImageIndex]);
-
-  function handleFieldClick(fieldKey: string) {
-    const newSelected = selectedField === fieldKey ? null : fieldKey;
-    setSelectedField(newSelected);
-    if (newSelected && app?.ocrData?.boundingBoxes) {
-      const bbox = app.ocrData.boundingBoxes[newSelected as keyof BoundingBoxMap];
-      if (bbox && bbox.imageIndex !== activeImageIndex) {
-        setActiveImageIndex(bbox.imageIndex);
-      }
-    }
-  }
-
-  function handleImageChange(index: number) {
-    setActiveImageIndex(index);
-    setSelectedField(null);
-  }
-
-  function handleSaveOverride(decision: OverrideDecision, reason: string) {
-    if (!overrideDraftField || !reason.trim()) return;
-    setOverrides((prev) => ({
-      ...prev,
-      [overrideDraftField]: { reason: reason.trim(), decision },
-    }));
-    if (decision === "approve") {
-      setRejectedFields((prev) => prev.filter((f) => f !== overrideDraftField));
-    }
-    setOverrideDraftField(null);
-  }
-
-  function clearOverride(fieldKey: string) {
-    setOverrides((prev) => {
-      const next = { ...prev };
-      delete next[fieldKey];
-      return next;
-    });
-    setRejectedFields((prev) => prev.filter((f) => f !== fieldKey));
-  }
-
-  function toggleRejectedField(fieldKey: string) {
-    setRejectedFields((prev) =>
-      prev.includes(fieldKey) ? prev.filter((f) => f !== fieldKey) : [...prev, fieldKey],
-    );
-  }
-
-  async function submitResolution(
-    decision: "approved" | "rejected",
-    rejectedFieldsArg: string[],
-    note: string,
-  ) {
+  async function submitResolution(decision: "approved" | "rejected", note: string) {
     if (!app) return;
     setSubmitting(true);
-    const stillFlaggedKeys = new Set(stillFlagged.map((f) => f.field));
-    const validRejectedFields = rejectedFieldsArg.filter((f) => stillFlaggedKeys.has(f));
+    setSubmitError(null);
     const specialist = getCurrentSpecialist();
     const body = {
       decision,
@@ -165,21 +244,26 @@ export default function QueueDetailPage() {
         reason: entry.reason,
         decision: entry.decision,
       })),
-      rejectedFields: decision === "rejected" ? validRejectedFields : [],
+      rejectedFields: decision === "rejected" ? rejectedFields : [],
       note: decision === "rejected" ? note : "",
       specialistId: specialist?.id,
     };
-    const res = await fetch(`/api/queue/${app.id}/resolve`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    setSubmitting(false);
-    if (!res.ok) {
-      const data = (await res.json()) as { error: string };
-      throw new Error(data.error);
+    try {
+      const res = await fetch(`/api/queue/${app.id}/resolve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error: string };
+        throw new Error(data.error);
+      }
+      goToNextOrExit();
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setSubmitting(false);
     }
-    goToNextOrExit();
   }
 
   async function handleRevert() {
@@ -200,24 +284,16 @@ export default function QueueDetailPage() {
     }
   }
 
-  const allFields = app?.ocrData?.result.fields ?? [];
-  const naturallyStillFlagged = allFields.filter(
-    (f) => isFieldFlagged(f) && overrides[f.field]?.decision !== "approve",
-  );
-  const manuallyFlagged = allFields.filter(
-    (f) => !isFieldFlagged(f) && overrides[f.field]?.decision === "flag",
-  );
-  const stillFlagged = [...naturallyStillFlagged, ...manuallyFlagged];
-  const canApprove = app?.ocrData !== null && stillFlagged.length === 0;
-
   if (loading)
     return <div className="px-8 py-8 text-sm text-on-surface-muted">Loading application…</div>;
   if (!app)
     return <div className="px-8 py-8 text-sm text-bp-error">Application not found.</div>;
 
+  const showStepper = Boolean(app.ocrData) && app.status !== "resolved";
+
   return (
-    <div className="px-8 py-8 max-w-5xl">
-      <div className="mb-8">
+    <div className="px-8 py-8 max-w-5xl mx-auto">
+      <div className="mb-6">
         <h1
           className="text-2xl font-bold text-on-surface"
           style={{ fontFamily: "var(--font-inter)" }}>
@@ -233,59 +309,102 @@ export default function QueueDetailPage() {
         )}
       </div>
 
-      {!app.ocrData ?
+      {!app.ocrData && (
         <p className="text-sm text-on-surface-muted">
           This application has not been analyzed yet. Run pre-analysis from the queue screen first.
         </p>
-      : <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ImageCarousel
-            images={app.images}
-            activeImageIndex={activeImageIndex}
-            selectedField={selectedField}
-            hasBoundingBoxes={Boolean(app.ocrData.boundingBoxes)}
-            onImageChange={handleImageChange}
-            imgRef={imgRef}
-            canvasRef={canvasRef}
+      )}
+
+      {showStepper && (
+        <div className="rounded-2xl overflow-hidden border border-outline shadow-sm">
+          <FieldStatusStrip
+            appId={app.id}
+            orderedFields={orderedFields}
+            overrides={overrides}
+            currentFlaggedIndex={currentStepIndex}
+            totalFlagged={totalFlagged}
+            atSummary={atSummary}
+            selectedFieldKey={displayedFieldKey}
+            onSelectField={handleViewField}
+            onSkipToSummary={handleSkipToSummary}
           />
 
-          <div className="space-y-3">
-            {app.ocrData.result.fields.map((f) => (
-              <FieldCard
-                key={f.field}
-                field={f}
-                override={overrides[f.field]}
-                selectedField={selectedField}
-                activeImageIndex={activeImageIndex}
-                onFieldClick={handleFieldClick}
-                onOpenOverride={setOverrideDraftField}
-                onClearOverride={clearOverride}
-                fieldBbox={app.ocrData?.boundingBoxes?.[f.field as keyof BoundingBoxMap]}
-                allImages={app.images}
-              />
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            <div className="bg-[#141414] p-6">
+              {displayedField ?
+                <LabelRegionPanel
+                  images={app.images}
+                  fieldLabel={displayedField.label}
+                  fieldNumber={displayedFieldNumber}
+                  extractedText={displayedField.extracted}
+                  bbox={displayedBbox}
+                />
+              : <div className="h-full flex items-center justify-center text-white/40 text-sm py-16">
+                  Review complete — see summary
+                </div>
+              }
+            </div>
+            <div className="bg-surface p-6">
+              {displayedField && isDisplayedNaturallyFlagged ?
+                <FieldReviewCard
+                  field={displayedField}
+                  severity={effectiveSeverity(displayedField, overrides[displayedField.field])}
+                  currentFlaggedIndex={currentStepIndex}
+                  totalFlagged={totalFlagged}
+                  reviewedCount={reviewedCount}
+                  leftCount={leftCount}
+                  markedAction={markedAction}
+                  canPrev={currentStepIndex > 0}
+                  canNext={currentStepIndex < totalFlagged}
+                  onAccept={handleAccept}
+                  onReject={handleReject}
+                  onSkip={handleSkip}
+                  onPrev={handlePrev}
+                  onNext={handleNext}
+                />
+              : displayedField ?
+                <PassedFieldPanel
+                  field={displayedField}
+                  severity={effectiveSeverity(displayedField, overrides[displayedField.field])}
+                  isManuallyFlagged={overrides[displayedField.field]?.decision === "flag"}
+                  onFlag={() => handleFlagPassed(displayedField.field)}
+                  onClearFlag={() => handleClearFlag(displayedField.field)}
+                  onBack={() => setPinnedFieldKey(null)}
+                />
+              : <ReviewSummaryPanel
+                  stillFlagged={stillFlagged}
+                  totalFlagged={totalFlagged}
+                  getMarkedAction={getMarkedAction}
+                  onReviewField={handleViewField}
+                  onBackToFields={() => setCurrentStepIndex(0)}
+                />
+              }
+            </div>
           </div>
+
+          <ReviewSummaryBar
+            passCount={severityCounts.pass}
+            warnCount={severityCounts.warn}
+            failCount={severityCounts.fail}
+            canApprove={canApprove ?? false}
+            canDeny={canDeny}
+            submitting={submitting}
+            errorMessage={submitError}
+            onApprove={() => submitResolution("approved", "")}
+            onDenyClick={() => setDenyModalOpen(true)}
+          />
         </div>
-      }
-
-      <OverrideModal
-        fieldKey={overrideDraftField}
-        existingOverride={overrideDraftField ? overrides[overrideDraftField] : undefined}
-        onSave={handleSaveOverride}
-        onClose={() => setOverrideDraftField(null)}
-      />
-
-      {app.ocrData && app.status !== "resolved" && (
-        <ResolutionPanel
-          key={app.id}
-          canApprove={canApprove ?? false}
-          stillFlagged={stillFlagged}
-          rejectedFields={rejectedFields}
-          submitting={submitting}
-          onApprove={() => submitResolution("approved", [], "")}
-          onToggleRejectedField={toggleRejectedField}
-          onConfirmReject={(fields, note) => submitResolution("rejected", fields, note)}
-        />
       )}
+
+      <DenyNoteModal
+        open={denyModalOpen}
+        submitting={submitting}
+        onConfirm={(note) => {
+          setDenyModalOpen(false);
+          submitResolution("rejected", note);
+        }}
+        onClose={() => setDenyModalOpen(false)}
+      />
 
       {app.status === "resolved" && app.reviewData.resolution && (
         <div className="mt-8 border-t border-outline pt-6">
@@ -306,7 +425,7 @@ export default function QueueDetailPage() {
             </div>
             <button
               onClick={() => setRevertConfirmOpen(true)}
-              className="px-4 py-2 border border-outline text-on-surface-dim text-sm font-semibold rounded-lg">
+              className="cursor-pointer px-4 py-2 border border-outline text-on-surface-dim text-sm font-semibold rounded-lg">
               Revert to Queue
             </button>
           </div>
