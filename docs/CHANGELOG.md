@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-04] — enable "Reset seed data" / "Add mock application" in production, scoped to demo- rows
+
+### Changed
+
+- `addMockApplication()` now generates ids as `demo-TTB-2026-{timestamp}` instead of `TTB-2026-{timestamp}`, and `resetQueue()` now deletes only `id LIKE 'demo-%'` instead of the whole `applications` table. With both operations scoped to demo data, the hard `VERCEL_ENV === "production"` 403 block on `POST /api/queue` and `DELETE /api/queue/reset` was removed — these dev-tools buttons on the Settings page now actually work when clicked on the production deployment, instead of silently failing.
+- `DELETE /api/queue/reset` still skips `regenerateExtracted()` in production specifically, since that function writes `tests/mocks/labels/_extracted.json` to disk and Vercel's production filesystem is read-only outside `/tmp` — the demo-scoped queue reset itself now runs in every environment, just without that dev-only side effect.
+- Settings page copy and error messages updated to no longer claim these actions are "disabled in production."
+
+### Security note
+
+- Neither `POST /api/queue` nor `DELETE /api/queue/reset` has authentication or rate limiting, and both are now reachable in production. An anonymous visitor could spam mock-application inserts between resets, or reset the demo queue while someone else is actively using it. Accepted as a reasonable tradeoff for a demo app with no real intake pipeline — revisit if this app ever needs to coexist with real data.
+
+---
+
 ## [2026-07-04] — store demo label images as static files, seed production demo data
 
 ### Changed
