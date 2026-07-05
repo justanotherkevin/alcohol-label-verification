@@ -1,4 +1,5 @@
 import { ExtractedLabelData, ConfidenceMap } from "./ocr/types"
+import { FieldConflictMap } from "./ocr/merge"
 import {
   isValidClassType,
   detectProductType,
@@ -116,10 +117,18 @@ function checkNetContentsRegulatory(
   return { status: "pass", note: `${ml} mL is a valid standard fill size` }
 }
 
+function conflictNote(field: keyof ExtractedLabelData, conflicts: FieldConflictMap): string | undefined {
+  const values = conflicts[field]
+  if (!values || values.length < 2) return undefined
+  const bySide = values.map((v) => `image ${v.imageIndex}='${v.value}'`).join(", ")
+  return `Images disagree on this field: ${bySide} — verify manually.`
+}
+
 export function verifyLabel(
   appData: ApplicationData,
   extracted: ExtractedLabelData,
-  confidence: ConfidenceMap = {}
+  confidence: ConfidenceMap = {},
+  conflicts: FieldConflictMap = {}
 ): VerificationResult {
   const fields: FieldResult[] = []
 
@@ -131,7 +140,16 @@ export function verifyLabel(
   ) {
     const ext = extracted[field]
     const status: FieldStatus = !ext ? "missing" : fuzzyMatch(expected, ext) ? "pass" : "fail"
-    fields.push({ field, label, expected, extracted: ext, status, confidence: confidence[field], regulatory })
+    fields.push({
+      field,
+      label,
+      expected,
+      extracted: ext,
+      status,
+      confidence: confidence[field],
+      regulatory,
+      note: conflictNote(field, conflicts),
+    })
   }
 
   addFuzzyField("brandName", "Brand Name", appData.brandName)
@@ -147,6 +165,7 @@ export function verifyLabel(
     status: abvStatus,
     confidence: confidence.abv,
     regulatory: checkAbvRegulatory(extracted.abv, extracted.classType),
+    note: conflictNote("abv", conflicts),
   })
   addFuzzyField(
     "netContents",
@@ -161,11 +180,11 @@ export function verifyLabel(
   const govExt = extracted.governmentWarning
   const govPass = strictMatch(REQUIRED_GOVERNMENT_WARNING, govExt)
   const govStatus: FieldStatus = !govExt ? "missing" : govPass ? "pass" : "fail"
-  let govNote: string | undefined
+  let govNote: string | undefined = conflictNote("governmentWarning", conflicts)
   if (govStatus === "fail" && govExt && !govExt.startsWith("GOVERNMENT WARNING:")) {
-    govNote = `Warning must begin with "GOVERNMENT WARNING:" in ALL CAPS (27 CFR Part 16)`
+    govNote = `Warning must begin with "GOVERNMENT WARNING:" in ALL CAPS (27 CFR Part 16)` + (govNote ? ` ${govNote}` : "")
   } else if (govStatus === "fail") {
-    govNote = "Warning text does not match required exact wording (27 CFR Part 16)"
+    govNote = "Warning text does not match required exact wording (27 CFR Part 16)" + (govNote ? ` ${govNote}` : "")
   }
   fields.push({
     field: "governmentWarning",

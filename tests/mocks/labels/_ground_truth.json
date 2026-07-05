@@ -1,0 +1,143 @@
+{
+  "_readme": "Independently-verified truth for each label image, used to score OCR config quality. For each image: open the corresponding file in public/demo-labels/, read the label by eye, and correct any field below to match exactly what is printed (verbatim, including case/punctuation). Set null for fields that are genuinely not printed on that image (e.g. back labels often lack a government warning). Set \"verified\" to true once you've checked an entry against the actual image. Unverified entries were pre-filled from tests/mocks/labels/_extracted.json as a starting guess only — they are NOT trustworthy until you check them.",
+  "12345-imports": {
+    "verified": true,
+    "brandName": "12345 IMPORTS",
+    "classType": "Rum with Coconut Liqueur",
+    "abv": "18% ALC/VOL",
+    "netContents": "200 mL",
+    "bottler": null,
+    "countryOfOrigin": "Canada",
+    "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+  },
+  "abc-distillery": {
+    "verified": true,
+    "brandName": "ABC DISTILLERY",
+    "classType": "Single Barrel Straight Rye Whisky",
+    "abv": "45% ALC/VOL",
+    "netContents": "750 ML",
+    "bottler": "ABC Distillery",
+    "countryOfOrigin": null,
+    "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+  },
+  "hollow-creek": {
+    "verified": true,
+    "brandName": "hollow creek",
+    "classType": "Moonshine",
+    "abv": "35% ALC/VOL",
+    "netContents": "750 ml",
+    "bottler": null,
+    "countryOfOrigin": null,
+    "governmentWarning": null
+  },
+  "malt-hop-brewery": {
+    "verified": true,
+    "brandName": "MALT & HOP BREWERY",
+    "classType": "Pale Ale",
+    "abv": "5%",
+    "netContents": "1 pint",
+    "bottler": "malt & hop brewery",
+    "countryOfOrigin": null,
+    "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+  },
+  "label-1-front": {
+    "verified": true,
+    "brandName": "ELDERBERRY & OAK",
+    "classType": "Small Batch Gin",
+    "abv": "43% ALC/VOL",
+    "netContents": "750 ml",
+    "bottler": null,
+    "countryOfOrigin": null,
+    "governmentWarning": null
+  },
+  "label-1-back": {
+    "verified": true,
+    "brandName": null,
+    "classType": null,
+    "abv": "43% abv.",
+    "netContents": "750ml",
+    "bottler": null,
+    "countryOfOrigin": null,
+    "governmentWarning": "GOVERNMENT WARNING"
+  },
+  "label-2-front": {
+    "verified": true,
+    "brandName": "desert luna & agave",
+    "classType": "botanical spirit",
+    "abv": "40% alc./vol.",
+    "netContents": "750ml",
+    "bottler": null,
+    "countryOfOrigin": null,
+    "governmentWarning": null
+  },
+  "label-2-back": {
+    "verified": true,
+    "brandName": "desert luna & agave",
+    "classType": "botanical spirit",
+    "abv": "40% alc./vol.",
+    "netContents": "750ml",
+    "bottler": null,
+    "countryOfOrigin": null,
+    "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery"
+  },
+  "label-3-front": {
+    "verified": true,
+    "brandName": "DESERT LUNA & AGAVE",
+    "classType": "agave spirit",
+    "abv": "40% ALC./VOL.",
+    "netContents": "750ml",
+    "bottler": null,
+    "countryOfOrigin": null,
+    "governmentWarning": null
+  },
+  "label-3-back": {
+    "verified": true,
+    "brandName": "DESERT LUNA & AGAVE",
+    "classType": "Botanical Spirit",
+    "abv": "40% ALC./VOL.",
+    "netContents": "750ml",
+    "bottler": null,
+    "countryOfOrigin": null,
+    "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, problems"
+  },
+  "label-4-front": {
+    "verified": true,
+    "brandName": "HAWK'S SHADOW ESTATE WINERY",
+    "classType": "Orange Muscat",
+    "abv": null,
+    "netContents": null,
+    "bottler": null,
+    "countryOfOrigin": "texas high plains",
+    "governmentWarning": null
+  },
+  "label-4-back": {
+    "verified": true,
+    "brandName": "hawk's shadow estate",
+    "classType": "Orange Muscat",
+    "abv": "13.68% alcohol/volume",
+    "netContents": "375 ml",
+    "bottler": "hawk's shadow estate",
+    "countryOfOrigin": null,
+    "governmentWarning": "GOVERNMENT WARNING:"
+  },
+  "label-5-front": {
+    "verified": true,
+    "brandName": "CASAMIGOS",
+    "classType": "tequila",
+    "abv": "40% ALC./VOL.",
+    "netContents": "750ML",
+    "bottler": "casamigos de agave",
+    "countryOfOrigin": "Mexico",
+    "governmentWarning": null
+  },
+  "label-5-back": {
+    "verified": true,
+    "brandName": "CASAMIGOS",
+    "classType": "tequila",
+    "abv": null,
+    "netContents": "750 mL",
+    "bottler": "casamigos spirits company",
+    "countryOfOrigin": "Mexico",
+    "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+  }
+}

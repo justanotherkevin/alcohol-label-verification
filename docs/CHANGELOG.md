@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-05] — fix missing Tesseract bounding boxes, grid-search the OCR config
+
+### Fixed
+
+- `worker.recognize(buffer)` in `lib/ocr/tesseract.ts` omitted the output-format argument, so tesseract.js's default `blocks: false` meant `data.blocks` was always `undefined` and every field's bounding box came back `null`. Now calls `recognize(buffer, {}, { blocks: true })`.
+- `computeFieldBbox`'s image-dimension inputs (`W`/`H`) were approximated from the max OCR word bounding box instead of the real image size, making normalized box coordinates slightly off.
+
+### Changed
+
+- Replaced the (initially assumed) grayscale + denoise + invert preprocessing pipeline in `lib/ocr/tesseract.ts` with the empirically best config: **no preprocessing, `PSM.SPARSE_TEXT`, `OEM.LSTM_ONLY`**, found via a 32-config × 14-image grid search scored against a manually verified ground-truth sheet. `invert` in particular was actively harmful on this label set (3–5% token-match vs. 90% for the winning config) — see `docs/2026-07-05-tesseract-grid-search-results.md`.
+- Added `tests/mocks/labels/_ground_truth.json` — manually verified true field values per demo label image, used as the scoring reference (deliberately independent of the existing `SEED_HINTS`/`_extracted.json`, which were circularly derived from each other).
+- Added `scripts/tesseract-grid-search.ts` — sweeps preprocessing/PSM combinations and scores each with partial credit (fraction of matched tokens per field), so a config that reads part of a string gets a proportional score and a bounding box around just the matched part, instead of an all-or-nothing null.
+- `lib/ocr/tesseract.ts` no longer preprocesses images with `sharp` (the winning config is preprocessing-free); `sharp` remains a dependency, now only used by `scripts/tesseract-grid-search.ts` to sweep preprocessing variants.
+
 ## [2026-07-04] — enable "Reset seed data" / "Add mock application" in production, scoped to demo- rows
 
 ### Changed
