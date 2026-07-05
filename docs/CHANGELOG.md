@@ -20,6 +20,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added `scripts/tesseract-grid-search.ts` — sweeps preprocessing/PSM combinations and scores each with partial credit (fraction of matched tokens per field), so a config that reads part of a string gets a proportional score and a bounding box around just the matched part, instead of an all-or-nothing null.
 - `lib/ocr/tesseract.ts` no longer preprocesses images with `sharp` (the winning config is preprocessing-free); `sharp` remains a dependency, now only used by `scripts/tesseract-grid-search.ts` to sweep preprocessing variants.
 
+### Fixed (multi-image applications)
+
+- `analyzeApplication()` in `lib/queue/analyze.ts` OCR'd only `app.images[0]` (the front label) — fields only present on the back image (e.g. bottler, country of origin, government warning) were silently dropped, and conflicting values between front/back were never detected. It now OCRs every image in parallel and merges the results.
+- Added `lib/ocr/merge.ts` — `mergeOcrResults()` resolves each field independently: uses the only value present when just one image has it, agrees silently when images match, and prefers the higher-confidence value (falling back to the front image when no provider reports confidence) when they disagree — recording the disagreement rather than guessing silently.
+- `lib/verify.ts`'s `verifyLabel()` now accepts the conflict map and appends a note (e.g. `"Images disagree on this field: image 0='43% ABV', image 1='45% ABV' — verify manually."`) to the affected `FieldResult`, reusing the existing reviewer-facing `note` field instead of adding new UI.
+- Bounding boxes are now stamped with the actual source image's index instead of always defaulting to `0`.
+
 ## [2026-07-04] — enable "Reset seed data" / "Add mock application" in production, scoped to demo- rows
 
 ### Changed
