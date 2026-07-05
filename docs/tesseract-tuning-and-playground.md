@@ -289,6 +289,10 @@ Try these first, then refine in the playground:
 
 ---
 
+> **Measured, not just recommended:** a real grid search against this app's 14 demo labels (32 configs × 14 images, partial-credit token-match scoring against a manually verified ground-truth sheet) confirmed PSM matters far more than preprocessing for this label set, and that `invert` is actively harmful on ordinary dark-text-on-light labels. The winning config — **no preprocessing, `PSM.SPARSE_TEXT`, `OEM.LSTM_ONLY`** — is what `lib/ocr/tesseract.ts` runs today. Full methodology and results: [`2026-07-05-tesseract-grid-search-results.md`](./2026-07-05-tesseract-grid-search-results.md). Re-run it (`npx tsx scripts/tesseract-grid-search.ts`) whenever the demo label set changes or a new preprocessing idea needs checking — don't just trust a config because it worked in the playground on one image.
+
+---
+
 ## 11. References
 
 - Tesseract docs — Improving Quality: https://tesseract-ocr.github.io/tessdoc/ImproveQuality.html

@@ -1,4 +1,5 @@
-import { createWorker } from "tesseract.js"
+import { createWorker, OEM, PSM } from "tesseract.js"
+import sharp from "sharp"
 import { computeFieldBbox, extractFields, WordLike } from "./extraction"
 import { BoundingBoxMap, ExtractedLabelData, GuidedSearchHints, OcrProvider, OcrResult } from "./types"
 
@@ -8,25 +9,29 @@ export function logRawOcrText(provider: string, text: string): void {
   }
 }
 
+// PSM.SPARSE_TEXT + no preprocessing was the empirical winner of a 32-config grid
+// search against a verified ground-truth set (see docs/2026-07-05-tesseract-grid-search-results.md).
+// Labels have scattered, disconnected text regions rather than one contiguous block,
+// and preprocessing steps like invert actively hurt accuracy on this label set.
 export const tesseractOcrProvider: OcrProvider = {
   name: "tesseract",
   async extract(imageBase64: string, _mimeType: string, hints?: GuidedSearchHints): Promise<OcrResult> {
     const buffer = Buffer.from(imageBase64, "base64")
-    const worker = await createWorker("eng")
+    const { width, height } = await sharp(buffer).metadata()
+    const worker = await createWorker("eng", OEM.LSTM_ONLY)
     let text = ""
     let words: WordLike[] = []
-    let W = 0
-    let H = 0
+    const W = width ?? 0
+    const H = height ?? 0
     try {
-      const { data } = await worker.recognize(buffer)
+      await worker.setParameters({ tessedit_pageseg_mode: PSM.SPARSE_TEXT })
+      const { data } = await worker.recognize(buffer, {}, { blocks: true })
       text = data.text
       logRawOcrText("tesseract", text)
       words = (data.blocks ?? [])
         .flatMap((b) => b.paragraphs)
         .flatMap((p) => p.lines)
         .flatMap((l) => l.words)
-      W = words.length > 0 ? Math.max(...words.map((w) => w.bbox.x1)) : 0
-      H = words.length > 0 ? Math.max(...words.map((w) => w.bbox.y1)) : 0
     } finally {
       await worker.terminate()
     }

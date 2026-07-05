@@ -40,6 +40,8 @@ The app is a single Next.js unit. Single-label verification is synchronous (`POS
 
 See [`docs/system-design.md`](docs/system-design.md) for the full request flow, API contracts, OCR provider interface, and constraints.
 
+The default Tesseract OCR config (no preprocessing, `PSM.SPARSE_TEXT`, `OEM.LSTM_ONLY`) was chosen by grid-searching 32 configs against a manually verified ground-truth sheet for the demo labels — see [`docs/2026-07-05-tesseract-grid-search-results.md`](docs/2026-07-05-tesseract-grid-search-results.md).
+
 ## Technology Stack
 
 | Layer             | Technology                                      |

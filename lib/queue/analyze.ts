@@ -1,6 +1,7 @@
 import fs from "fs"
 import path from "path"
 import { getProvider } from "@/lib/ocr"
+import { mergeOcrResults } from "@/lib/ocr/merge"
 import { verifyLabel } from "@/lib/verify"
 import { LabelImage, QueueApplication, OcrData } from "./types"
 
@@ -24,19 +25,23 @@ export async function analyzeApplication(
   apiKey?: string
 ): Promise<AnalyzeResult> {
   const provider = getProvider(providerName, apiKey)
-  const primaryImage = app.images[0]
-  const base64 = readImageBase64(primaryImage.path)
-  const ocrResult = await provider.extract(base64, primaryImage.mimeType, app.applicationData)
-  const result = verifyLabel(app.applicationData, ocrResult.data, ocrResult.confidence)
+  const perImageResults = await Promise.all(
+    app.images.map((img) => {
+      const base64 = readImageBase64(img.path)
+      return provider.extract(base64, img.mimeType, app.applicationData)
+    })
+  )
+  const merged = mergeOcrResults(perImageResults)
+  const result = verifyLabel(app.applicationData, merged.data, merged.confidence, merged.conflicts)
   const ocrData: OcrData = {
-    extracted: ocrResult.data,
-    confidence: ocrResult.confidence,
-    boundingBoxes: ocrResult.boundingBoxes,
+    extracted: merged.data,
+    confidence: merged.confidence,
+    boundingBoxes: merged.boundingBoxes,
     result,
     analyzedAt: new Date().toISOString(),
   }
   const images: LabelImage[] = app.images.map((img, i) =>
-    i === 0 && ocrResult.rawText ? { ...img, rawOcrText: ocrResult.rawText } : img
+    merged.rawTexts[i] ? { ...img, rawOcrText: merged.rawTexts[i] } : img
   )
   return { ocrData, images }
 }
