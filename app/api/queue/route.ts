@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { listQueue, addMockApplication } from "@/lib/queue/store"
-import { isProductionEnvironment } from "@/lib/env"
 
 const DEFAULT_PAGE_SIZE = 25
 const MAX_PAGE_SIZE = 100
@@ -17,12 +16,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST() {
-  if (isProductionEnvironment()) {
-    return NextResponse.json(
-      { error: "Adding mock applications is disabled in production." },
-      { status: 403 },
-    )
-  }
   const app = await addMockApplication()
   return NextResponse.json({ id: app.id }, { status: 201 })
 }

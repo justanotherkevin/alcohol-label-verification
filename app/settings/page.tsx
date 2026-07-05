@@ -90,7 +90,7 @@ export default function SettingsPage() {
     await loadPendingCount()
     setResetting(false)
     setDevMessage({
-      text: res.ok ? "Queue reset to seed data." : "Resetting seed data is disabled in production.",
+      text: res.ok ? "Queue reset to seed data." : "Failed to reset seed data. Try again.",
       ok: res.ok,
     })
     setTimeout(() => setDevMessage(null), 3000)
@@ -104,7 +104,7 @@ export default function SettingsPage() {
     setDevMessage({
       text: res.ok
         ? "Mock application added to the queue."
-        : "Adding mock applications is disabled in production.",
+        : "Failed to add mock application. Try again.",
       ok: res.ok,
     })
     setTimeout(() => setDevMessage(null), 3000)
@@ -215,9 +215,8 @@ export default function SettingsPage() {
         <p className="text-sm text-on-surface-muted mt-1">
           These buttons manipulate the queue directly and exist to make it easy to demo and test
           this app without a real intake pipeline. &quot;Reset seed data&quot; and &quot;Add mock
-          application&quot; are disabled on the production deployment to avoid wiping real queue
-          data. &quot;Run pre-analysis now&quot; stays enabled everywhere — it&apos;s the only way
-          pending applications get analyzed, not just a demo convenience.
+          application&quot; only ever touch demo applications (ids prefixed &quot;demo-&quot;),
+          so they&apos;re safe to use on the production deployment too.
         </p>
 
         <div className="mt-4 space-y-3">

@@ -4,13 +4,13 @@ import { regenerateExtracted } from "@/lib/queue/regenerate-extracted"
 import { isProductionEnvironment } from "@/lib/env"
 
 export async function DELETE() {
-  if (isProductionEnvironment()) {
-    return NextResponse.json(
-      { error: "Resetting seed data is disabled in production." },
-      { status: 403 },
-    )
+  // regenerateExtracted() writes tests/mocks/labels/_extracted.json to disk,
+  // which fails on Vercel's read-only production filesystem — it's a dev
+  // convenience for picking up local vision.json fixture edits, not needed
+  // in production since _extracted.json is already committed.
+  if (!isProductionEnvironment()) {
+    regenerateExtracted()
   }
-  regenerateExtracted()
   await resetQueue()
   return NextResponse.json({ ok: true })
 }

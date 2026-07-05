@@ -53,16 +53,16 @@ describe("POST /api/queue", () => {
     expect(after.total).toBe(before.total + 1)
   })
 
-  it("returns 403 and does not add an application when running in production", async () => {
+  it("adds a demo-prefixed mock application even when running in production", async () => {
     process.env.VERCEL_ENV = "production"
     const before = await listQueue(1, 1000)
 
     const res = await POST()
-    expect(res.status).toBe(403)
+    expect(res.status).toBe(201)
     const body = await res.json()
-    expect(body.error).toMatch(/disabled in production/i)
+    expect(body.id).toMatch(/^demo-/)
 
     const after = await listQueue(1, 1000)
-    expect(after.total).toBe(before.total)
+    expect(after.total).toBe(before.total + 1)
   })
 })
