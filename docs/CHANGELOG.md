@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-05] — replace review table with a one-field-at-a-time stepper
+
+### Changed
+
+- Rebuilt the `/queue/[id]` review page: replaced the all-fields comparison table and "every bounding box drawn at once" image view with a stepper that walks through flagged fields one at a time. Each step pairs a dark label-region panel (cropped/zoomed bbox preview, full-label thumbnail, expandable lightbox) with a review card showing Application/OCR Found/Regulation values and single-click Accept/Reject/Skip actions.
+- Added a clickable status-pill strip so a reviewer can jump straight to any field, including a field that already passed — passed fields now have a "Flag as issue" affordance to manually override a pass, with the same override mechanism the app already used for auto-detected flags.
+- Replaced the checkbox-based reject flow with a bottom summary bar (live pass/warn/fail counts) and a single Deny action that submits whatever fields were marked "Reject" during the step-through, gated on a required note.
+- New components: `FieldStatusStrip`, `LabelRegionPanel`, `ImageExpandModal`, `FieldReviewCard`, `PassedFieldPanel`, `ReviewSummaryPanel`, `ReviewSummaryBar`, `DenyNoteModal`. Removed `FieldTable`, `ImageCarousel`, `OverrideModal`, `ResolutionPanel`.
+- Updated `tests/queue.spec.ts` and `tests/batch-review.spec.ts` for the new Accept/Reject/Skip + Approve Application/Deny flow.
+
+---
+
 ## [2026-07-05] — fix missing Tesseract bounding boxes, grid-search the OCR config
 
 ### Fixed
