@@ -1,7 +1,11 @@
-import { describe, it, expect, afterEach } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import fs from "fs/promises"
 import path from "path"
-import { POST } from "./route"
+
+const putMock = vi.fn()
+vi.mock("@vercel/blob", () => ({ put: (...args: unknown[]) => putMock(...args) }))
+
+const { POST } = await import("./route")
 
 const uploadsDir = path.join(process.cwd(), "public", "uploads")
 
@@ -15,7 +19,9 @@ describe("POST /api/uploads", () => {
   afterEach(async () => {
     await fs.rm(uploadsDir, { recursive: true, force: true })
     delete process.env.BLOB_READ_WRITE_TOKEN
+    delete process.env.BLOB_STORE_ID
     delete process.env.VERCEL
+    putMock.mockReset()
   })
 
   it("rejects a request with no file", async () => {
@@ -84,6 +90,20 @@ describe("POST /api/uploads", () => {
       .then(() => true)
       .catch(() => false)
     expect(wroteLocally).toBe(false)
+  })
+
+  it("uses Blob when only BLOB_STORE_ID is set (OIDC-connected store, no BLOB_READ_WRITE_TOKEN)", async () => {
+    delete process.env.BLOB_READ_WRITE_TOKEN
+    process.env.BLOB_STORE_ID = "store_abc123"
+    putMock.mockResolvedValue({ url: "https://abc123.public.blob.vercel-storage.com/label-photos/x.jpg" })
+
+    const file = new File([new Uint8Array([1])], "my-label.jpg", { type: "image/jpeg" })
+    const res = await POST(requestWithFile(file))
+
+    expect(putMock).toHaveBeenCalledOnce()
+    expect(res.status).toBe(201)
+    const body = (await res.json()) as { url: string }
+    expect(body.url).toBe("https://abc123.public.blob.vercel-storage.com/label-photos/x.jpg")
   })
 
   it("gives each upload a unique filename so replacements don't collide", async () => {

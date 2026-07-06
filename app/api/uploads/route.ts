@@ -32,12 +32,19 @@ export async function POST(request: Request) {
   // fallback below.
   const filename = `${crypto.randomUUID()}.${EXTENSION_BY_MIME_TYPE[file.type]}`
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  // A connected Blob store shows up as either a static BLOB_READ_WRITE_TOKEN
+  // or (the newer, recommended way) BLOB_STORE_ID paired with a
+  // Vercel-populated VERCEL_OIDC_TOKEN — @vercel/blob's put() resolves
+  // whichever is present on its own, so we only need to check that *some*
+  // form of Blob auth exists before calling it.
+  const hasBlobStoreConnected = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)
+
+  if (!hasBlobStoreConnected) {
     // On Vercel, the deployed filesystem is read-only (writing into public/
     // throws ENOENT) — there's no local disk to fall back to, so surface a
     // clear error instead of crashing. Only plain `next dev` gets the
-    // zero-setup local-disk fallback; Vercel deployments get the token
-    // injected automatically once a Blob store is connected to the project.
+    // zero-setup local-disk fallback; Vercel deployments get Blob auth
+    // injected automatically once a store is connected to the project.
     if (process.env.VERCEL) {
       return NextResponse.json(
         { error: "Photo uploads need a Blob store connected to this Vercel project." },
