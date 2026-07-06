@@ -4,7 +4,7 @@ import { runAnalysis } from "@/lib/queue/analyze"
 import { QueueApplication } from "@/lib/queue/types"
 
 export async function POST(req: NextRequest) {
-  const providerName = req.headers.get("X-Ocr-Provider") ?? "mock"
+  const providerName = req.headers.get("X-Ocr-Provider") ?? "tesseract"
   const apiKey = req.headers.get("X-Api-Key") ?? undefined
 
   let pending
