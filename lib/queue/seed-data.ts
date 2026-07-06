@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { ApplicationData, REQUIRED_GOVERNMENT_WARNING } from "@/lib/verify";
-import { BoundingBoxMap, ExtractedLabelData } from "@/lib/ocr/types";
+import { BoundingBoxMap, ExtractedLabelData, OcrResult } from "@/lib/ocr/types";
+import { mergeOcrResults } from "@/lib/ocr/merge";
 import { verifyLabel } from "@/lib/verify";
 import { QueueApplication, ApplicationReviewData } from "./types";
 import { loadMockImage } from "./load-image";
@@ -41,6 +42,16 @@ const emptyReviewData: ApplicationReviewData = {
   resolution: null,
 };
 
+const EMPTY_EXTRACTED: ExtractedLabelData = {
+  brandName: null,
+  classType: null,
+  abv: null,
+  netContents: null,
+  bottler: null,
+  countryOfOrigin: null,
+  governmentWarning: null,
+};
+
 function seed(
   id: string,
   applicant: string,
@@ -49,19 +60,20 @@ function seed(
   applicationData: ApplicationData,
 ): QueueApplication {
   const images = imageFiles.map((f) => loadMockImage(f));
-  const key = extractedKey(imageFiles[0]);
-  const entry = allExtracted[key];
-  const extracted = entry?.extracted ?? {
-    brandName: null,
-    classType: null,
-    abv: null,
-    netContents: null,
-    bottler: null,
-    countryOfOrigin: null,
-    governmentWarning: null,
-  };
-  const boundingBoxes: BoundingBoxMap = entry?.boundingBoxes ?? {};
-  const result = verifyLabel(applicationData, extracted, {});
+
+  // Every image's own ground-truth entry contributes fields — mirrors the live
+  // analyzeApplication() pipeline, which OCRs each image and merges the results,
+  // instead of only ever looking at the front image.
+  const perImageResults: OcrResult[] = imageFiles.map((f) => {
+    const entry = allExtracted[extractedKey(f)];
+    return {
+      data: entry?.extracted ?? EMPTY_EXTRACTED,
+      confidence: {},
+      boundingBoxes: entry?.boundingBoxes ?? {},
+    };
+  });
+  const merged = mergeOcrResults(perImageResults);
+  const result = verifyLabel(applicationData, merged.data, merged.confidence, merged.conflicts);
   return {
     id,
     applicant,
@@ -70,9 +82,9 @@ function seed(
     images,
     status: "analyzed",
     ocrData: {
-      extracted,
-      confidence: {},
-      boundingBoxes,
+      extracted: merged.data,
+      confidence: merged.confidence,
+      boundingBoxes: merged.boundingBoxes,
       result,
       analyzedAt: submittedAt,
     },
