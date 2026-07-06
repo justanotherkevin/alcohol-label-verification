@@ -63,6 +63,21 @@ This application automates the first three steps, letting specialists focus enti
 5. **Decision** — Approve, reject, or request corrections
 6. **Record** — All decisions are logged for audit purposes
 
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Specialist uploads label + application data] --> B[Queue store\nlib/queue/]
+    B --> C[Pre-analysis\ngetProvider + verifyLabel]
+    C -->|Tesseract or Google Vision| D[OCR extraction]
+    D --> E[Field-by-field comparison\nvs application data]
+    E --> F[Queue review page\n/queue/id]
+    F --> G{Specialist decision}
+    G -->|Approve / Reject / Override| B
+```
+
+Applications are pre-analyzed automatically as they enter the queue: OCR extracts label fields, then `verifyLabel()` compares them against the submitted application data and flags mismatches. Specialists open flagged applications, resolve each field (accept or override), and record an approve/reject decision — no manual re-typing of label data required.
+
 ## What It Does _Not_ Do
 
 - Replace human judgment — specialists make all final decisions
@@ -86,6 +101,23 @@ The Settings page includes a "Development tools" section. These are for local de
 - **Built with** — Next.js, React, Tailwind CSS
 - **Database** — Postgres (optional; works in-memory for demos)
 - **Deployment** — Vercel or self-hosted
+
+## Documentation
+
+The [`docs/`](docs) folder has deeper background and design history:
+
+- [`system-design.md`](docs/system-design.md) — architecture reference for the single/batch verification API design
+- [`2026-07-01-queue-based-review-flow.md`](docs/2026-07-01-queue-based-review-flow.md) — implementation plan for the current queue-based review flow (pre-analysis + specialist resolution)
+- [`20260630-ai-label-verification-app.md`](docs/20260630-ai-label-verification-app.md) — original product plan: stakeholder context, MVP scope, and phased build-out
+- [`users-flow.md`](docs/users-flow.md) — documented user flows through the app's screens
+- [`TTB-COLA-context.md`](docs/TTB-COLA-context.md) — real-world background on the TTB COLA review process this app digitizes
+- [`ttb-cola-reference.md`](docs/ttb-cola-reference.md) — reference on the real TTB COLA form/process this app replaces
+- [`stakeholder-interview-notes.md`](docs/stakeholder-interview-notes.md) — raw interview notes with TTB stakeholders that shaped requirements
+- [`ocr-comparison.md`](docs/ocr-comparison.md) — comparison of OCR/vision providers (Google Vision, Textract, Azure, Tesseract, etc.) considered for the app
+- [`tesseract-tuning-and-playground.md`](docs/tesseract-tuning-and-playground.md) — notes on tuning Tesseract OCR settings and the local playground for testing them
+- [`2026-07-05-tesseract-grid-search-results.md`](docs/2026-07-05-tesseract-grid-search-results.md) — results from a grid search over Tesseract configuration parameters
+- [`backlogs.md`](docs/backlogs.md) — non-critical bugs, ideas, and follow-ups not yet scheduled
+- [`CHANGELOG.md`](docs/CHANGELOG.md) — dated log of feature additions, fixes, and refactors as the app evolved
 
 ## Regulatory Context
 
