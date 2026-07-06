@@ -124,3 +124,32 @@ describe("verifyLabel — matchScore", () => {
     expect(field?.matchScore).toBe(0)
   })
 })
+
+describe("verifyLabel — net contents unit-tolerant matching", () => {
+  it("passes when OCR drops the space before the unit (750ml vs 750 mL)", () => {
+    const result = verifyLabel(
+      { ...baseApp, netContents: "750 mL" },
+      { ...baseExtracted, netContents: "750ml" }
+    )
+    const field = result.fields.find((f) => f.field === "netContents")
+    expect(field?.status).toBe("pass")
+  })
+
+  it("passes when unit casing differs (750 ML vs 750 mL)", () => {
+    const result = verifyLabel(
+      { ...baseApp, netContents: "750 mL" },
+      { ...baseExtracted, netContents: "750 ML" }
+    )
+    const field = result.fields.find((f) => f.field === "netContents")
+    expect(field?.status).toBe("pass")
+  })
+
+  it("still fails when the actual volume differs", () => {
+    const result = verifyLabel(
+      { ...baseApp, netContents: "750 mL" },
+      { ...baseExtracted, netContents: "700ml" }
+    )
+    const field = result.fields.find((f) => f.field === "netContents")
+    expect(field?.status).toBe("fail")
+  })
+})

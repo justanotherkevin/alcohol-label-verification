@@ -105,6 +105,15 @@ function abvMatch(expected: string | null, extracted: string | null): boolean {
   return expNum !== undefined && extNum !== undefined && parseFloat(expNum) === parseFloat(extNum)
 }
 
+function netContentsMatch(expected: string | null, extracted: string | null): boolean {
+  if (fuzzyMatch(expected, extracted)) return true
+  // Compare parsed mL values so "750 mL" matches "750ml", "750 ML", etc. —
+  // unit spacing/casing differences aren't a real mismatch.
+  const expMl = expected ? parseNetContentsMl(expected) : null
+  const extMl = extracted ? parseNetContentsMl(extracted) : null
+  return expMl !== null && extMl !== null && expMl === extMl
+}
+
 function strictMatch(expected: string, extracted: string | null): boolean {
   if (!extracted) return false
   return extracted.trim() === expected.trim()
@@ -210,13 +219,21 @@ export function verifyLabel(
     regulatory: checkAbvRegulatory(extracted.abv, extracted.classType),
     note: conflictNote("abv", conflicts),
   })
-  addFuzzyField(
-    "netContents",
-    "Net Contents",
-    appData.netContents,
-    checkNetContentsRegulatory(extracted.netContents, extracted.classType),
-    parseNetContentsMl
-  )
+  // Net contents uses numeric comparison so "750 mL" matches "750ml"
+  const netExt = extracted.netContents
+  const netStatus: FieldStatus =
+    !netExt ? "missing" : netContentsMatch(appData.netContents, netExt) ? "pass" : "fail"
+  fields.push({
+    field: "netContents",
+    label: "Net Contents",
+    expected: appData.netContents,
+    extracted: netExt,
+    status: netStatus,
+    confidence: confidence.netContents,
+    matchScore: numericAwareSimilarity(appData.netContents, netExt, parseNetContentsMl),
+    regulatory: checkNetContentsRegulatory(extracted.netContents, extracted.classType),
+    note: conflictNote("netContents", conflicts),
+  })
   addFuzzyField("bottler", "Bottler / Producer", appData.bottler)
   addFuzzyField("countryOfOrigin", "Country of Origin", appData.countryOfOrigin)
 

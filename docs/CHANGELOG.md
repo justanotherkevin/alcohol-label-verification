@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — fix net contents unit-format false mismatch
+
+### Fixed
+
+- `lib/verify.ts`: `netContents` was compared with an exact-string match only (unlike `abv`, which already tolerates format differences), so a genuinely matching fill size like OCR's `"750ml"` against application data `"750 mL"` was flagged as a mismatch just because of unit spacing/casing. Added `netContentsMatch()`, parsing both sides to mL via the existing `parseNetContentsMl()` (already used for the regulatory fill-size check), and used it for status determination the same way `abvMatch()` already works for ABV.
+- `lib/verify.test.ts`: added coverage for dropped-space and casing variants, plus a regression guard confirming a genuinely different volume still fails.
+
 ## [2026-07-06] — fuzzy partial-match bounding boxes
 
 ### Added
