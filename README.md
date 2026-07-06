@@ -1,89 +1,86 @@
-# TTB Alcohol Label Verification
+# Alcohol Label Verification System
 
-An AI-powered web app that verifies alcohol labels against TTB application data. Supports single-label and batch verification using a configurable vision/OCR backend.
+This application helps government specialists review alcohol beverage labels for compliance with TTB (Alcohol and Tobacco Tax and Trade Bureau) regulations. It uses artificial intelligence to automatically read label information and compare it against submitted application data, reducing review time while maintaining accuracy and human oversight.
 
-## What This App Does
+![Application reivew](docs/assets/application-reivew.gif)
 
-This application uses AI vision (Claude, Gemini, or GPT-4o) to:
+![Batch processing](docs/assets/batch-processing.gif)
 
-1. **Extract** text from label images (OCR + structured field extraction)
-2. **Compare** extracted fields against application data (fuzzy matching for most fields, strict matching for Government Warning Statement)
-3. **Validate** against TTB regulations (ABV bounds by product type, valid class designations from 27 CFR, standard fill sizes)
-4. **Report** pass/fail/missing per field with extracted vs. expected values
+## What Problem Does It Solve?
 
-**What it does not do:**
+Reviewing alcohol labels involves comparing multiple pieces of information:
 
-- Integrate directly with COLAs Online (standalone prototype)
-- Replace specialist judgment on ambiguous or complex cases
-- Handle visual formatting checks (font size, contrast, layout)
-- Store or retain application data (no persistence beyond the session)
+- Brand name
+- Product type
+- Alcohol content
+- Bottle size
+- Bottler location
+- Country of origin
+- Government-required warning statement
 
-**Target performance:** ≤ 5 seconds per label for single verification; batch mode processes multiple labels via streaming.
+Previously, this was a manual, time-consuming process. Specialists had to:
 
-### Batch Processing Context
+- Look at label images
+- Manually extract information
+- Type data into forms
+- Compare against applications
+- Document any discrepancies
 
-Large importers submit hundreds of applications at once. The batch feature allows uploading multiple label images alongside a CSV of corresponding application data, processing all labels in parallel and streaming results back as each completes — enabling bulk pre-screening before specialist review.
+This application automates the first three steps, letting specialists focus entirely on review and decision-making.
 
-### The Bottleneck
+## Key Features
 
-With 150,000 applications per year and 47 specialists, each specialist handles roughly **3,200 applications annually**. Much of that workload is mechanically matching text on a label image against text in an application form — a task that requires attention but not expertise.
+### Smart Recognition
 
-Historically, TTB had over 100 agents. Budget reductions have cut staffing in half while application volume has remained high. The backlog is a recurring operational pain point, particularly during peak import seasons when large batches (200–300 applications) arrive at once.
+- **Intelligent matching** — recognizes that "STONE'S THROW" and "Stone's Throw" refer to the same brand
+- **Format flexibility** — understands that "45% ABV," "45% Alc./Vol.," and "90 Proof" are equivalent
+- **Multi-image support** — reads information from front and back labels simultaneously
 
-### The Prior Attempt
+### Compliance Checking
 
-TTB piloted a scanning vendor whose system took 30–40 seconds per label. Specialists abandoned it because they could manually review 5 labels in the time the machine processed 1. **Speed is a hard requirement** — results must return in approximately 5 seconds to be useful in an active review workflow.
+- **Regulatory validation** — checks alcohol content ranges for different product types
+- **Government warning verification** — requires exact matching for mandatory warning statements (no variations allowed)
+- **Standard fill sizes** — confirms bottle sizes against approved standards
 
-## Architecture
+### Review Support
 
-The app is a single Next.js unit. Single-label verification is synchronous (`POST /api/verify`, ~5s); batch verification streams results via Server-Sent Events (`POST /api/batch`).
+- **Clear flagging** — identifies what needs specialist review and why
+- **Visual field references** — shows exactly where on the label each piece of information came from
+- **Confidence indicators** — distinguishes between confident extractions and uncertain ones
 
-See [`docs/system-design.md`](docs/system-design.md) for the full request flow, API contracts, OCR provider interface, and constraints.
+### Accessibility
 
-The default Tesseract OCR config (no preprocessing, `PSM.SPARSE_TEXT`, `OEM.LSTM_ONLY`) was chosen by grid-searching 32 configs against a manually verified ground-truth sheet for the demo labels — see [`docs/2026-07-05-tesseract-grid-search-results.md`](docs/2026-07-05-tesseract-grid-search-results.md).
+- **Senior-friendly design** — 28% larger text, bigger touch targets, high-contrast colors
+- **No specialized training required** — straightforward interface for reviewers of all technical levels
+- **Batch processing** — review multiple applications efficiently
 
-## Technology Stack
+## How It Works
 
-| Layer             | Technology                                      |
-| ----------------- | ----------------------------------------------- |
-| Frontend / API    | Next.js 16 (App Router), React, Tailwind CSS v4 |
-| OCR (default)     | Tesseract.js (WASM, no API key)                 |
-| OCR (LLM options) | Claude Sonnet 4.6 / Gemini 2.0 Flash / GPT-4o  |
-| CSV parsing       | PapaParse                                       |
-| Testing           | Vitest (unit) + Playwright (E2E)                |
-| Hosting           | Vercel                                          |
+1. **Upload** — Submit one or more label images (front/back pairs for alcohol bottles)
+2. **Analysis** — The system automatically extracts label information using AI vision technology
+3. **Comparison** — Extracted data is compared against the submitted application
+4. **Review** — Specialists review flagged items and any uncertain extractions
+5. **Decision** — Approve, reject, or request corrections
+6. **Record** — All decisions are logged for audit purposes
 
-## Getting Started
+## What It Does _Not_ Do
 
-First, run the development server:
+- Replace human judgment — specialists make all final decisions
+- Check visual formatting — font sizes, layouts, and design elements are out of scope
+- Store or persist application data — it's a review tool, not a database
+- Integrate with COLAs Online — it's a standalone verification system
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Try It
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app includes 5 pre-loaded demo labels so you can see it in action immediately without needing to set up data.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technology
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Vision AI** — Tesseract (free, open-source), Google Vision
+- **Built with** — Next.js, React, Tailwind CSS
+- **Database** — Postgres (optional; works in-memory for demos)
+- **Deployment** — Vercel or self-hosted
 
-## Learn More
+## Regulatory Context
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This tool supports the TTB's responsibility to ensure alcohol labels comply with 27 CFR regulations. It accelerates the review process while maintaining the requirement that a human specialist approves every application.
