@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — applicant portal visual polish
+
+### Changed
+
+- `components/ApplicantNav.tsx`: sticky/blurred header, primary-tinted logo badge, active-nav shadow, and an avatar-initial badge next to "Signed in as". Avatar is `aria-hidden`; the accompanying name text uses `sr-only sm:not-sr-only` so it stays announced to screen readers even where it's visually hidden below the `sm` breakpoint.
+- `components/ApplicantHome.tsx`: added a Total / In review / Resolved summary tile row, icons on status badges, a richer empty state, and subtle hover/shadow polish on the applications table.
+- `app/apply/page.tsx`: label-picker cards get shadow + hover-lift + image zoom; the review step has a sticky image column, focus rings on inputs, and an icon-styled error banner; the submitted confirmation now uses a circular icon badge and a constrained width.
+- `app/page.tsx`: moved the "Start batch review" action from the page header into the "Pending Applications" table header, next to the heading it acts on.
+- `app/layout.tsx`: extended the Material Symbols `icon_names` allowlist to include the new icons used above (`add`, `arrow_back`, `check_circle`, `error`, `inventory_2`, `schedule`, `visibility`) — the font is served as a subset, so unlisted icons were rendering as literal ligature text (e.g. "ARROW_BACK") instead of glyphs.
+- `components/queue/FieldStatusStrip.tsx`: enlarged dash size, gaps, text, and button sizing for readability.
+
 ## [2026-07-06] — fix net contents unit-format false mismatch
 
 ### Fixed
