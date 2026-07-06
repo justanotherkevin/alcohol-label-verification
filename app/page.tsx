@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useIdentity } from "@/components/AppShell";
 import ApplicantHome from "@/components/ApplicantHome";
+import { Toast } from "@/components/Toast";
 
 interface QueueSummary {
   id: string;
@@ -16,7 +17,14 @@ interface QueueSummary {
   overallPass: boolean | null;
 }
 
+interface BatchRun {
+  id: number;
+  analyzedCount: number;
+  completedAt: string;
+}
+
 const SETTINGS_KEY = "ttb-ocr-settings";
+const LAST_SEEN_BATCH_RUN_KEY = "ttb-last-seen-batch-run";
 
 function verdictBadge(item: QueueSummary) {
   if (item.status === "pending") {
@@ -52,6 +60,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [startingBatch, setStartingBatch] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   async function loadQueue(targetPage = page) {
     setLoading(true);
@@ -62,6 +71,7 @@ export default function DashboardPage() {
       items: QueueSummary[];
       total: number;
       counts: { pending: number; flagged: number; clean: number };
+      lastBatchRun: BatchRun | null;
     };
     setItems(data.items);
     setTotal(data.total);
@@ -69,6 +79,21 @@ export default function DashboardPage() {
     setPage(targetPage);
     setSelected(new Set());
     setLoading(false);
+
+    if (data.lastBatchRun) {
+      const lastSeenId = Number(
+        localStorage.getItem(LAST_SEEN_BATCH_RUN_KEY) ?? "0",
+      );
+      if (data.lastBatchRun.id > lastSeenId) {
+        setToastMessage(
+          `Batch review completed — ${data.lastBatchRun.analyzedCount} application${data.lastBatchRun.analyzedCount === 1 ? "" : "s"} analyzed.`,
+        );
+        localStorage.setItem(
+          LAST_SEEN_BATCH_RUN_KEY,
+          String(data.lastBatchRun.id),
+        );
+      }
+    }
   }
 
   function toggleSelected(id: string) {
@@ -144,6 +169,12 @@ export default function DashboardPage() {
 
   return (
     <div className="px-8 py-8 max-w-7xl">
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          onDismiss={() => setToastMessage(null)}
+        />
+      )}
       <div className="mb-8 flex items-start justify-between">
         <div>
           <h1

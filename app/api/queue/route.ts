@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { listQueue, addMockApplication } from "@/lib/queue/store"
+import { listQueue, addMockApplication, getLastBatchRun } from "@/lib/queue/store"
 
 const DEFAULT_PAGE_SIZE = 25
 const MAX_PAGE_SIZE = 100
@@ -13,7 +13,8 @@ export async function GET(request: Request) {
   )
   const applicant = url.searchParams.get("applicant") ?? undefined
   const { items, total, counts } = await listQueue(page, pageSize, applicant)
-  return NextResponse.json({ items, total, page, pageSize, counts })
+  const lastBatchRun = await getLastBatchRun()
+  return NextResponse.json({ items, total, page, pageSize, counts, lastBatchRun })
 }
 
 export async function POST() {

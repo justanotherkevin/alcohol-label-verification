@@ -4,6 +4,7 @@ import { getProvider } from "@/lib/ocr"
 import { mergeOcrResults } from "@/lib/ocr/merge"
 import { verifyLabel } from "@/lib/verify"
 import { LabelImage, QueueApplication, OcrData } from "./types"
+import { updateApplication } from "./store"
 
 export interface AnalyzeResult {
   ocrData: OcrData
@@ -44,4 +45,18 @@ export async function analyzeApplication(
     merged.rawTexts[i] ? { ...img, rawOcrText: merged.rawTexts[i] } : img
   )
   return { ocrData, images }
+}
+
+export async function runAnalysis(
+  apps: QueueApplication[],
+  providerName: string,
+  apiKey?: string
+): Promise<string[]> {
+  const analyzedIds: string[] = []
+  for (const app of apps) {
+    const { ocrData, images } = await analyzeApplication(app, providerName, apiKey)
+    await updateApplication(app.id, { status: "analyzed", ocrData, images })
+    analyzedIds.push(app.id)
+  }
+  return analyzedIds
 }

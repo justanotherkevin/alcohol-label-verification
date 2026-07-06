@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — automated batch review cron + specialist toast
+
+### Added
+
+- `vercel.json`: Vercel Cron schedule hitting `/api/cron/analyze-queue` at `0 5 * * *` and `0 17 * * *` (12am/12pm US Eastern, EST-aligned — Vercel Cron is UTC-only and not DST-aware, so this drifts an hour during EDT).
+- `app/api/cron/analyze-queue/route.ts`: analyzes all `pending` applications, gated by a `CRON_SECRET` bearer token (must be set as a Vercel project env var for the schedule to authenticate once deployed).
+- `batch_runs` table (`scripts/init-db.sql`) and `recordBatchRun`/`getLastBatchRun` (`lib/queue/store.ts`) to track when a batch (cron or manual) last completed and how many applications it analyzed.
+- `components/Toast.tsx`: minimal dismissible toast. `GET /api/queue` now returns `lastBatchRun`; the dashboard (`app/page.tsx`) shows a toast once per new run, tracked via a `ttb-last-seen-batch-run` localStorage marker so it doesn't repeat on refresh.
+- `lib/queue/analyze.ts`: extracted the pending-applications analyze loop into `runAnalysis`, shared by the manual (`/api/queue/analyze`) and cron routes so both record their run and stay in sync.
+
 ## [2026-07-06] — senior-friendly accessibility overhaul
 
 ### Changed

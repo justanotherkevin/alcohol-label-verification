@@ -6,6 +6,8 @@ import {
   resolveApplication,
   revertResolution,
   addMockApplication,
+  recordBatchRun,
+  getLastBatchRun,
   __resetQueueForTests,
 } from "./store"
 
@@ -93,5 +95,18 @@ describe("queue store", () => {
     expect(reverted?.status).toBe("analyzed")
     expect(reverted?.reviewData.resolution).toBeNull()
     expect((await listQueue(1, 1000)).items.find((i) => i.id === target.id)).toBeDefined()
+  })
+
+  it("getLastBatchRun returns the most recently recorded run", async () => {
+    await recordBatchRun("manual", 3)
+    const first = await getLastBatchRun()
+    expect(first?.triggeredBy).toBe("manual")
+    expect(first?.analyzedCount).toBe(3)
+
+    await recordBatchRun("cron", 5)
+    const second = await getLastBatchRun()
+    expect(second?.triggeredBy).toBe("cron")
+    expect(second?.analyzedCount).toBe(5)
+    expect(second!.id).toBeGreaterThan(first!.id)
   })
 })

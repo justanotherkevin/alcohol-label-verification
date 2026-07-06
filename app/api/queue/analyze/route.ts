@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getApplication, unanalyzedApplications, updateApplication } from "@/lib/queue/store"
-import { analyzeApplication } from "@/lib/queue/analyze"
+import { getApplication, unanalyzedApplications, recordBatchRun } from "@/lib/queue/store"
+import { runAnalysis } from "@/lib/queue/analyze"
 import { QueueApplication } from "@/lib/queue/types"
 
 export async function POST(req: NextRequest) {
@@ -17,12 +17,10 @@ export async function POST(req: NextRequest) {
   } else {
     pending = await unanalyzedApplications()
   }
-  const analyzedIds: string[] = []
 
-  for (const app of pending) {
-    const { ocrData, images } = await analyzeApplication(app, providerName, apiKey)
-    await updateApplication(app.id, { status: "analyzed", ocrData, images })
-    analyzedIds.push(app.id)
+  const analyzedIds = await runAnalysis(pending, providerName, apiKey)
+  if (analyzedIds.length > 0) {
+    await recordBatchRun("manual", analyzedIds.length)
   }
 
   return NextResponse.json({ analyzedIds })
