@@ -328,7 +328,7 @@ export default function QueueDetailPage() {
   const showStepper = Boolean(app.ocrData) && app.status !== "resolved";
 
   return (
-    <div className="px-8 py-8 max-w-7xl">
+    <div className="px-8 py-8 max-w-10xl">
       <div className="mb-6">
         <h1
           className="text-2xl font-bold text-on-surface"

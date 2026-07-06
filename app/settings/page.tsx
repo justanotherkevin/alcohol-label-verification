@@ -89,7 +89,17 @@ export default function SettingsPage() {
   }, []);
 
   function handleSave() {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ provider, apiKey }));
+    const requiresKey = PROVIDERS.find((p) => p.id === provider)?.requiresKey;
+    const keyMissing = requiresKey && !apiKey.trim();
+    // Never persist a provider that needs a key it doesn't have — a provider
+    // requiring a key can silently pick up a server-side default (see
+    // lib/ocr/index.ts), so an empty field must not be treated as "configured".
+    const toSave = keyMissing ? { provider: "tesseract", apiKey: "" } : { provider, apiKey };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(toSave));
+    if (keyMissing) {
+      setProvider("tesseract");
+      setApiKey("");
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -148,6 +158,7 @@ export default function SettingsPage() {
   }
 
   const selectedProvider = PROVIDERS.find((p) => p.id === provider);
+  const keyMissing = !!selectedProvider?.requiresKey && !apiKey.trim();
 
   return (
     <div className="px-8 py-8 max-w-2xl">
@@ -217,15 +228,24 @@ export default function SettingsPage() {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="API key"
-            className="w-full h-12 border-2 border-outline rounded-lg px-4 py-3 text-base font-mono bg-surface-card text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            className={`w-full h-12 border-2 rounded-lg px-4 py-3 text-base font-mono bg-surface-card text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
+              keyMissing ? "border-bp-error" : "border-outline focus:border-primary"
+            }`}
           />
+          {keyMissing && (
+            <p className="text-base text-bp-error font-semibold mt-2">
+              Enter an API key to use {selectedProvider.label}, or switch to
+              Tesseract (Local).
+            </p>
+          )}
         </div>
       )}
 
       <div className="mt-8 flex items-center gap-4">
         <button
           onClick={handleSave}
-          className="px-5 py-3 bg-primary text-white text-base font-semibold rounded-lg hover:bg-primary-hover transition-colors cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
+          disabled={keyMissing}
+          className="px-5 py-3 bg-primary text-white text-base font-semibold rounded-lg hover:bg-primary-hover transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-2 focus:outline-offset-2 focus:outline-primary">
           Save Settings
         </button>
         {saved && <span className="text-base text-bp-success font-semibold">Saved!</span>}

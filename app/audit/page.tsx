@@ -107,7 +107,7 @@ export default function AuditLogPage() {
     : [];
 
   return (
-    <div className="px-8 py-8 max-w-7xl">
+    <div className="px-8 py-8 max-w-10xl">
       <div className="mb-8">
         <h1
           className="text-3xl font-bold text-on-surface"

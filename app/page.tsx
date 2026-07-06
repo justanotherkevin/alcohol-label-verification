@@ -168,12 +168,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="px-8 py-8 max-w-7xl">
+    <div className="px-8 py-8 max-w-10xl">
       {toastMessage && (
-        <Toast
-          message={toastMessage}
-          onDismiss={() => setToastMessage(null)}
-        />
+        <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
       )}
       <div className="mb-8">
         <h1
