@@ -75,6 +75,18 @@ export function LabelRegionPanel({
       ctx.strokeStyle = "#f97316";
       ctx.lineWidth = 2;
       ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+      if (typeof bbox.confidence === "number" && bbox.confidence < 1) {
+        const label = `${Math.round(bbox.confidence * 100)}%`;
+        ctx.font = "bold 11px sans-serif";
+        const textWidth = ctx.measureText(label).width;
+        const labelX = boxX;
+        const labelY = Math.max(0, boxY - 4);
+        ctx.fillStyle = "#f97316";
+        ctx.fillRect(labelX, labelY - 12, textWidth + 6, 14);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(label, labelX + 3, labelY - 2);
+      }
     };
     img.src = image.path;
   }, [bbox, images]);
