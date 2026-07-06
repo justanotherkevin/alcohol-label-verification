@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — fix production 500 on queue load, document dev tools and schema-drift backlog
+
+### Fixed
+
+- Production Supabase database (`supabase-ttb-labeling`) was missing the `batch_runs` table — it was added to `scripts/init-db.sql` for the batch-review cron feature but never applied to production, causing `GET /api/queue` to throw `relation "batch_runs" does not exist` and 500, which left the dashboard stuck on "Loading queue…" indefinitely (no error handling in `loadQueue()` to surface the failure). Created the table directly against the production database via the Supabase MCP; verified `/api/queue` returns 200.
+
+### Changed
+
+- `README.md`: documented the Settings page "Development tools" (reset seed data, add mock application, run pre-analysis) as safe to use in production since they only touch demo-prefixed applications.
+- `docs/backlogs.md`: added a backlog entry proposing incremental, CI-tracked database migrations to prevent schema drift between local and production recurring (this is the second time it's caused a prod 500), plus a note that `loadQueue()` still lacks error handling for a failed `/api/queue` request.
+
 ## [2026-07-06] — queue verification page UI improvements
 
 ### Changed
