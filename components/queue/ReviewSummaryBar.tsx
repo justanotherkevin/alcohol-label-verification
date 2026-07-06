@@ -40,9 +40,9 @@ export function ReviewSummaryBar({
   onDenyClick,
 }: ReviewSummaryBarProps) {
   return (
-    <div className="bg-[#1c1c1c] px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+    <div className="bg-surface-card px-6 py-4 flex items-center justify-between gap-4 flex-wrap border-t border-outline">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-white/50">All fields reviewed:</span>
+        <span className="text-sm text-on-surface-muted">All fields reviewed:</span>
         <CountPill
           count={passCount}
           label="pass"

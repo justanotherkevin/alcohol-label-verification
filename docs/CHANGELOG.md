@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — queue verification page UI improvements
+
+### Changed
+
+- `app/queue/[id]/page.tsx`: Removed centering (`mx-auto`) from main container, increased max-width from 5xl to 7xl for consistency with other pages, changed image container background from dark (#141414) to light semantic color (bg-surface-card).
+- `components/queue/LabelRegionPanel.tsx`: Converted single image thumbnail to scrollable gallery showing all label images, updated all dark colors to light theme (bg-[#1c1c1c] → bg-surface-card, text-white/50 → text-on-surface-muted), improved accessibility with descriptive aria-labels for each image.
+- `components/queue/ReviewSummaryBar.tsx`: Changed background from dark (#1c1c1c) to light (bg-surface-card), updated text color for readability (text-white/50 → text-on-surface-muted), added border-t border-outline for visual separation.
+
 ## [2026-07-06] — automated batch review cron + specialist toast
 
 ### Added
