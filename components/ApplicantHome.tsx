@@ -25,7 +25,9 @@ function statusBadge(item: QueueSummary) {
   if (item.status === "resolved") {
     return (
       <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-bp-success-surface text-bp-success border border-bp-success-border">
-        <span className="material-symbols-outlined text-[16px]">check_circle</span>
+        <span className="material-symbols-outlined text-[16px]">
+          check_circle
+        </span>
         Resolved
       </span>
     );
@@ -60,7 +62,7 @@ export default function ApplicantHome({
   const resolvedCount = items.filter((i) => i.status === "resolved").length;
 
   return (
-    <div className="min-h-screen max-w-5xl p-8 mx-auto">
+    <div className="max-h-screen max-w-5xl p-8 mx-auto">
       <div className="mb-8 flex items-start justify-between gap-6">
         <div>
           <h1
@@ -98,7 +100,9 @@ export default function ApplicantHome({
             <p className="text-sm font-semibold text-on-surface-muted uppercase tracking-wide mb-1">
               Resolved
             </p>
-            <p className="text-2xl font-bold text-bp-success">{resolvedCount}</p>
+            <p className="text-2xl font-bold text-bp-success">
+              {resolvedCount}
+            </p>
           </div>
         </div>
       )}
@@ -106,7 +110,9 @@ export default function ApplicantHome({
       <div className="bg-surface-card border border-outline rounded-2xl overflow-hidden flex flex-col shadow-sm">
         {loading ?
           <div className="px-6 py-16 text-center">
-            <p className="text-base text-on-surface-muted">Loading applications…</p>
+            <p className="text-base text-on-surface-muted">
+              Loading applications…
+            </p>
           </div>
         : items.length === 0 ?
           <div className="px-6 py-16 text-center">
@@ -125,33 +131,35 @@ export default function ApplicantHome({
           </div>
         : <div className="flex-1 overflow-x-auto">
             <table className="w-full text-base min-w-max">
-            <thead>
-              <tr className="border-b border-outline bg-surface-dim">
-                {["App ID", "Brand Name", "Submitted", "Status"].map((h) => (
-                  <th
-                    key={h}
-                    className="px-6 py-4 text-left text-sm font-semibold text-on-surface-muted uppercase tracking-wider">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline">
-              {items.map((item) => (
-                <tr key={item.id} className="hover:bg-surface-dim/60 transition-colors">
-                  <td className="px-6 py-5 font-mono text-sm text-on-surface-dim">
-                    {item.id}
-                  </td>
-                  <td className="px-6 py-5 text-base font-semibold text-on-surface">
-                    {item.brandName}
-                  </td>
-                  <td className="px-6 py-5 text-base text-on-surface-muted">
-                    {new Date(item.submittedAt).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-5">{statusBadge(item)}</td>
+              <thead>
+                <tr className="border-b border-outline bg-surface-dim">
+                  {["App ID", "Brand Name", "Submitted", "Status"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-6 py-4 text-left text-sm font-semibold text-on-surface-muted uppercase tracking-wider">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
+              </thead>
+              <tbody className="divide-y divide-outline">
+                {items.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="hover:bg-surface-dim/60 transition-colors">
+                    <td className="px-6 py-5 font-mono text-sm text-on-surface-dim">
+                      {item.id}
+                    </td>
+                    <td className="px-6 py-5 text-base font-semibold text-on-surface">
+                      {item.brandName}
+                    </td>
+                    <td className="px-6 py-5 text-base text-on-surface-muted">
+                      {new Date(item.submittedAt).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-5">{statusBadge(item)}</td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         }
