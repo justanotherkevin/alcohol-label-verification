@@ -1,11 +1,13 @@
 "use client";
 
 import { FieldResult } from "@/lib/verify";
+import { BoundingBox } from "@/lib/ocr/types";
 import { FieldSeverity } from "@/lib/queue/field-status";
 import { FieldValueRows, SEVERITY_LABEL, SEVERITY_PILL } from "@/components/queue/FieldReviewCard";
 
 interface PassedFieldPanelProps {
   field: FieldResult;
+  boxes?: BoundingBox[];
   severity: FieldSeverity;
   isManuallyFlagged: boolean;
   onFlag: () => void;
@@ -15,6 +17,7 @@ interface PassedFieldPanelProps {
 
 export function PassedFieldPanel({
   field,
+  boxes = [],
   severity,
   isManuallyFlagged,
   onFlag,
@@ -30,7 +33,7 @@ export function PassedFieldPanel({
         <h2 className="text-xl font-bold text-on-surface">{field.label}</h2>
       </div>
 
-      <FieldValueRows field={field} />
+      <FieldValueRows field={field} boxes={boxes} />
 
       <div>
         <p className="text-sm font-medium text-on-surface mb-2">
