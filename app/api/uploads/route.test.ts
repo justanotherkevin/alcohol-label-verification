@@ -15,6 +15,7 @@ describe("POST /api/uploads", () => {
   afterEach(async () => {
     await fs.rm(uploadsDir, { recursive: true, force: true })
     delete process.env.BLOB_READ_WRITE_TOKEN
+    delete process.env.VERCEL
   })
 
   it("rejects a request with no file", async () => {
@@ -65,6 +66,24 @@ describe("POST /api/uploads", () => {
       .then(() => true)
       .catch(() => false)
     expect(escaped).toBe(false)
+  })
+
+  it("returns a clear 500 instead of crashing when deployed to Vercel without a Blob store connected", async () => {
+    delete process.env.BLOB_READ_WRITE_TOKEN
+    process.env.VERCEL = "1"
+    const file = new File([new Uint8Array([1])], "my-label.jpg", { type: "image/jpeg" })
+
+    const res = await POST(requestWithFile(file))
+    expect(res.status).toBe(500)
+    const body = (await res.json()) as { error: string }
+    expect(body.error).toMatch(/blob store/i)
+
+    // must not have attempted the local-disk fallback (Vercel's deployed fs is read-only)
+    const wroteLocally = await fs
+      .access(uploadsDir)
+      .then(() => true)
+      .catch(() => false)
+    expect(wroteLocally).toBe(false)
   })
 
   it("gives each upload a unique filename so replacements don't collide", async () => {

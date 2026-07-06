@@ -32,11 +32,18 @@ export async function POST(request: Request) {
   // fallback below.
   const filename = `${crypto.randomUUID()}.${EXTENSION_BY_MIME_TYPE[file.type]}`
 
-  // No Blob store connected yet (e.g. local dev without BLOB_READ_WRITE_TOKEN):
-  // fall back to writing into public/uploads so the drag-and-drop flow works
-  // with zero setup. Vercel deployments get the token injected automatically
-  // once a Blob store is connected to the project.
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    // On Vercel, the deployed filesystem is read-only (writing into public/
+    // throws ENOENT) — there's no local disk to fall back to, so surface a
+    // clear error instead of crashing. Only plain `next dev` gets the
+    // zero-setup local-disk fallback; Vercel deployments get the token
+    // injected automatically once a Blob store is connected to the project.
+    if (process.env.VERCEL) {
+      return NextResponse.json(
+        { error: "Photo uploads need a Blob store connected to this Vercel project." },
+        { status: 500 }
+      )
+    }
     const url = await saveToLocalUploadsDir(file, filename)
     return NextResponse.json({ url, mimeType: file.type }, { status: 201 })
   }
