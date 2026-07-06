@@ -91,7 +91,7 @@ export default function ApplyPage() {
   }
 
   return (
-    <div className="min-h-screen px-8 py-8 max-w-4xl mx-auto">
+    <div className="min-h-screen px-8 py-8 max-w-5xl mx-auto">
       <div className="mb-8 flex items-start justify-between">
         <div>
           <h1
@@ -112,7 +112,7 @@ export default function ApplyPage() {
             style={{ fontFamily: "var(--font-inter)" }}>
             Select a label image
           </h2>
-          <p className="text-base text-on-surface-muted mb-6">
+          <p className="text-base text-on-surface-muted mb-6 max-w-2xl">
             This is a demo environment. Each label below comes with its application data
             pre-filled so you can focus on trying out the submission flow — choose one to continue.
           </p>
@@ -121,7 +121,7 @@ export default function ApplyPage() {
               <button
                 key={entry.key}
                 onClick={() => handlePick(entry)}
-                className="bg-surface-card border-2 border-outline rounded-2xl overflow-hidden text-left hover:border-primary cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary transition-colors">
+                className="group bg-surface-card border border-outline rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-md hover:border-primary hover:-translate-y-0.5 cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary transition-all">
                 <div
                   className={`flex ${entry.imageKeys.length > 1 ? "divide-x divide-outline" : ""}`}>
                   {entry.imageKeys.map((imgKey) => (
@@ -130,16 +130,16 @@ export default function ApplyPage() {
                       key={imgKey}
                       src={`/demo-labels/${imgKey.split("/").pop()}`}
                       alt={entry.displayName}
-                      className="h-40 flex-1 object-cover bg-surface-dim"
+                      className="h-40 flex-1 object-cover bg-surface-dim transition-transform group-hover:scale-[1.03]"
                     />
                   ))}
                 </div>
-                <div className="p-4">
+                <div className="p-4 flex items-center justify-between gap-2 border-t border-outline">
                   <p className="text-base font-semibold text-on-surface truncate">
                     {entry.displayName}
                   </p>
                   {entry.imageKeys.length > 1 && (
-                    <span className="inline-block mt-2 text-xs font-bold uppercase tracking-wide text-on-surface-muted bg-surface-dim px-3 py-1 rounded-full">
+                    <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-on-surface-muted bg-surface-dim px-3 py-1 rounded-full">
                       Front + Back
                     </span>
                   )}
@@ -154,12 +154,13 @@ export default function ApplyPage() {
         <div>
           <button
             onClick={() => setStep("pick")}
-            className="px-4 py-2 text-base font-semibold text-on-surface-dim bg-surface-dim hover:bg-outline rounded-lg mb-6 transition-colors cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
-            ← Choose a different label
+            className="flex items-center gap-1.5 px-4 py-2 text-base font-semibold text-on-surface-dim bg-surface-dim hover:bg-outline rounded-lg mb-6 transition-colors cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
+            <span className="material-symbols-outlined text-lg">arrow_back</span>
+            Choose a different label
           </button>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            <div className="md:sticky md:top-24">
               <p className="text-sm font-semibold text-on-surface-muted uppercase tracking-wide mb-4">
                 {selected.displayName}
               </p>
@@ -170,13 +171,13 @@ export default function ApplyPage() {
                     key={imgKey}
                     src={`/demo-labels/${imgKey.split("/").pop()}`}
                     alt={selected.displayName}
-                    className="w-full rounded-2xl border-2 border-outline bg-surface-dim"
+                    className="w-full rounded-2xl border border-outline bg-surface-dim shadow-sm"
                   />
                 ))}
               </div>
             </div>
 
-            <div className="bg-surface-card border border-outline rounded-2xl p-6">
+            <div className="bg-surface-card border border-outline rounded-2xl p-6 shadow-sm">
               <p className="text-sm font-semibold text-on-surface-muted uppercase tracking-wide mb-2">
                 Application data
               </p>
@@ -195,7 +196,7 @@ export default function ApplyPage() {
                         value={formData[key]}
                         onChange={(e) => handleFieldChange(key, e.target.value)}
                         rows={4}
-                        className="w-full text-base text-on-surface font-medium bg-surface border-2 border-outline rounded-lg px-4 py-3 focus:outline-none focus:border-primary"
+                        className="w-full text-base text-on-surface font-medium bg-surface border-2 border-outline rounded-lg px-4 py-3 transition-colors focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
                       />
                     </div>
                   : <div key={key}>
@@ -206,18 +207,23 @@ export default function ApplyPage() {
                         type="text"
                         value={formData[key]}
                         onChange={(e) => handleFieldChange(key, e.target.value)}
-                        className="w-full h-12 text-base text-on-surface font-medium bg-surface border-2 border-outline rounded-lg px-4 py-3 focus:outline-none focus:border-primary"
+                        className="w-full h-12 text-base text-on-surface font-medium bg-surface border-2 border-outline rounded-lg px-4 py-3 transition-colors focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
                       />
                     </div>,
                 )}
               </div>
 
-              {error && <p className="text-base text-bp-error mt-6 font-semibold">{error}</p>}
+              {error && (
+                <p className="flex items-center gap-2 text-base text-bp-error mt-6 font-semibold bg-bp-error-surface border border-bp-error-border rounded-lg px-4 py-3">
+                  <span className="material-symbols-outlined text-xl">error</span>
+                  {error}
+                </p>
+              )}
 
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full mt-8 py-3 bg-primary text-white text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-opacity focus:outline-2 focus:outline-offset-2 focus:outline-primary hover:bg-primary-hover">
+                className="w-full mt-8 py-3 bg-primary text-white text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-primary hover:bg-primary-hover shadow-sm">
                 {submitting ? "Submitting…" : "Submit Application"}
               </button>
             </div>
@@ -226,9 +232,11 @@ export default function ApplyPage() {
       )}
 
       {step === "submitted" && (
-        <div className="bg-surface-card border border-outline rounded-2xl p-10 text-center">
-          <span className="material-symbols-outlined text-bp-success text-5xl mb-4">
-            assignment_turned_in
+        <div className="bg-surface-card border border-outline rounded-2xl p-10 text-center shadow-sm max-w-xl mx-auto">
+          <span className="inline-flex items-center justify-center size-16 rounded-full bg-bp-success-surface border border-bp-success-border mb-4">
+            <span className="material-symbols-outlined text-bp-success text-4xl">
+              assignment_turned_in
+            </span>
           </span>
           <h2
             className="text-2xl font-bold text-on-surface mb-3"

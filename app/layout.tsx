@@ -39,7 +39,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=assignment_turned_in,check,close,edit,gavel,history,inbox,layers,logout,memory,settings,swap_horiz,timer,upload,verified,warning"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add,arrow_back,assignment_turned_in,check,check_circle,close,edit,error,gavel,history,inbox,inventory_2,layers,logout,memory,schedule,settings,swap_horiz,timer,upload,verified,visibility,warning"
         />
       </head>
       <body className="min-h-full flex bg-surface" suppressHydrationWarning>
