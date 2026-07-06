@@ -473,3 +473,34 @@ export async function resetQueue(): Promise<void> {
 export async function __resetQueueForTests(): Promise<void> {
   return resetQueue();
 }
+
+export interface BatchRun {
+  id: number;
+  triggeredBy: "cron" | "manual";
+  analyzedCount: number;
+  completedAt: string;
+}
+
+export async function recordBatchRun(
+  triggeredBy: "cron" | "manual",
+  analyzedCount: number,
+): Promise<void> {
+  await pool.query(
+    `INSERT INTO batch_runs (triggered_by, analyzed_count, completed_at) VALUES ($1, $2, $3)`,
+    [triggeredBy, analyzedCount, new Date().toISOString()],
+  );
+}
+
+export async function getLastBatchRun(): Promise<BatchRun | null> {
+  const { rows } = await pool.query(
+    `SELECT * FROM batch_runs ORDER BY id DESC LIMIT 1`,
+  );
+  if (!rows.length) return null;
+  const row = rows[0];
+  return {
+    id: row.id,
+    triggeredBy: row.triggered_by,
+    analyzedCount: row.analyzed_count,
+    completedAt: row.completed_at,
+  };
+}

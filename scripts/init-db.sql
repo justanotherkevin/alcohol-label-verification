@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS ocr_data CASCADE;
 DROP TABLE IF EXISTS application_images CASCADE;
 DROP TABLE IF EXISTS application_data CASCADE;
 DROP TABLE IF EXISTS applications CASCADE;
+DROP TABLE IF EXISTS batch_runs CASCADE;
 
 CREATE TABLE applications (
   id           TEXT PRIMARY KEY,
@@ -68,4 +69,11 @@ CREATE TABLE resolutions (
   note            TEXT        NOT NULL,
   resolved_at     TIMESTAMPTZ NOT NULL,
   specialist_id   TEXT
+);
+
+CREATE TABLE batch_runs (
+  id             SERIAL PRIMARY KEY,
+  triggered_by   TEXT        NOT NULL, -- 'cron' | 'manual'
+  analyzed_count INTEGER     NOT NULL,
+  completed_at   TIMESTAMPTZ NOT NULL
 );
