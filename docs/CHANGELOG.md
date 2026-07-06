@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — restrict OCR provider selection to tested providers
+
+### Changed
+
+- `app/settings/page.tsx`: only Tesseract and Google Vision (the two OCR providers validated end-to-end) are selectable in Settings. Claude, Gemini, GPT-4o, and Mock are shown but disabled, with a "Future feature" tooltip on hover.
+
 ## [2026-07-06] — add applicant portal for COLA application submission
 
 ### Added
