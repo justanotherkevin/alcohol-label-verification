@@ -33,6 +33,7 @@ export interface FieldResult {
   extracted: string | null
   status: FieldStatus
   confidence?: number
+  matchScore?: number
   note?: string
   regulatory?: RegulatoryCheck
 }
@@ -55,6 +56,45 @@ function normalize(value: string | null): string {
 
 function fuzzyMatch(expected: string | null, extracted: string | null): boolean {
   return normalize(expected) === normalize(extracted)
+}
+
+function bigrams(s: string): Set<string> {
+  const out = new Set<string>()
+  for (let i = 0; i < s.length - 1; i++) out.add(s.slice(i, i + 2))
+  return out
+}
+
+// Dice-coefficient bigram similarity, 0-1. Used to surface a match percentage
+// to reviewers independent of pass/fail status or OCR-provider confidence.
+function similarity(a: string | null, b: string | null): number {
+  const na = normalize(a)
+  const nb = normalize(b)
+  if (!na || !nb) return 0
+  if (na === nb) return 1
+  const ba = bigrams(na)
+  const bb = bigrams(nb)
+  if (ba.size === 0 || bb.size === 0) return 0
+  let overlap = 0
+  for (const bg of ba) if (bb.has(bg)) overlap++
+  return (2 * overlap) / (ba.size + bb.size)
+}
+
+// ABV/net-contents fields differ in unit formatting ("45% ABV" vs "45% Alc./Vol."),
+// which tanks bigram overlap despite being a semantic match. Score similarity on
+// the normalized numeric value when both sides parse, falling back to text similarity.
+function numericAwareSimilarity(
+  expected: string | null,
+  extracted: string | null,
+  parse: (s: string) => number | null
+): number {
+  if (expected && extracted) {
+    const expNum = parse(expected)
+    const extNum = parse(extracted)
+    if (expNum !== null && extNum !== null) {
+      return expNum === extNum ? 1 : similarity(expected, extracted)
+    }
+  }
+  return similarity(expected, extracted)
 }
 
 function abvMatch(expected: string | null, extracted: string | null): boolean {
@@ -136,7 +176,8 @@ export function verifyLabel(
     field: keyof ExtractedLabelData,
     label: string,
     expected: string | null,
-    regulatory?: RegulatoryCheck
+    regulatory?: RegulatoryCheck,
+    parse?: (s: string) => number | null
   ) {
     const ext = extracted[field]
     const status: FieldStatus = !ext ? "missing" : fuzzyMatch(expected, ext) ? "pass" : "fail"
@@ -147,6 +188,7 @@ export function verifyLabel(
       extracted: ext,
       status,
       confidence: confidence[field],
+      matchScore: parse ? numericAwareSimilarity(expected, ext, parse) : similarity(expected, ext),
       regulatory,
       note: conflictNote(field, conflicts),
     })
@@ -164,6 +206,7 @@ export function verifyLabel(
     extracted: abvExt,
     status: abvStatus,
     confidence: confidence.abv,
+    matchScore: numericAwareSimilarity(appData.abv, abvExt, parseAbv),
     regulatory: checkAbvRegulatory(extracted.abv, extracted.classType),
     note: conflictNote("abv", conflicts),
   })
@@ -171,7 +214,8 @@ export function verifyLabel(
     "netContents",
     "Net Contents",
     appData.netContents,
-    checkNetContentsRegulatory(extracted.netContents, extracted.classType)
+    checkNetContentsRegulatory(extracted.netContents, extracted.classType),
+    parseNetContentsMl
   )
   addFuzzyField("bottler", "Bottler / Producer", appData.bottler)
   addFuzzyField("countryOfOrigin", "Country of Origin", appData.countryOfOrigin)
@@ -193,6 +237,7 @@ export function verifyLabel(
     extracted: govExt,
     status: govStatus,
     confidence: confidence.governmentWarning,
+    matchScore: similarity(REQUIRED_GOVERNMENT_WARNING, govExt),
     note: govNote,
   })
 

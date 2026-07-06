@@ -50,9 +50,12 @@ export function FieldValueRows({ field }: { field: FieldResult }) {
         value={
           <>
             {field.extracted ?? "not found"}
-            {typeof field.confidence === "number" && (
-              <span className="text-on-surface-muted"> ({Math.round(field.confidence * 100)}%)</span>
-            )}
+            {(() => {
+              const pct = typeof field.matchScore === "number" ? field.matchScore : field.confidence
+              return typeof pct === "number" ? (
+                <span className="text-on-surface-muted"> ({Math.round(pct * 100)}%)</span>
+              ) : null
+            })()}
           </>
         }
       />
