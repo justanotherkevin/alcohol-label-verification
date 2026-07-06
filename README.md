@@ -74,6 +74,12 @@ This application automates the first three steps, letting specialists focus enti
 
 The app includes 5 pre-loaded demo labels so you can see it in action immediately without needing to set up data.
 
+The Settings page includes a "Development tools" section. These are for local development and demoing specific features/states — they only ever touch demo applications (ids prefixed `demo-`), so they're safe to use on the production deployment too.
+
+- **Reset seed data** — Deletes every application currently in the queue and replaces them with the original fixed set of sample applications. Use this to return to a known-clean starting point after testing, e.g. after resolving or rejecting several applications and wanting the dashboard to look like a fresh install again.
+- **+ Add mock application** — Inserts one randomly-generated application (based on the sample templates) into the queue in "pending" status. Use this when you want to test the pre-analysis or review flow on a new application without waiting for a real submission.
+- **Run pre-analysis now** — Triggers pre-analysis on demand for all pending applications, using the OCR provider currently selected on the Settings page. Pending applications are normally pre-analyzed automatically; use this button when you've just added a mock application or changed the OCR provider and want to see results immediately instead of waiting.
+
 ## Technology
 
 - **Vision AI** — Tesseract (free, open-source), Google Vision
