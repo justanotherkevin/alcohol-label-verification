@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — applicants can replace demo label photos with their own
+
+### Added
+
+- `app/api/uploads/route.ts`: new endpoint for uploading a label photo. Validates file type (`image/jpeg`, `image/png`, `image/webp`) and an 8MB size cap, then stores it via Vercel Blob (`@vercel/blob`, public access). When `BLOB_READ_WRITE_TOKEN` isn't set (e.g. local dev without a connected Blob store), falls back to writing into `public/uploads/` so the feature works with zero setup; the returned filename is always server-generated (never derived from the client-supplied `file.name`) to rule out path traversal.
+- `lib/uploads.ts`: shared `ALLOWED_IMAGE_MIME_TYPES` allowlist and `isTrustedUploadPath()`, which restricts accepted image URLs to the app's own `/uploads/` fallback or a Vercel Blob public-store URL.
+- `app/apply/page.tsx`: the review step's label photos are now drag-and-drop (and click-to-browse) replaceable, with an upload-in-progress spinner and inline error/revert on failure.
+
+### Changed
+
+- `app/api/applications/route.ts`: accepts an optional `imageOverrides` map (keyed by photo slot index) so a submission can swap in an uploaded photo instead of the catalog demo image. Overrides are validated against `isTrustedUploadPath()`/`ALLOWED_IMAGE_MIME_TYPES` and the whole request is rejected with 400 if either check fails — otherwise the OCR analysis step's image fetch (see below) could be used as an SSRF proxy for an attacker-supplied URL. Untouched photo slots keep the catalog's precomputed OCR vision text; replaced slots drop it since it belongs to a different image now.
+- `lib/queue/analyze.ts`: `readImageBase64` now fetches `http(s)://` image paths over HTTP in addition to reading local demo images off disk, since an uploaded photo's `path` is a full Blob URL rather than a `public/`-relative path.
+
 ## [2026-07-06] — OCR Found percentage now matches the bounding-box overlay
 
 ### Fixed
