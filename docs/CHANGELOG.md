@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — fix Tesseract crashing on Vercel after the mock-provider-default fix
+
+### Fixed
+
+- `next.config.ts`: switching production analysis to the real `tesseract` provider (previous entry below) surfaced a crash: `Cannot find module '..'` inside `tesseract.js`'s node worker script. `tesseract.js` spawns its OCR work in a `worker_threads` worker loaded from an absolute path computed at runtime, so Next's build-time file tracer never sees the worker script's own `require()` calls and silently drops its dependencies (`worker-script/*`, `tesseract.js-core`, `bmp-js`, `node-fetch`, `zlibjs`, `wasm-feature-detect`) from the deployed serverless function. Added `outputFileTracingIncludes` to force those files into the `/api/**` function bundles. Verified by reconstructing the actual Vercel function bundle locally from the `.nft.json` trace manifest and running `tesseract.js`'s `recognize()` against it — reproduced the crash before this fix, confirmed clean OCR output after, at ~85MB uncompressed (within Vercel's 250MB function size limit).
+
 ## [2026-07-06] — production OCR analysis defaults to real Tesseract, not mock data
 
 ### Fixed
