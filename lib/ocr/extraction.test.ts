@@ -313,6 +313,32 @@ describe("computeFieldBbox — bidirectional token matching (ABV split-word case
   })
 })
 
+describe("extractFields — fuzzy fallback", () => {
+  it("resolves brand name despite a dropped letter not covered by exact matching", () => {
+    // "DISTILERY" (missing an 'L') would fail matchExact's substring check.
+    const text = "ABC DISTILERY\nFREDERICK, MD\nSTRAIGHT RYE WHISKY"
+    const result = extractFields(text, { brandName: "ABC DISTILLERY" })
+    expect(result.brandName).toBe("ABC DISTILLERY")
+  })
+
+  it("still returns null when the hint has no meaningful overlap with the OCR text", () => {
+    const result = extractFields(OCR_TEXT, { brandName: "Totally Different Brand Name" })
+    expect(result.brandName).toBeNull()
+  })
+
+  it("resolves government warning despite scattered OCR line noise between key words", () => {
+    const text =
+      "GOVERNMENT WARNNING (1) According to the Surgeon General women should not drink " +
+      "alcoholic beverages during pregnancy because of the risk of birth defects (2) Consumption " +
+      "of alcoholic beverages impairs your ability to drive a car or operate machinery and may " +
+      "cause health problems"
+    const hint =
+      "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    const result = extractFields(text, { governmentWarning: hint })
+    expect(result.governmentWarning).toBe(hint)
+  })
+})
+
 describe("computeFieldBbox — invariant: extracted value always yields a bbox", () => {
   it("ABV: if extractFields returns a non-null abv, computeFieldBbox must return non-null", () => {
     // extractFields uses matchAbv which returns the OCR text form of the ABV,
@@ -358,5 +384,38 @@ describe("computeFieldBbox — invariant: extracted value always yields a bbox",
     const words = [word("750ml", 0, 40, 60, 52)]
     const bbox = computeFieldBbox(words, extracted.netContents, W, H)
     expect(bbox).not.toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// computeFieldBbox — coverage score (partial fuzzy matching)
+// ---------------------------------------------------------------------------
+
+describe("computeFieldBbox — confidence score", () => {
+  it("scores a perfect consecutive match as confidence 1", () => {
+    const words = [word("ABC", 0, 0, 100, 20), word("DISTILLERY", 110, 0, 300, 20)]
+    const bbox = computeFieldBbox(words, "ABC DISTILLERY", W, H)
+    expect(bbox!.confidence).toBe(1)
+  })
+
+  it("returns a partial-coverage bbox when OCR truncates the last word of a multi-word value", () => {
+    // OCR captured "OLD TOM DISTIL" — the final word of "OLD TOM DISTILLERY" got cut off.
+    const words = [
+      word("OLD", 0, 0, 100, 20),
+      word("TOM", 110, 0, 200, 20),
+      word("DISTIL", 210, 0, 300, 20),
+    ]
+    const bbox = computeFieldBbox(words, "OLD TOM DISTILLERY", W, H)
+    expect(bbox).not.toBeNull()
+    expect(bbox!.confidence).toBeGreaterThanOrEqual(0.6)
+    expect(bbox!.confidence).toBeLessThan(1)
+    // Bbox should cover all three matched words, not just a subset.
+    expect(bbox!.width).toBeCloseTo(300 / W)
+  })
+
+  it("returns null when coverage falls below the acceptance floor", () => {
+    const words = [word("OLD", 0, 0, 100, 20)]
+    const bbox = computeFieldBbox(words, "OLD TOM DISTILLERY RESERVE BOURBON", W, H)
+    expect(bbox).toBeNull()
   })
 })
