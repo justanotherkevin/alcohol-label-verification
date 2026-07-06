@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — add applicant portal for COLA application submission
+
+### Added
+
+- `app/apply/page.tsx`: applicant-facing submission flow — pick a demo label image, review its auto-filled COLA data (editable, to allow demoing a mismatch), and submit. Lands in the queue as `status: "pending"` with a "waiting for reviewer" confirmation.
+- `app/api/applications/route.ts`: `POST /api/applications` — builds a new `QueueApplication` from a selected label-catalog entry (merging any applicant edits over the catalog's ground truth) and inserts it via the existing `addApplication()`.
+- `components/LoginModal.tsx`: replaces the single-column specialist login with a two-column chooser — sign in as a specialist (existing 5 demo accounts) or as an applicant (5 new prebuilt demo accounts, via `lib/queue/applicant.ts`).
+- `components/AppShell.tsx`: owns identity gating/sign-in-modal display and hides the specialist sidebar entirely for applicant identities, replacing logic previously embedded in `components/Sidebar.tsx`. Also adds a "Log out" action alongside the existing "Switch user".
+- `components/ApplicantNav.tsx`: lightweight top nav shown on all applicant-facing pages (My Applications / Submit New / signed-in-as / switch user / log out) — applicants otherwise had no navigation chrome at all.
+- `components/ApplicantHome.tsx`: role-aware home screen shown at `/` for applicant identities — lists only that applicant's own submissions (via a new optional `applicant` filter on `listQueue()` / `GET /api/queue?applicant=`), instead of the full specialist queue.
+- `lib/queue/label-catalog.ts`: extracts the per-image `SEED_HINTS` ground-truth map out of the server-only `lib/queue/seed-data.ts` into a client-safe module, and adds a grouped `LABEL_CATALOG` (front+back pairs collapsed into one selectable entry) for the applicant portal's image picker. Also adds a ground-truth entry for `label-2`, previously unused outside the hardcoded pending seed row.
+
+### Changed
+
+- `lib/queue/seed-data.ts`: re-exports `SEED_HINTS` from `label-catalog.ts` instead of defining it inline; no behavioral change to seeded demo data.
+- `lib/queue/store.ts`: `listQueue()` takes an optional `applicant` parameter to scope results to one applicant's full history (including resolved applications), for the new applicant home screen.
+
+---
+
 ## [2026-07-06] — add requirements-traceability test suite, align user-flow doc with source requirements
 
 ### Added
