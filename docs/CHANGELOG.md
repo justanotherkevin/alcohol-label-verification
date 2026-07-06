@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — OCR Found percentage now matches the bounding-box overlay
+
+### Fixed
+
+- `components/queue/FieldReviewCard.tsx`: the "OCR Found" percentage shown in field review preferred `field.matchScore` (text similarity between the OCR output and the application data) over `field.confidence`, which is always empty since no OCR provider (`mock.ts`, `google-vision.ts`, `tesseract.ts`) populates a per-field confidence map. This made the reviewer-facing percentage disagree with the confidence badge drawn on the label region image, which comes from the bounding-box localization score computed in `computeFieldBoxes()` — e.g. a field could show "100%" next to the extracted text while its box overlay showed "82%" for the same field.
+- `components/queue/FieldReviewCard.tsx`, `components/queue/PassedFieldPanel.tsx`, `app/queue/[id]/page.tsx`: threaded the field's `BoundingBox[]` down to `FieldValueRows`, which now averages the boxes' `confidence` and uses that for the displayed percentage (falling back to `field.confidence`/`matchScore` only when no box confidence is available), so the two numbers agree.
+
 ## [2026-07-06] — unify bounding-box location with fuzzy text matching
 
 ### Fixed

@@ -2,7 +2,20 @@
 
 import type { ReactNode } from "react";
 import { FieldResult } from "@/lib/verify";
+import { BoundingBox } from "@/lib/ocr/types";
 import { FieldSeverity } from "@/lib/queue/field-status";
+
+// The verify pipeline's `confidence` map is always empty in this app (no OCR
+// provider reports per-field confidence), so the only real per-field OCR
+// confidence available is the bounding-box localization score drawn on the
+// label region image. Average it here so "OCR Found" matches that overlay
+// instead of silently falling back to the text match score against the
+// application data (a different, unrelated metric).
+function boxConfidence(boxes: BoundingBox[]): number | undefined {
+  const scored = boxes.filter((b) => typeof b.confidence === "number");
+  if (scored.length === 0) return undefined;
+  return scored.reduce((sum, b) => sum + (b.confidence as number), 0) / scored.length;
+}
 
 export const SEVERITY_PILL: Record<FieldSeverity, string> = {
   pass: "bg-bp-success-surface text-bp-success border-bp-success-border",
@@ -40,7 +53,8 @@ function Row({
   );
 }
 
-export function FieldValueRows({ field }: { field: FieldResult }) {
+export function FieldValueRows({ field, boxes = [] }: { field: FieldResult; boxes?: BoundingBox[] }) {
+  const pct = boxConfidence(boxes) ?? field.confidence ?? field.matchScore;
   return (
     <div className="border border-outline rounded-lg divide-y divide-outline">
       <Row label="Application" value={field.expected ?? "—"} />
@@ -50,12 +64,9 @@ export function FieldValueRows({ field }: { field: FieldResult }) {
         value={
           <>
             {field.extracted ?? "not found"}
-            {(() => {
-              const pct = typeof field.matchScore === "number" ? field.matchScore : field.confidence
-              return typeof pct === "number" ? (
-                <span className="text-on-surface-muted"> ({Math.round(pct * 100)}%)</span>
-              ) : null
-            })()}
+            {typeof pct === "number" ? (
+              <span className="text-on-surface-muted"> ({Math.round(pct * 100)}%)</span>
+            ) : null}
           </>
         }
       />
@@ -83,6 +94,7 @@ export function FieldValueRows({ field }: { field: FieldResult }) {
 
 interface FieldReviewCardProps {
   field: FieldResult;
+  boxes?: BoundingBox[];
   severity: FieldSeverity;
   currentFlaggedIndex: number;
   totalFlagged: number;
@@ -100,6 +112,7 @@ interface FieldReviewCardProps {
 
 export function FieldReviewCard({
   field,
+  boxes = [],
   severity,
   currentFlaggedIndex,
   totalFlagged,
@@ -129,7 +142,7 @@ export function FieldReviewCard({
         </span>
       </div>
 
-      <FieldValueRows field={field} />
+      <FieldValueRows field={field} boxes={boxes} />
 
       <div>
         <p className="text-sm font-medium text-on-surface mb-2">Override this field:</p>

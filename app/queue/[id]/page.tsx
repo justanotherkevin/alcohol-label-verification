@@ -384,6 +384,7 @@ export default function QueueDetailPage() {
               {displayedField && isDisplayedNaturallyFlagged ?
                 <FieldReviewCard
                   field={displayedField}
+                  boxes={displayedBoxes}
                   severity={effectiveSeverity(
                     displayedField,
                     overrides[displayedField.field],
@@ -404,6 +405,7 @@ export default function QueueDetailPage() {
               : displayedField ?
                 <PassedFieldPanel
                   field={displayedField}
+                  boxes={displayedBoxes}
                   severity={effectiveSeverity(
                     displayedField,
                     overrides[displayedField.field],
