@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — field match-percentage scoring
+
+### Added
+
+- `lib/verify.ts`: added a Dice-coefficient bigram `similarity()` function and `matchScore` on every `FieldResult`, giving reviewers a real expected-vs-extracted text-match percentage regardless of OCR provider (previously the displayed "confidence" was the OCR provider's self-reported score, which Tesseract and Google Vision never populate). `numericAwareSimilarity()` scores ABV/net-contents fields on their parsed numeric value so unit-format differences ("45% ABV" vs "45% Alc./Vol.") still read as a near-100% match.
+- `lib/verify.test.ts`: added coverage for identical strings, minor OCR noise, mismatches, unit-format variants, and missing values.
+
+### Changed
+
+- `components/queue/FieldReviewCard.tsx`: the percentage shown next to "OCR Found" now prefers `field.matchScore`, falling back to OCR confidence only if absent.
+- `README.md`: documented app architecture (flow diagram) and added a `docs/` folder index.
+
 ## [2026-07-06] — fix production 500 on queue load, document dev tools and schema-drift backlog
 
 ### Fixed
