@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
-/* Bureau Precision (Luminous) color tokens */
+/* Bureau Precision (Luminous) color tokens - updated for senior accessibility */
 :root {
-  --bp-primary:          #4c6080;
-  --bp-primary-hover:    #3d5070;
-  --bp-secondary:        #565f71;
-  --bp-tertiary:         #665881;
-  --bp-error:            #a83836;
+  --bp-primary:          #334455;
+  --bp-primary-hover:    #243445;
+  --bp-secondary:        #445566;
+  --bp-tertiary:         #556677;
+  --bp-error:            #8a2f2d;
   --bp-error-surface:    #fdf2f2;
   --bp-error-border:     #f5c6c6;
-  --bp-success:          #2d6a4f;
+  --bp-success:          #1f4d36;
   --bp-success-surface:  #f0faf5;
   --bp-success-border:   #b7dfc9;
-  --bp-warning:          #92610a;
+  --bp-warning:          #6d4700;
   --bp-warning-surface:  #fefae8;
   --bp-warning-border:   #f5dfa0;
   --bp-surface:          #f9f9fe;
-  --bp-surface-dim:      #eef0f5;
+  --bp-surface-dim:      #e8ebf0;
   --bp-surface-card:     #ffffff;
-  --bp-outline:          #e2e4ea;
-  --bp-outline-variant:  #d0d3de;
-  --bp-on-surface:       #1a1c22;
-  --bp-on-surface-dim:   #4a4e5c;
-  --bp-on-surface-muted: #767b8a;
+  --bp-outline:          #d8dce3;
+  --bp-outline-variant:  #c6cad5;
+  --bp-on-surface:       #0f1117;
+  --bp-on-surface-dim:   #3a3f4d;
+  --bp-on-surface-muted: #5a5f6d;
 }
 
 @theme inline {

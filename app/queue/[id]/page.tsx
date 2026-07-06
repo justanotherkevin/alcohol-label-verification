@@ -6,11 +6,17 @@ import { FieldResult } from "@/lib/verify";
 import { BoundingBoxMap } from "@/lib/ocr/types";
 import { isFieldFlagged, effectiveSeverity } from "@/lib/queue/field-status";
 import { LabelImage, OcrData, QueueStatus } from "@/lib/queue/types";
-import { getCurrentSpecialist, specialistNameById } from "@/lib/queue/specialist";
+import {
+  getCurrentSpecialist,
+  specialistNameById,
+} from "@/lib/queue/specialist";
 import { ApplicationData } from "@/lib/verify";
 import { FieldStatusStrip } from "@/components/queue/FieldStatusStrip";
 import { LabelRegionPanel } from "@/components/queue/LabelRegionPanel";
-import { FieldReviewCard, MarkedAction } from "@/components/queue/FieldReviewCard";
+import {
+  FieldReviewCard,
+  MarkedAction,
+} from "@/components/queue/FieldReviewCard";
 import { PassedFieldPanel } from "@/components/queue/PassedFieldPanel";
 import { ReviewSummaryPanel } from "@/components/queue/ReviewSummaryPanel";
 import { ReviewSummaryBar } from "@/components/queue/ReviewSummaryBar";
@@ -96,23 +102,29 @@ export default function QueueDetailPage() {
 
   const totalFlagged = flaggedFieldKeys.length;
   const atSummary = currentStepIndex >= totalFlagged;
-  const currentFieldKey = !atSummary ? flaggedFieldKeys[currentStepIndex] : null;
-  const currentField = currentFieldKey ? (fieldByKey.get(currentFieldKey) ?? null) : null;
+  const currentFieldKey =
+    !atSummary ? flaggedFieldKeys[currentStepIndex] : null;
+  const currentField =
+    currentFieldKey ? (fieldByKey.get(currentFieldKey) ?? null) : null;
 
   // What's actually on screen: a manually pinned field (clicked via a pill or
   // a Summary "Review" link) takes priority over the flagged stepper's
   // current position.
   const displayedFieldKey = pinnedFieldKey ?? currentFieldKey;
-  const displayedField = displayedFieldKey ? (fieldByKey.get(displayedFieldKey) ?? null) : null;
+  const displayedField =
+    displayedFieldKey ? (fieldByKey.get(displayedFieldKey) ?? null) : null;
   const displayedBbox =
     displayedFieldKey ?
-      (app?.ocrData?.boundingBoxes?.[displayedFieldKey as keyof BoundingBoxMap] ?? undefined)
+      (app?.ocrData?.boundingBoxes?.[
+        displayedFieldKey as keyof BoundingBoxMap
+      ] ?? undefined)
     : undefined;
-  const isDisplayedNaturallyFlagged = displayedFieldKey ?
-    flaggedFieldKeys.includes(displayedFieldKey)
-  : false;
+  const isDisplayedNaturallyFlagged =
+    displayedFieldKey ? flaggedFieldKeys.includes(displayedFieldKey) : false;
   const displayedFieldNumber =
-    displayedFieldKey ? orderedFields.findIndex((f) => f.field === displayedFieldKey) + 1 : 0;
+    displayedFieldKey ?
+      orderedFields.findIndex((f) => f.field === displayedFieldKey) + 1
+    : 0;
 
   const naturallyStillFlagged = allFields.filter(
     (f) => isFieldFlagged(f) && overrides[f.field]?.decision !== "approve",
@@ -124,7 +136,9 @@ export default function QueueDetailPage() {
   const canApprove = app?.ocrData !== null && stillFlagged.length === 0;
   const canDeny = rejectedFields.length > 0;
 
-  const reviewedCount = flaggedFieldKeys.filter((k) => actionedFields.has(k)).length;
+  const reviewedCount = flaggedFieldKeys.filter((k) =>
+    actionedFields.has(k),
+  ).length;
   const leftCount = totalFlagged - reviewedCount;
 
   const severityCounts = allFields.reduce(
@@ -143,7 +157,8 @@ export default function QueueDetailPage() {
     return null;
   }
 
-  const markedAction: MarkedAction = currentFieldKey ? getMarkedAction(currentFieldKey) : null;
+  const markedAction: MarkedAction =
+    currentFieldKey ? getMarkedAction(currentFieldKey) : null;
 
   function markActioned(key: string) {
     setActionedFields((prev) => {
@@ -156,7 +171,10 @@ export default function QueueDetailPage() {
 
   function handleAccept() {
     if (!currentFieldKey) return;
-    setOverrides((prev) => ({ ...prev, [currentFieldKey]: { reason: "", decision: "approve" } }));
+    setOverrides((prev) => ({
+      ...prev,
+      [currentFieldKey]: { reason: "", decision: "approve" },
+    }));
     setRejectedFields((prev) => prev.filter((f) => f !== currentFieldKey));
     markActioned(currentFieldKey);
   }
@@ -169,7 +187,9 @@ export default function QueueDetailPage() {
       delete next[currentFieldKey];
       return next;
     });
-    setRejectedFields((prev) => (prev.includes(currentFieldKey) ? prev : [...prev, currentFieldKey]));
+    setRejectedFields((prev) =>
+      prev.includes(currentFieldKey) ? prev : [...prev, currentFieldKey],
+    );
     markActioned(currentFieldKey);
   }
 
@@ -211,7 +231,10 @@ export default function QueueDetailPage() {
   }
 
   function handleFlagPassed(fieldKey: string) {
-    setOverrides((prev) => ({ ...prev, [fieldKey]: { reason: "", decision: "flag" } }));
+    setOverrides((prev) => ({
+      ...prev,
+      [fieldKey]: { reason: "", decision: "flag" },
+    }));
   }
 
   function handleClearFlag(fieldKey: string) {
@@ -232,7 +255,10 @@ export default function QueueDetailPage() {
     }
   }
 
-  async function submitResolution(decision: "approved" | "rejected", note: string) {
+  async function submitResolution(
+    decision: "approved" | "rejected",
+    note: string,
+  ) {
     if (!app) return;
     setSubmitting(true);
     setSubmitError(null);
@@ -271,7 +297,9 @@ export default function QueueDetailPage() {
     setReverting(true);
     setRevertError(null);
     try {
-      const res = await fetch(`/api/queue/${app.id}/revert`, { method: "POST" });
+      const res = await fetch(`/api/queue/${app.id}/revert`, {
+        method: "POST",
+      });
       if (!res.ok) {
         const data = (await res.json()) as { error: string };
         throw new Error(data.error);
@@ -285,9 +313,17 @@ export default function QueueDetailPage() {
   }
 
   if (loading)
-    return <div className="px-8 py-8 text-sm text-on-surface-muted">Loading application…</div>;
+    return (
+      <div className="px-8 py-8 text-sm text-on-surface-muted">
+        Loading application…
+      </div>
+    );
   if (!app)
-    return <div className="px-8 py-8 text-sm text-bp-error">Application not found.</div>;
+    return (
+      <div className="px-8 py-8 text-sm text-bp-error">
+        Application not found.
+      </div>
+    );
 
   const showStepper = Boolean(app.ocrData) && app.status !== "resolved";
 
@@ -300,7 +336,8 @@ export default function QueueDetailPage() {
           {app.applicationData.brandName}
         </h1>
         <p className="text-sm text-on-surface-muted mt-1">
-          {app.id} · {app.applicant} · submitted {new Date(app.submittedAt).toLocaleString()}
+          {app.id} · {app.applicant} · submitted{" "}
+          {new Date(app.submittedAt).toLocaleString()}
         </p>
         {batchIndex >= 0 && (
           <p className="text-xs text-primary font-medium mt-2">
@@ -311,7 +348,8 @@ export default function QueueDetailPage() {
 
       {!app.ocrData && (
         <p className="text-sm text-on-surface-muted">
-          This application has not been analyzed yet. Run pre-analysis from the queue screen first.
+          This application has not been analyzed yet. Run pre-analysis from the
+          queue screen first.
         </p>
       )}
 
@@ -348,7 +386,10 @@ export default function QueueDetailPage() {
               {displayedField && isDisplayedNaturallyFlagged ?
                 <FieldReviewCard
                   field={displayedField}
-                  severity={effectiveSeverity(displayedField, overrides[displayedField.field])}
+                  severity={effectiveSeverity(
+                    displayedField,
+                    overrides[displayedField.field],
+                  )}
                   currentFlaggedIndex={currentStepIndex}
                   totalFlagged={totalFlagged}
                   reviewedCount={reviewedCount}
@@ -365,8 +406,13 @@ export default function QueueDetailPage() {
               : displayedField ?
                 <PassedFieldPanel
                   field={displayedField}
-                  severity={effectiveSeverity(displayedField, overrides[displayedField.field])}
-                  isManuallyFlagged={overrides[displayedField.field]?.decision === "flag"}
+                  severity={effectiveSeverity(
+                    displayedField,
+                    overrides[displayedField.field],
+                  )}
+                  isManuallyFlagged={
+                    overrides[displayedField.field]?.decision === "flag"
+                  }
                   onFlag={() => handleFlagPassed(displayedField.field)}
                   onClearFlag={() => handleClearFlag(displayedField.field)}
                   onBack={() => setPinnedFieldKey(null)}
@@ -411,16 +457,23 @@ export default function QueueDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-on-surface">
-                {app.reviewData.resolution.decision === "approved" ? "Approved" : "Rejected"} by{" "}
-                {app.reviewData.resolution.specialistId
-                  ? specialistNameById(app.reviewData.resolution.specialistId)
-                  : "Unknown"}
+                {app.reviewData.resolution.decision === "approved" ?
+                  "Approved"
+                : "Rejected"}{" "}
+                by{" "}
+                {app.reviewData.resolution.specialistId ?
+                  specialistNameById(app.reviewData.resolution.specialistId)
+                : "Unknown"}
               </p>
               <p className="text-xs text-on-surface-muted mt-1">
-                {new Date(app.reviewData.resolution.resolvedAt).toLocaleString()}
+                {new Date(
+                  app.reviewData.resolution.resolvedAt,
+                ).toLocaleString()}
               </p>
               {app.reviewData.resolution.note && (
-                <p className="text-sm text-on-surface-dim mt-2">{app.reviewData.resolution.note}</p>
+                <p className="text-sm text-on-surface-dim mt-2">
+                  {app.reviewData.resolution.note}
+                </p>
               )}
             </div>
             <button

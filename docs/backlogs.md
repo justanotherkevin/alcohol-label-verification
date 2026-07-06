@@ -95,6 +95,26 @@ Still worth checking separately if preview deployments recur: whether Vercel's P
 
 ---
 
+## Regulations reference page (`/regulations`)
+
+**Why:** Neither applicants nor specialists currently have an in-app way to look up *why* a field matters or what the underlying TTB rule is — reviewers rely on domain knowledge and applicants get no context on rejections beyond the flagged field name. A reference project in this space (Excisely, see its changelog) ships this as a curated, plain-English CFR reference (~30 sections across 27 CFR Parts 4-7 and 16), searchable/filterable by beverage type, with deep links to eCFR, plus contextual CFR citation badges on flagged fields in the review UI. Confirmed out of scope for the current requirements — this is forward-looking, not a gap against anything we've committed to build.
+
+**Scope (for later):**
+
+- New `/regulations` route, accessible to both applicant and specialist roles (not gated behind either `AppShell`/`ApplicantNav`-only nav — needs to show in both navs)
+- Curated regulatory content data file (e.g. `lib/regulations/data.ts` or `src/config/regulations.ts`) — not a live eCFR fetch, a maintained local summary per section (mirrors how `lib/ttb-rules.ts` already encodes TTB business rules locally rather than calling an external service)
+- Lookup utility (e.g. `lib/regulations/lookup.ts`) to search/filter by field name, beverage type, or free text
+- Searchable/filterable UI on the `/regulations` page itself (by beverage type at minimum)
+- Deep links out to the actual eCFR section for full legal text
+- Contextual integration: CFR citation badges in field tooltips + a "See regulation" link on flagged fields during specialist review (`components/queue/*`), so a discrepancy connects directly to the rule it violates
+
+**Findings:**
+
+- `lib/ttb-rules.ts` is the closest existing analog — it already encodes some TTB rule logic, so the curated regulations content and the verification rule logic should probably stay separate concerns (one is human-readable reference copy, the other is executable matching logic) even if they cite the same CFR sections
+- Needs both-roles nav placement decided up front, since `ApplicantNav.tsx` and the specialist `Sidebar.tsx`/`AppShell.tsx` are currently separate nav components with no shared route list
+
+---
+
 ## Consider migrating `lib/db.ts` from `pg.Pool` to `@supabase/supabase-js`
 
 **Why:** Currently deferred — the direct `pg.Pool` connection works fine against production Supabase Postgres (confirmed 2026-07-04 after the schema-init fix above), so there's no functional problem to solve today. This is a discretionary architecture change, not a bug fix.
