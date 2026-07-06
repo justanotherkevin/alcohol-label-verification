@@ -55,10 +55,12 @@ export default function ApplicantNav({
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3 pl-1">
-            <span className="flex items-center justify-center size-8 rounded-full bg-surface-dim text-on-surface-dim text-sm font-bold uppercase">
+            <span
+              aria-hidden="true"
+              className="flex items-center justify-center size-8 rounded-full bg-surface-dim text-on-surface-dim text-sm font-bold uppercase">
               {applicant.name.charAt(0)}
             </span>
-            <p className="text-base text-on-surface-muted whitespace-nowrap hidden sm:block">
+            <p className="text-base text-on-surface-muted whitespace-nowrap sr-only sm:not-sr-only">
               Signed in as{" "}
               <span className="font-semibold text-on-surface">
                 {applicant.name}
