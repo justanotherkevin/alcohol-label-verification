@@ -25,22 +25,22 @@ describe("parseExtractionResponse — bounding boxes", () => {
   it("extracts boundingBoxes when present in response", () => {
     const result = parseExtractionResponse(FULL_BBOX_JSON)
     expect(result.boundingBoxes).toBeDefined()
-    expect(result.boundingBoxes!.brandName).toEqual({ x: 0.1, y: 0.05, width: 0.8, height: 0.1 })
-    expect(result.boundingBoxes!.netContents).toEqual({ x: 0.3, y: 0.35, width: 0.4, height: 0.06 })
-    expect(result.boundingBoxes!.governmentWarning).toEqual({ x: 0.05, y: 0.85, width: 0.9, height: 0.1 })
+    expect(result.boundingBoxes!.brandName).toEqual([{ x: 0.1, y: 0.05, width: 0.8, height: 0.1 }])
+    expect(result.boundingBoxes!.netContents).toEqual([{ x: 0.3, y: 0.35, width: 0.4, height: 0.06 }])
+    expect(result.boundingBoxes!.governmentWarning).toEqual([{ x: 0.05, y: 0.85, width: 0.9, height: 0.1 }])
   })
 
-  it("sets boundingBox to null when field returns null bbox", () => {
+  it("returns an empty array when field returns null bbox", () => {
     const result = parseExtractionResponse(FULL_BBOX_JSON)
-    expect(result.boundingBoxes!.abv).toBeNull()
-    expect(result.boundingBoxes!.bottler).toBeNull()
+    expect(result.boundingBoxes!.abv).toEqual([])
+    expect(result.boundingBoxes!.bottler).toEqual([])
   })
 
-  it("returns all-null boundingBoxes when response has no boundingBox fields", () => {
+  it("returns all-empty boundingBoxes when response has no boundingBox fields", () => {
     const result = parseExtractionResponse(NO_BBOX_JSON)
     expect(result.boundingBoxes).toBeDefined()
     const vals = Object.values(result.boundingBoxes!)
-    expect(vals.every(v => v === null)).toBe(true)
+    expect(vals.every(v => Array.isArray(v) && v.length === 0)).toBe(true)
   })
 
   it("still extracts data and confidence correctly when boundingBoxes present", () => {

@@ -11,62 +11,76 @@
       "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.08581436077057793,
-        "y": 0.31420765027322406,
-        "width": 0.3327495621716287,
-        "height": 0.21584699453551912,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 0,
-        "x": 0.07092819614711034,
-        "y": 0.644808743169399,
-        "width": 0.36777583187390545,
-        "height": 0.09699453551912568,
-        "confidence": 1
-      },
-      "abv": {
-        "imageIndex": 0,
-        "x": 0.12171628721541156,
-        "y": 0.8142076502732241,
-        "width": 0.12609457092819615,
-        "height": 0.036885245901639344,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 0,
-        "x": 0.3239929947460595,
-        "y": 0.8183060109289617,
-        "width": 0.10945709281961472,
-        "height": 0.031420765027322405,
-        "confidence": 1
-      },
-      "bottler": {
-        "imageIndex": 0,
-        "x": 0.5691768826619965,
-        "y": 0.2677595628415301,
-        "width": 0.4124343257443082,
-        "height": 0.10109289617486339,
-        "confidence": 1
-      },
-      "countryOfOrigin": {
-        "imageIndex": 0,
-        "x": 0.8161120840630472,
-        "y": 0.20218579234972678,
-        "width": 0.12259194395796848,
-        "height": 0.036885245901639344,
-        "confidence": 1
-      },
-      "governmentWarning": {
-        "imageIndex": 0,
-        "x": 0.5753064798598949,
-        "y": 0.4262295081967213,
-        "width": 0.39316987740805603,
-        "height": 0.3797814207650273,
-        "confidence": 1
-      }
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.08581436077057793,
+          "y": 0.31420765027322406,
+          "width": 0.3327495621716287,
+          "height": 0.21584699453551912,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 0,
+          "x": 0.07092819614711034,
+          "y": 0.644808743169399,
+          "width": 0.36777583187390545,
+          "height": 0.09699453551912568,
+          "confidence": 1
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 0,
+          "x": 0.12171628721541156,
+          "y": 0.8142076502732241,
+          "width": 0.12609457092819615,
+          "height": 0.036885245901639344,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 0,
+          "x": 0.3239929947460595,
+          "y": 0.8183060109289617,
+          "width": 0.10945709281961472,
+          "height": 0.031420765027322405,
+          "confidence": 1
+        }
+      ],
+      "bottler": [
+        {
+          "imageIndex": 0,
+          "x": 0.5691768826619965,
+          "y": 0.2677595628415301,
+          "width": 0.4124343257443082,
+          "height": 0.10109289617486339,
+          "confidence": 1
+        }
+      ],
+      "countryOfOrigin": [
+        {
+          "imageIndex": 0,
+          "x": 0.8161120840630472,
+          "y": 0.20218579234972678,
+          "width": 0.12259194395796848,
+          "height": 0.036885245901639344,
+          "confidence": 1
+        }
+      ],
+      "governmentWarning": [
+        {
+          "imageIndex": 0,
+          "x": 0.5753064798598949,
+          "y": 0.4262295081967213,
+          "width": 0.39316987740805603,
+          "height": 0.3797814207650273,
+          "confidence": 1
+        }
+      ]
     }
   },
   "abc-distillery": {
@@ -81,55 +95,67 @@
       "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.09682804674457429,
-        "y": 0.15796703296703296,
-        "width": 0.2904841402337229,
-        "height": 0.04945054945054945,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 0,
-        "x": 0.07512520868113523,
-        "y": 0.510989010989011,
-        "width": 0.333889816360601,
-        "height": 0.260989010989011,
-        "confidence": 1
-      },
-      "abv": {
-        "imageIndex": 0,
-        "x": 0.20868113522537562,
-        "y": 0.896978021978022,
-        "width": 0.14774624373956594,
-        "height": 0.04532967032967033,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 0,
-        "x": 0.18113522537562604,
-        "y": 0.8461538461538461,
-        "width": 0.12270450751252086,
-        "height": 0.038461538461538464,
-        "confidence": 1
-      },
-      "bottler": {
-        "imageIndex": 0,
-        "x": 0.0676126878130217,
-        "y": 0.08653846153846154,
-        "width": 0.35308848080133554,
-        "height": 0.12087912087912088,
-        "confidence": 1
-      },
-      "countryOfOrigin": null,
-      "governmentWarning": {
-        "imageIndex": 0,
-        "x": 0.5692821368948247,
-        "y": 0.3695054945054945,
-        "width": 0.39398998330550916,
-        "height": 0.3543956043956044,
-        "confidence": 1
-      }
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.09682804674457429,
+          "y": 0.15796703296703296,
+          "width": 0.2904841402337229,
+          "height": 0.04945054945054945,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 0,
+          "x": 0.07512520868113523,
+          "y": 0.510989010989011,
+          "width": 0.333889816360601,
+          "height": 0.260989010989011,
+          "confidence": 1
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 0,
+          "x": 0.20868113522537562,
+          "y": 0.896978021978022,
+          "width": 0.14774624373956594,
+          "height": 0.04532967032967033,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 0,
+          "x": 0.18113522537562604,
+          "y": 0.8461538461538461,
+          "width": 0.12270450751252086,
+          "height": 0.038461538461538464,
+          "confidence": 1
+        }
+      ],
+      "bottler": [
+        {
+          "imageIndex": 0,
+          "x": 0.0676126878130217,
+          "y": 0.08653846153846154,
+          "width": 0.35308848080133554,
+          "height": 0.12087912087912088,
+          "confidence": 1
+        }
+      ],
+      "countryOfOrigin": [],
+      "governmentWarning": [
+        {
+          "imageIndex": 0,
+          "x": 0.5692821368948247,
+          "y": 0.3695054945054945,
+          "width": 0.39398998330550916,
+          "height": 0.3543956043956044,
+          "confidence": 1
+        }
+      ]
     }
   },
   "hollow-creek": {
@@ -144,41 +170,49 @@
       "governmentWarning": null
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.13947590870667795,
-        "y": 0.049166666666666664,
-        "width": 0.724429416737109,
-        "height": 0.06666666666666667,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 0,
-        "x": 0.44040574809805577,
-        "y": 0.11416666666666667,
-        "width": 0.3693998309382925,
-        "height": 0.08583333333333333,
-        "confidence": 1
-      },
-      "abv": {
-        "imageIndex": 0,
-        "x": 0.3364327979712595,
-        "y": 0.8658333333333333,
-        "width": 0.1749788672865596,
-        "height": 0.030833333333333334,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 0,
-        "x": 0.4319526627218935,
-        "y": 0.9058333333333334,
-        "width": 0.13693998309382924,
-        "height": 0.025,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": null
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.13947590870667795,
+          "y": 0.049166666666666664,
+          "width": 0.724429416737109,
+          "height": 0.06666666666666667,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 0,
+          "x": 0.44040574809805577,
+          "y": 0.11416666666666667,
+          "width": 0.3693998309382925,
+          "height": 0.08583333333333333,
+          "confidence": 1
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 0,
+          "x": 0.3364327979712595,
+          "y": 0.8658333333333333,
+          "width": 0.1749788672865596,
+          "height": 0.030833333333333334,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 0,
+          "x": 0.4319526627218935,
+          "y": 0.9058333333333334,
+          "width": 0.13693998309382924,
+          "height": 0.025,
+          "confidence": 1
+        }
+      ],
+      "bottler": [],
+      "countryOfOrigin": [],
+      "governmentWarning": []
     }
   },
   "label-1-back": {
@@ -193,41 +227,58 @@
       "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 1,
-        "x": 0.08115183246073299,
-        "y": 0.6113602391629297,
-        "width": 0.34293193717277487,
-        "height": 0.026905829596412557,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 1,
-        "x": 0.43455497382198954,
-        "y": 0.6113602391629297,
-        "width": 0.31151832460732987,
-        "height": 0.026905829596412557,
-        "confidence": 1
-      },
-      "abv": null,
-      "netContents": {
-        "imageIndex": 1,
-        "x": 0.6029668411867365,
-        "y": 0.6464872944693573,
-        "width": 0.10645724258289703,
-        "height": 0.029895366218236172,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": {
-        "imageIndex": 1,
-        "x": 0.09075043630017451,
-        "y": 0.16741405082212257,
-        "width": 0.8333333333333334,
-        "height": 0.17040358744394618,
-        "confidence": 0.864963503649635
-      }
+      "brandName": [
+        {
+          "imageIndex": 1,
+          "x": 0.08115183246073299,
+          "y": 0.6113602391629297,
+          "width": 0.34293193717277487,
+          "height": 0.026905829596412557,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 1,
+          "x": 0.43455497382198954,
+          "y": 0.6113602391629297,
+          "width": 0.31151832460732987,
+          "height": 0.026905829596412557,
+          "confidence": 1
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 1,
+          "x": 0.7766143106457243,
+          "y": 0.6464872944693573,
+          "width": 0.11605584642233857,
+          "height": 0.029895366218236172,
+          "confidence": 0.8
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 1,
+          "x": 0.6029668411867365,
+          "y": 0.6464872944693573,
+          "width": 0.10645724258289703,
+          "height": 0.029895366218236172,
+          "confidence": 1
+        }
+      ],
+      "bottler": [],
+      "countryOfOrigin": [],
+      "governmentWarning": [
+        {
+          "imageIndex": 1,
+          "x": 0.09075043630017451,
+          "y": 0.16741405082212257,
+          "width": 0.8333333333333334,
+          "height": 0.17040358744394618,
+          "confidence": 0.864963503649635
+        }
+      ]
     }
   },
   "label-1-front": {
@@ -242,41 +293,49 @@
       "governmentWarning": null
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.109106529209622,
-        "y": 0.0900297619047619,
-        "width": 0.770618556701031,
-        "height": 0.20610119047619047,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 0,
-        "x": 0.19158075601374572,
-        "y": 0.8065476190476191,
-        "width": 0.6030927835051546,
-        "height": 0.04017857142857143,
-        "confidence": 1
-      },
-      "abv": {
-        "imageIndex": 0,
-        "x": 0.19158075601374572,
-        "y": 0.8891369047619048,
-        "width": 0.20704467353951891,
-        "height": 0.04017857142857143,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 0,
-        "x": 0.7740549828178694,
-        "y": 0.890625,
-        "width": 0.14604810996563575,
-        "height": 0.03720238095238095,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": null
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.109106529209622,
+          "y": 0.0900297619047619,
+          "width": 0.770618556701031,
+          "height": 0.20610119047619047,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 0,
+          "x": 0.19158075601374572,
+          "y": 0.8065476190476191,
+          "width": 0.6030927835051546,
+          "height": 0.04017857142857143,
+          "confidence": 1
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 0,
+          "x": 0.19158075601374572,
+          "y": 0.8891369047619048,
+          "width": 0.20704467353951891,
+          "height": 0.04017857142857143,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 0,
+          "x": 0.7740549828178694,
+          "y": 0.890625,
+          "width": 0.14604810996563575,
+          "height": 0.03720238095238095,
+          "confidence": 1
+        }
+      ],
+      "bottler": [],
+      "countryOfOrigin": [],
+      "governmentWarning": []
     }
   },
   "label-2-back": {
@@ -291,48 +350,58 @@
       "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 1,
-        "x": 0.09632224168126094,
-        "y": 0.16741741741741742,
-        "width": 0.40367775831873903,
-        "height": 0.03453453453453453,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 1,
-        "x": 0.51138353765324,
-        "y": 0.16891891891891891,
-        "width": 0.3914185639229422,
-        "height": 0.033783783783783786,
-        "confidence": 1
-      },
-      "abv": {
-        "imageIndex": 1,
-        "x": 0.2565674255691769,
-        "y": 0.4774774774774775,
-        "width": 0.1584938704028021,
-        "height": 0.03003003003003003,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 1,
-        "x": 0.7119089316987741,
-        "y": 0.4774774774774775,
-        "width": 0.10157618213660245,
-        "height": 0.03003003003003003,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": {
-        "imageIndex": 1,
-        "x": 0.08143607705779335,
-        "y": 0.5412912912912913,
-        "width": 0.8432574430823118,
-        "height": 0.16516516516516516,
-        "confidence": 0.8905109489051095
-      }
+      "brandName": [
+        {
+          "imageIndex": 1,
+          "x": 0.09632224168126094,
+          "y": 0.16741741741741742,
+          "width": 0.40367775831873903,
+          "height": 0.03453453453453453,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 1,
+          "x": 0.51138353765324,
+          "y": 0.16891891891891891,
+          "width": 0.3914185639229422,
+          "height": 0.033783783783783786,
+          "confidence": 1
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 1,
+          "x": 0.2565674255691769,
+          "y": 0.4774774774774775,
+          "width": 0.1584938704028021,
+          "height": 0.03003003003003003,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 1,
+          "x": 0.7119089316987741,
+          "y": 0.4774774774774775,
+          "width": 0.10157618213660245,
+          "height": 0.03003003003003003,
+          "confidence": 1
+        }
+      ],
+      "bottler": [],
+      "countryOfOrigin": [],
+      "governmentWarning": [
+        {
+          "imageIndex": 1,
+          "x": 0.08143607705779335,
+          "y": 0.5412912912912913,
+          "width": 0.8432574430823118,
+          "height": 0.16516516516516516,
+          "confidence": 0.8905109489051095
+        }
+      ]
     }
   },
   "label-2-front": {
@@ -347,41 +416,49 @@
       "governmentWarning": null
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.0981067125645439,
-        "y": 0.08594917787742899,
-        "width": 0.8029259896729777,
-        "height": 0.21076233183856502,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 0,
-        "x": 0.0981067125645439,
-        "y": 0.8109118086696562,
-        "width": 0.7994836488812392,
-        "height": 0.03662182361733931,
-        "confidence": 1
-      },
-      "abv": {
-        "imageIndex": 0,
-        "x": 0.18760757314974183,
-        "y": 0.8916292974588939,
-        "width": 0.2099827882960413,
-        "height": 0.03961136023916293,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 0,
-        "x": 0.7719449225473322,
-        "y": 0.8923766816143498,
-        "width": 0.14802065404475043,
-        "height": 0.03811659192825112,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": null
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.0981067125645439,
+          "y": 0.08594917787742899,
+          "width": 0.8029259896729777,
+          "height": 0.21076233183856502,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 0,
+          "x": 0.0981067125645439,
+          "y": 0.8109118086696562,
+          "width": 0.7994836488812392,
+          "height": 0.03662182361733931,
+          "confidence": 1
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 0,
+          "x": 0.18760757314974183,
+          "y": 0.8916292974588939,
+          "width": 0.2099827882960413,
+          "height": 0.03961136023916293,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 0,
+          "x": 0.7719449225473322,
+          "y": 0.8923766816143498,
+          "width": 0.14802065404475043,
+          "height": 0.03811659192825112,
+          "confidence": 1
+        }
+      ],
+      "bottler": [],
+      "countryOfOrigin": [],
+      "governmentWarning": []
     }
   },
   "label-3-back": {
@@ -396,48 +473,58 @@
       "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 1,
-        "x": 0.08243727598566308,
-        "y": 0.19013062409288825,
-        "width": 0.4121863799283154,
-        "height": 0.031204644412191583,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 1,
-        "x": 0.507168458781362,
-        "y": 0.19013062409288825,
-        "width": 0.40053763440860213,
-        "height": 0.031204644412191583,
-        "confidence": 1
-      },
-      "abv": {
-        "imageIndex": 1,
-        "x": 0.2482078853046595,
-        "y": 0.4898403483309144,
-        "width": 0.15949820788530467,
-        "height": 0.02539912917271408,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 1,
-        "x": 0.71415770609319,
-        "y": 0.4898403483309144,
-        "width": 0.10304659498207885,
-        "height": 0.02539912917271408,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": {
-        "imageIndex": 1,
-        "x": 0.06899641577060932,
-        "y": 0.5522496371552975,
-        "width": 0.8629032258064516,
-        "height": 0.15602322206095792,
-        "confidence": 0.8905109489051095
-      }
+      "brandName": [
+        {
+          "imageIndex": 1,
+          "x": 0.08243727598566308,
+          "y": 0.19013062409288825,
+          "width": 0.4121863799283154,
+          "height": 0.031204644412191583,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 1,
+          "x": 0.507168458781362,
+          "y": 0.19013062409288825,
+          "width": 0.40053763440860213,
+          "height": 0.031204644412191583,
+          "confidence": 1
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 1,
+          "x": 0.2482078853046595,
+          "y": 0.4898403483309144,
+          "width": 0.15949820788530467,
+          "height": 0.02539912917271408,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 1,
+          "x": 0.71415770609319,
+          "y": 0.4898403483309144,
+          "width": 0.10304659498207885,
+          "height": 0.02539912917271408,
+          "confidence": 1
+        }
+      ],
+      "bottler": [],
+      "countryOfOrigin": [],
+      "governmentWarning": [
+        {
+          "imageIndex": 1,
+          "x": 0.06899641577060932,
+          "y": 0.5522496371552975,
+          "width": 0.8629032258064516,
+          "height": 0.15602322206095792,
+          "confidence": 0.8905109489051095
+        }
+      ]
     }
   },
   "label-3-front": {
@@ -452,34 +539,40 @@
       "governmentWarning": null
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.09833024118738404,
-        "y": 0.095565749235474,
-        "width": 0.8237476808905381,
-        "height": 0.20489296636085627,
-        "confidence": 1
-      },
-      "classType": null,
-      "abv": {
-        "imageIndex": 0,
-        "x": 0.38311688311688313,
-        "y": 0.8256880733944955,
-        "width": 0.18089053803339517,
-        "height": 0.03746177370030581,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 0,
-        "x": 0.6103896103896104,
-        "y": 0.8256880733944955,
-        "width": 0.11966604823747681,
-        "height": 0.03746177370030581,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": null
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.09833024118738404,
+          "y": 0.095565749235474,
+          "width": 0.8237476808905381,
+          "height": 0.20489296636085627,
+          "confidence": 1
+        }
+      ],
+      "classType": [],
+      "abv": [
+        {
+          "imageIndex": 0,
+          "x": 0.38311688311688313,
+          "y": 0.8256880733944955,
+          "width": 0.18089053803339517,
+          "height": 0.03746177370030581,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 0,
+          "x": 0.6103896103896104,
+          "y": 0.8256880733944955,
+          "width": 0.11966604823747681,
+          "height": 0.03746177370030581,
+          "confidence": 1
+        }
+      ],
+      "bottler": [],
+      "countryOfOrigin": [],
+      "governmentWarning": []
     }
   },
   "label-4-back": {
@@ -494,34 +587,49 @@
       "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 1,
-        "x": 0.1676300578034682,
-        "y": 0.07909090909090909,
-        "width": 0.6777456647398844,
-        "height": 0.05,
-        "confidence": 0.7407407407407407
-      },
-      "classType": {
-        "imageIndex": 1,
-        "x": 0.3338150289017341,
-        "y": 0.3890909090909091,
-        "width": 0.48988439306358383,
-        "height": 0.042727272727272725,
-        "confidence": 1
-      },
-      "abv": null,
-      "netContents": null,
-      "bottler": {
-        "imageIndex": 1,
-        "x": 0.1676300578034682,
-        "y": 0.07909090909090909,
-        "width": 0.6777456647398844,
-        "height": 0.09454545454545454,
-        "confidence": 0.925
-      },
-      "countryOfOrigin": null,
-      "governmentWarning": null
+      "brandName": [
+        {
+          "imageIndex": 1,
+          "x": 0.1676300578034682,
+          "y": 0.07909090909090909,
+          "width": 0.6777456647398844,
+          "height": 0.05,
+          "confidence": 0.7407407407407407
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 1,
+          "x": 0.3338150289017341,
+          "y": 0.3890909090909091,
+          "width": 0.48988439306358383,
+          "height": 0.042727272727272725,
+          "confidence": 1
+        }
+      ],
+      "abv": [],
+      "netContents": [],
+      "bottler": [
+        {
+          "imageIndex": 1,
+          "x": 0.1676300578034682,
+          "y": 0.07909090909090909,
+          "width": 0.6777456647398844,
+          "height": 0.09454545454545454,
+          "confidence": 0.925
+        }
+      ],
+      "countryOfOrigin": [],
+      "governmentWarning": [
+        {
+          "imageIndex": 1,
+          "x": 0.07658959537572255,
+          "y": 0.73,
+          "width": 0.7095375722543352,
+          "height": 0.18181818181818182,
+          "confidence": 0.9507042253521126
+        }
+      ]
     }
   },
   "label-4-front": {
@@ -536,27 +644,31 @@
       "governmentWarning": null
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.05504587155963303,
-        "y": 0.08574007220216606,
-        "width": 0.8669724770642202,
-        "height": 0.1796028880866426,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 0,
-        "x": 0.2324159021406728,
-        "y": 0.6570397111913358,
-        "width": 0.518348623853211,
-        "height": 0.05595667870036101,
-        "confidence": 1
-      },
-      "abv": null,
-      "netContents": null,
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": null
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.05504587155963303,
+          "y": 0.08574007220216606,
+          "width": 0.8669724770642202,
+          "height": 0.1796028880866426,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 0,
+          "x": 0.2324159021406728,
+          "y": 0.6570397111913358,
+          "width": 0.518348623853211,
+          "height": 0.05595667870036101,
+          "confidence": 1
+        }
+      ],
+      "abv": [],
+      "netContents": [],
+      "bottler": [],
+      "countryOfOrigin": [],
+      "governmentWarning": []
     }
   },
   "label-5-back": {
@@ -571,48 +683,67 @@
       "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 1,
-        "x": 0.3971631205673759,
-        "y": 0.26706231454005935,
-        "width": 0.24645390070921985,
-        "height": 0.026706231454005934,
-        "confidence": 1
-      },
-      "classType": null,
-      "abv": null,
-      "netContents": {
-        "imageIndex": 1,
-        "x": 0.15602836879432624,
-        "y": 0.7166172106824926,
-        "width": 0.16134751773049646,
-        "height": 0.05192878338278932,
-        "confidence": 1
-      },
-      "bottler": {
-        "imageIndex": 1,
-        "x": 0.14361702127659576,
-        "y": 0.8249258160237388,
-        "width": 0.7375886524822695,
-        "height": 0.028189910979228485,
-        "confidence": 1
-      },
-      "countryOfOrigin": {
-        "imageIndex": 1,
-        "x": 0.5638297872340425,
-        "y": 0.1201780415430267,
-        "width": 0.17198581560283688,
-        "height": 0.02225519287833828,
-        "confidence": 1
-      },
-      "governmentWarning": {
-        "imageIndex": 1,
-        "x": 0.1524822695035461,
-        "y": 0.40801186943620177,
-        "width": 0.7198581560283688,
-        "height": 0.21364985163204747,
-        "confidence": 1
-      }
+      "brandName": [
+        {
+          "imageIndex": 1,
+          "x": 0.3971631205673759,
+          "y": 0.26706231454005935,
+          "width": 0.24645390070921985,
+          "height": 0.026706231454005934,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 1,
+          "x": 0.4521276595744681,
+          "y": 0.3026706231454006,
+          "width": 0.1400709219858156,
+          "height": 0.07566765578635015,
+          "confidence": 0.8333333333333334
+        }
+      ],
+      "abv": [],
+      "netContents": [
+        {
+          "imageIndex": 1,
+          "x": 0.15602836879432624,
+          "y": 0.7166172106824926,
+          "width": 0.16134751773049646,
+          "height": 0.05192878338278932,
+          "confidence": 1
+        }
+      ],
+      "bottler": [
+        {
+          "imageIndex": 1,
+          "x": 0.14361702127659576,
+          "y": 0.8249258160237388,
+          "width": 0.7375886524822695,
+          "height": 0.028189910979228485,
+          "confidence": 1
+        }
+      ],
+      "countryOfOrigin": [
+        {
+          "imageIndex": 1,
+          "x": 0.5638297872340425,
+          "y": 0.1201780415430267,
+          "width": 0.17198581560283688,
+          "height": 0.02225519287833828,
+          "confidence": 1
+        }
+      ],
+      "governmentWarning": [
+        {
+          "imageIndex": 1,
+          "x": 0.1524822695035461,
+          "y": 0.40801186943620177,
+          "width": 0.7198581560283688,
+          "height": 0.21364985163204747,
+          "confidence": 1
+        }
+      ]
     }
   },
   "label-5-front": {
@@ -627,41 +758,58 @@
       "governmentWarning": null
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.38338658146964855,
-        "y": 0.1257396449704142,
-        "width": 0.26996805111821087,
-        "height": 0.026627218934911243,
-        "confidence": 1
-      },
-      "classType": null,
-      "abv": {
-        "imageIndex": 0,
-        "x": 0.17731629392971246,
-        "y": 0.8402366863905325,
-        "width": 0.13258785942492013,
-        "height": 0.03550295857988166,
-        "confidence": 0.6363636363636364
-      },
-      "netContents": {
-        "imageIndex": 0,
-        "x": 0.7971246006389776,
-        "y": 0.834319526627219,
-        "width": 0.05750798722044728,
-        "height": 0.028106508875739646,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": {
-        "imageIndex": 0,
-        "x": 0.7204472843450479,
-        "y": 0.3062130177514793,
-        "width": 0.12939297124600638,
-        "height": 0.042899408284023666,
-        "confidence": 1
-      },
-      "governmentWarning": null
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.38338658146964855,
+          "y": 0.1257396449704142,
+          "width": 0.26996805111821087,
+          "height": 0.026627218934911243,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 0,
+          "x": 0.13258785942492013,
+          "y": 0.21597633136094674,
+          "width": 0.536741214057508,
+          "height": 0.13609467455621302,
+          "confidence": 0.8275862068965517
+        }
+      ],
+      "abv": [
+        {
+          "imageIndex": 0,
+          "x": 0.17731629392971246,
+          "y": 0.8402366863905325,
+          "width": 0.13258785942492013,
+          "height": 0.03550295857988166,
+          "confidence": 0.6363636363636364
+        }
+      ],
+      "netContents": [
+        {
+          "imageIndex": 0,
+          "x": 0.7971246006389776,
+          "y": 0.834319526627219,
+          "width": 0.05750798722044728,
+          "height": 0.028106508875739646,
+          "confidence": 1
+        }
+      ],
+      "bottler": [],
+      "countryOfOrigin": [
+        {
+          "imageIndex": 0,
+          "x": 0.7204472843450479,
+          "y": 0.3062130177514793,
+          "width": 0.12939297124600638,
+          "height": 0.042899408284023666,
+          "confidence": 1
+        }
+      ],
+      "governmentWarning": []
     }
   },
   "malt-hop-brewery": {
@@ -676,41 +824,58 @@
       "governmentWarning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
     },
     "boundingBoxes": {
-      "brandName": {
-        "imageIndex": 0,
-        "x": 0.10968229954614221,
-        "y": 0.3668555240793201,
-        "width": 0.245839636913767,
-        "height": 0.11048158640226628,
-        "confidence": 1
-      },
-      "classType": {
-        "imageIndex": 0,
-        "x": 0.17246596066565809,
-        "y": 0.5269121813031161,
-        "width": 0.11649016641452345,
-        "height": 0.0339943342776204,
-        "confidence": 1
-      },
-      "abv": null,
-      "netContents": {
-        "imageIndex": 0,
-        "x": 0.24962178517397882,
-        "y": 0.7634560906515581,
-        "width": 0.1043872919818457,
-        "height": 0.031161473087818695,
-        "confidence": 1
-      },
-      "bottler": null,
-      "countryOfOrigin": null,
-      "governmentWarning": {
-        "imageIndex": 0,
-        "x": 0.6021180030257186,
-        "y": 0.5368271954674221,
-        "width": 0.2609682299546142,
-        "height": 0.26062322946175637,
-        "confidence": 1
-      }
+      "brandName": [
+        {
+          "imageIndex": 0,
+          "x": 0.10968229954614221,
+          "y": 0.3668555240793201,
+          "width": 0.245839636913767,
+          "height": 0.11048158640226628,
+          "confidence": 1
+        }
+      ],
+      "classType": [
+        {
+          "imageIndex": 0,
+          "x": 0.17246596066565809,
+          "y": 0.5269121813031161,
+          "width": 0.11649016641452345,
+          "height": 0.0339943342776204,
+          "confidence": 1
+        }
+      ],
+      "abv": [],
+      "netContents": [
+        {
+          "imageIndex": 0,
+          "x": 0.24962178517397882,
+          "y": 0.7634560906515581,
+          "width": 0.1043872919818457,
+          "height": 0.031161473087818695,
+          "confidence": 1
+        }
+      ],
+      "bottler": [
+        {
+          "imageIndex": 0,
+          "x": 0.10968229954614221,
+          "y": 0.18271954674220964,
+          "width": 0.245839636913767,
+          "height": 0.3781869688385269,
+          "confidence": 0.8169014084507042
+        }
+      ],
+      "countryOfOrigin": [],
+      "governmentWarning": [
+        {
+          "imageIndex": 0,
+          "x": 0.6021180030257186,
+          "y": 0.5368271954674221,
+          "width": 0.2609682299546142,
+          "height": 0.26062322946175637,
+          "confidence": 1
+        }
+      ]
     }
   }
 }

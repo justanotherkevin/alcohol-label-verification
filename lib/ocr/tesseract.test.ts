@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { computeFieldBbox } from "./extraction"
+import { computeFieldBoxes } from "./extraction"
 
 type MockWord = { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }
 
@@ -14,37 +14,37 @@ const WORDS: MockWord[] = [
 const W = 400
 const H = 500
 
-describe("computeFieldBbox", () => {
-  it("returns union bbox for words matching the field value, normalized", () => {
-    const bbox = computeFieldBbox(WORDS, "OLD TOM", W, H)
-    expect(bbox).not.toBeNull()
-    expect(bbox!.x).toBeCloseTo(50 / W)
-    expect(bbox!.y).toBeCloseTo(20 / H)
-    expect(bbox!.width).toBeCloseTo((200 - 50) / W)
-    expect(bbox!.height).toBeCloseTo((60 - 20) / H)
+describe("computeFieldBoxes", () => {
+  it("returns union box for words matching the field value, normalized", () => {
+    const boxes = computeFieldBoxes(WORDS, "OLD TOM", W, H)
+    expect(boxes).toHaveLength(1)
+    expect(boxes[0].x).toBeCloseTo(50 / W)
+    expect(boxes[0].y).toBeCloseTo(20 / H)
+    expect(boxes[0].width).toBeCloseTo((200 - 50) / W)
+    expect(boxes[0].height).toBeCloseTo((60 - 20) / H)
   })
 
-  it("returns null when no words match the field value", () => {
-    const bbox = computeFieldBbox(WORDS, "COGNAC", W, H)
-    expect(bbox).toBeNull()
+  it("returns no boxes when no words match the field value", () => {
+    const boxes = computeFieldBoxes(WORDS, "COGNAC", W, H)
+    expect(boxes).toEqual([])
   })
 
-  it("returns null for empty or null field value", () => {
-    expect(computeFieldBbox(WORDS, null, W, H)).toBeNull()
-    expect(computeFieldBbox(WORDS, "", W, H)).toBeNull()
+  it("returns no boxes for empty or null field value", () => {
+    expect(computeFieldBoxes(WORDS, null, W, H)).toEqual([])
+    expect(computeFieldBoxes(WORDS, "", W, H)).toEqual([])
   })
 
-  it("returns null when words array is empty", () => {
-    const bbox = computeFieldBbox([], "OLD TOM", W, H)
-    expect(bbox).toBeNull()
+  it("returns no boxes when words array is empty", () => {
+    const boxes = computeFieldBoxes([], "OLD TOM", W, H)
+    expect(boxes).toEqual([])
   })
 
   it("computes correct union across non-adjacent words", () => {
-    const bbox = computeFieldBbox(WORDS, "750 mL", W, H)
-    expect(bbox).not.toBeNull()
-    expect(bbox!.x).toBeCloseTo(80 / W)
-    expect(bbox!.y).toBeCloseTo(200 / H)
-    expect(bbox!.width).toBeCloseTo((170 - 80) / W)
-    expect(bbox!.height).toBeCloseTo((220 - 200) / H)
+    const boxes = computeFieldBoxes(WORDS, "750 mL", W, H)
+    expect(boxes).toHaveLength(1)
+    expect(boxes[0].x).toBeCloseTo(80 / W)
+    expect(boxes[0].y).toBeCloseTo(200 / H)
+    expect(boxes[0].width).toBeCloseTo((170 - 80) / W)
+    expect(boxes[0].height).toBeCloseTo((220 - 200) / H)
   })
 })

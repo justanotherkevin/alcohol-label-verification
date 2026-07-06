@@ -55,20 +55,20 @@ describe("mergeOcrResults", () => {
     expect(merged.conflicts.abv).toHaveLength(2)
   })
 
-  it("stamps the bounding box with the source image's index", () => {
+  it("stamps the bounding boxes with the source image's index", () => {
     const front = result(
       { brandName: "HOLLOW CREEK" },
-      { boundingBoxes: { brandName: { imageIndex: 0, x: 0, y: 0, width: 1, height: 1 } } }
+      { boundingBoxes: { brandName: [{ imageIndex: 0, x: 0, y: 0, width: 1, height: 1 }] } }
     )
     const back = result({})
     const merged = mergeOcrResults([front, back])
-    expect(merged.boundingBoxes.brandName?.imageIndex).toBe(0)
+    expect(merged.boundingBoxes.brandName?.[0]?.imageIndex).toBe(0)
   })
 
-  it("returns null and no bounding box when no image has a value", () => {
+  it("returns null data and no bounding boxes when no image has a value", () => {
     const merged = mergeOcrResults([result({}), result({})])
     expect(merged.data.brandName).toBeNull()
-    expect(merged.boundingBoxes.brandName).toBeNull()
+    expect(merged.boundingBoxes.brandName).toEqual([])
   })
 
   it("preserves rawText per image, indexed to match input order", () => {

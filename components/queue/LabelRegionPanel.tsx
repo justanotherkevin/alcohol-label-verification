@@ -15,7 +15,7 @@ interface LabelRegionPanelProps {
   fieldLabel: string;
   fieldNumber: number;
   extractedText: string | null;
-  bbox: BoundingBox | undefined;
+  boxes: BoundingBox[];
 }
 
 const CROP_PADDING = 0.15;
@@ -27,19 +27,23 @@ export function LabelRegionPanel({
   fieldLabel,
   fieldNumber,
   extractedText,
-  bbox,
+  boxes,
 }: LabelRegionPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [expandOpen, setExpandOpen] = useState(false);
-  const [expandImageIndex, setExpandImageIndex] = useState(bbox?.imageIndex ?? 0);
-  const thumbImage = images[bbox?.imageIndex ?? 0];
+  const primaryImageIndex = boxes[0]?.imageIndex ?? 0;
+  const [expandImageIndex, setExpandImageIndex] = useState(primaryImageIndex);
+  const thumbImage = images[primaryImageIndex];
+  // Only boxes on the same image can share one crop; boxes on other images
+  // (e.g. a front/back split) aren't drawn in this thumbnail.
+  const boxesOnImage = boxes.filter((b) => b.imageIndex === primaryImageIndex);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !bbox) return;
+    if (!canvas || boxesOnImage.length === 0) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const image = images[bbox.imageIndex];
+    const image = images[primaryImageIndex];
     if (!image) return;
 
     const img = new Image();
@@ -48,12 +52,19 @@ export function LabelRegionPanel({
       canvas.height = CANVAS_HEIGHT;
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-      const padX = bbox.width * CROP_PADDING;
-      const padY = bbox.height * CROP_PADDING;
-      const cropX = Math.max(0, bbox.x - padX);
-      const cropY = Math.max(0, bbox.y - padY);
-      const cropW = Math.min(1 - cropX, bbox.width + padX * 2);
-      const cropH = Math.min(1 - cropY, bbox.height + padY * 2);
+      const unionX0 = Math.min(...boxesOnImage.map((b) => b.x));
+      const unionY0 = Math.min(...boxesOnImage.map((b) => b.y));
+      const unionX1 = Math.max(...boxesOnImage.map((b) => b.x + b.width));
+      const unionY1 = Math.max(...boxesOnImage.map((b) => b.y + b.height));
+      const unionW = unionX1 - unionX0;
+      const unionH = unionY1 - unionY0;
+
+      const padX = unionW * CROP_PADDING;
+      const padY = unionH * CROP_PADDING;
+      const cropX = Math.max(0, unionX0 - padX);
+      const cropY = Math.max(0, unionY0 - padY);
+      const cropW = Math.min(1 - cropX, unionW + padX * 2);
+      const cropH = Math.min(1 - cropY, unionH + padY * 2);
 
       const sx = cropX * img.naturalWidth;
       const sy = cropY * img.naturalHeight;
@@ -68,28 +79,30 @@ export function LabelRegionPanel({
 
       ctx.drawImage(img, sx, sy, sW, sH, dx, dy, drawW, drawH);
 
-      const boxX = dx + ((bbox.x - cropX) / cropW) * drawW;
-      const boxY = dy + ((bbox.y - cropY) / cropH) * drawH;
-      const boxW = (bbox.width / cropW) * drawW;
-      const boxH = (bbox.height / cropH) * drawH;
-      ctx.strokeStyle = "#f97316";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(boxX, boxY, boxW, boxH);
+      for (const bbox of boxesOnImage) {
+        const boxX = dx + ((bbox.x - cropX) / cropW) * drawW;
+        const boxY = dy + ((bbox.y - cropY) / cropH) * drawH;
+        const boxW = (bbox.width / cropW) * drawW;
+        const boxH = (bbox.height / cropH) * drawH;
+        ctx.strokeStyle = "#f97316";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
 
-      if (typeof bbox.confidence === "number" && bbox.confidence < 1) {
-        const label = `${Math.round(bbox.confidence * 100)}%`;
-        ctx.font = "bold 11px sans-serif";
-        const textWidth = ctx.measureText(label).width;
-        const labelX = boxX;
-        const labelY = Math.max(0, boxY - 4);
-        ctx.fillStyle = "#f97316";
-        ctx.fillRect(labelX, labelY - 12, textWidth + 6, 14);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(label, labelX + 3, labelY - 2);
+        if (typeof bbox.confidence === "number" && bbox.confidence < 1) {
+          const label = `${Math.round(bbox.confidence * 100)}%`;
+          ctx.font = "bold 11px sans-serif";
+          const textWidth = ctx.measureText(label).width;
+          const labelX = boxX;
+          const labelY = Math.max(0, boxY - 4);
+          ctx.fillStyle = "#f97316";
+          ctx.fillRect(labelX, labelY - 12, textWidth + 6, 14);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(label, labelX + 3, labelY - 2);
+        }
       }
     };
     img.src = image.path;
-  }, [bbox, images]);
+  }, [boxesOnImage, images, primaryImageIndex]);
 
   return (
     <div className="bg-surface-card rounded-lg p-6 flex flex-col gap-4 h-full">
@@ -97,7 +110,7 @@ export function LabelRegionPanel({
         Label region · Field {fieldNumber}
       </p>
 
-      {bbox && (
+      {boxesOnImage.length > 0 && (
         <div
           className="rounded-lg bg-outline/20 border border-outline flex items-center justify-center overflow-hidden"
           style={{ height: CANVAS_HEIGHT }}>
@@ -110,7 +123,7 @@ export function LabelRegionPanel({
         </div>
       )}
 
-      {!bbox && (
+      {boxesOnImage.length === 0 && (
         <div
           className="rounded-lg bg-outline/20 border border-outline flex items-center justify-center"
           style={{ height: CANVAS_HEIGHT }}>
@@ -143,7 +156,7 @@ export function LabelRegionPanel({
       {expandOpen && images[expandImageIndex] && (
         <ImageExpandModal
           image={images[expandImageIndex]}
-          bbox={expandImageIndex === (bbox?.imageIndex ?? 0) ? bbox : undefined}
+          boxes={boxes.filter((b) => b.imageIndex === expandImageIndex)}
           fieldLabel={fieldLabel}
           onClose={() => setExpandOpen(false)}
         />

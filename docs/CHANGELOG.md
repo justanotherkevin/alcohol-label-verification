@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — unify bounding-box location with fuzzy text matching
+
+### Fixed
+
+- `lib/ocr/extraction.ts`: a field could pass fuzzy text matching (`findFuzzyMatch`'s substring/dice-window/scattered-word stages) while its bounding box came back `null`, because `computeFieldBbox` only ever tried a strict contiguous-word walk — visible as "No location found on label" on a field showing a 100% OCR text match. Replaced it with `computeFieldBoxes()`, which mirrors the same three-stage fallback used for text (contiguous substring → Dice-scored sliding window → scattered significant-word matching) and returns `BoundingBox[]` instead of a single box-or-null, so a garbled or scattered OCR read now surfaces disconnected boxes around whatever was actually located rather than nothing.
+
+### Changed
+
+- `lib/ocr/types.ts`: `BoundingBoxMap` values are now `BoundingBox[]` (empty array = not found) instead of `BoundingBox | null`, threaded through every provider (`tesseract.ts`, `google-vision.ts`, `mock.ts`, `llm-prompt.ts`), `merge.ts`, and `regenerate-extracted.ts`.
+- `components/queue/LabelRegionPanel.tsx`, `components/queue/ImageExpandModal.tsx`: render every box in the array (drawing multiple disconnected rectangles when the scattered-word fallback fires) instead of a single rect; the "no location" empty state now only shows when the array is empty.
+- `tests/mocks/labels/_extracted.json`: regenerated via `scripts/regenerate-extracted.ts` against the updated matcher.
+
 ## [2026-07-06] — applicant portal visual polish
 
 ### Changed

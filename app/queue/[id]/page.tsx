@@ -113,12 +113,10 @@ export default function QueueDetailPage() {
   const displayedFieldKey = pinnedFieldKey ?? currentFieldKey;
   const displayedField =
     displayedFieldKey ? (fieldByKey.get(displayedFieldKey) ?? null) : null;
-  const displayedBbox =
+  const displayedBoxes =
     displayedFieldKey ?
-      (app?.ocrData?.boundingBoxes?.[
-        displayedFieldKey as keyof BoundingBoxMap
-      ] ?? undefined)
-    : undefined;
+      (app?.ocrData?.boundingBoxes?.[displayedFieldKey as keyof BoundingBoxMap] ?? [])
+    : [];
   const isDisplayedNaturallyFlagged =
     displayedFieldKey ? flaggedFieldKeys.includes(displayedFieldKey) : false;
   const displayedFieldNumber =
@@ -328,7 +326,7 @@ export default function QueueDetailPage() {
   const showStepper = Boolean(app.ocrData) && app.status !== "resolved";
 
   return (
-    <div className="px-8 py-8 max-w-7xl">
+    <div className="px-8 py-8 max-w-10xl">
       <div className="mb-6">
         <h1
           className="text-2xl font-bold text-on-surface"
@@ -375,7 +373,7 @@ export default function QueueDetailPage() {
                   fieldLabel={displayedField.label}
                   fieldNumber={displayedFieldNumber}
                   extractedText={displayedField.extracted}
-                  bbox={displayedBbox}
+                  boxes={displayedBoxes}
                 />
               : <div className="h-full flex items-center justify-center text-white/40 text-sm py-16">
                   Review complete — see summary

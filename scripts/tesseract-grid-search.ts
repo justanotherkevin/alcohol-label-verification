@@ -5,7 +5,7 @@
  * Scoring is partial-credit, not binary: each ground-truth field value is
  * split into tokens, and the score is the fraction of tokens that show up
  * among the OCR'd words for that image/config. The same token-match set is
- * used to compute the field's bounding box (via computeFieldBbox), so a
+ * used to compute the field's bounding box (via computeFieldBoxes), so a
  * config that only reads part of a string still gets a partial score AND a
  * bounding box covering just the part it actually found — mirroring how a
  * partial match should behave in production, not an all-or-nothing gate.
@@ -17,7 +17,7 @@ import fs from "fs"
 import path from "path"
 import sharp from "sharp"
 import { createWorker, OEM, PSM } from "tesseract.js"
-import { computeFieldBbox, WordLike } from "../lib/ocr/extraction"
+import { computeFieldBoxes, WordLike } from "../lib/ocr/extraction"
 import { ExtractedLabelData } from "../lib/ocr/types"
 
 const LABELS_DIR = path.join(process.cwd(), "tests", "mocks", "labels")
@@ -93,7 +93,7 @@ function resolveImagePath(key: string): string | null {
 }
 
 // Fraction of fieldValue's tokens found among the OCR'd words (same containment
-// rule computeFieldBbox uses), plus the tokens themselves for inspection.
+// rule computeFieldBoxes uses), plus the tokens themselves for inspection.
 function tokenMatchRatio(words: WordLike[], fieldValue: string): { ratio: number; matched: number; total: number } {
   const tokens = fieldValue.toLowerCase().split(/\s+/).filter((t) => t.length > 1)
   if (tokens.length === 0) return { ratio: 0, matched: 0, total: 0 }
@@ -173,9 +173,9 @@ async function main() {
           const truthValue = entry[field]
           if (truthValue === null) continue
           const { ratio, matched, total } = tokenMatchRatio(words, truthValue)
-          const bbox = computeFieldBbox(words, truthValue, width, height)
+          const boxes = computeFieldBoxes(words, truthValue, width, height)
           allRatios.push(ratio)
-          perImage[key][field] = `${(ratio * 100).toFixed(0)}% (${matched}/${total} tokens)${bbox ? "" : " [no bbox]"}`
+          perImage[key][field] = `${(ratio * 100).toFixed(0)}% (${matched}/${total} tokens)${boxes.length > 0 ? "" : " [no bbox]"}`
         }
       }
 

@@ -39,7 +39,7 @@ export function parseExtractionResponse(json: string): OcrResult {
     if (typeof entry?.confidence === "number") {
       confidence[field] = entry.confidence
     }
-    boundingBoxes[field] = entry?.boundingBox ?? null
+    boundingBoxes[field] = entry?.boundingBox ? [entry.boundingBox] : []
   }
 
   return { data: data as ExtractedLabelData, confidence, boundingBoxes }
