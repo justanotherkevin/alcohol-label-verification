@@ -141,7 +141,7 @@ export default function DashboardPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Ocr-Provider": settings.provider ?? "mock",
+          "X-Ocr-Provider": settings.provider ?? "tesseract",
           ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
         },
         body: JSON.stringify({ ids: pendingIds }),

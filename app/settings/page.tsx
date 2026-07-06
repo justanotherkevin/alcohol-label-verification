@@ -147,7 +147,7 @@ export default function SettingsPage() {
     await fetch("/api/queue/analyze", {
       method: "POST",
       headers: {
-        "X-Ocr-Provider": settings.provider ?? "mock",
+        "X-Ocr-Provider": settings.provider ?? "tesseract",
         ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
       },
     });

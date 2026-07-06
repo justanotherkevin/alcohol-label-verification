@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   }
 
   const pending = await unanalyzedApplications()
-  const analyzedIds = await runAnalysis(pending, "mock")
+  const analyzedIds = await runAnalysis(pending, "tesseract")
   if (analyzedIds.length > 0) {
     await recordBatchRun("cron", analyzedIds.length)
   }
