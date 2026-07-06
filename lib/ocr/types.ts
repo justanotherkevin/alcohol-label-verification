@@ -19,7 +19,10 @@ export interface BoundingBox {
   confidence?: number // 0.0–1.0, OCR confidence for this field extraction
 }
 
-export type BoundingBoxMap = Partial<Record<keyof ExtractedLabelData, BoundingBox | null>>
+// A field may resolve to several disconnected boxes (e.g. scattered-word
+// fallback matching) rather than a single contiguous region. Empty array means
+// no location could be found.
+export type BoundingBoxMap = Partial<Record<keyof ExtractedLabelData, BoundingBox[]>>
 
 export interface OcrResult {
   data: ExtractedLabelData

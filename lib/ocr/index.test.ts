@@ -31,12 +31,12 @@ describe("getProvider", () => {
     expect(result.boundingBoxes).toBeDefined()
     const fields = ["brandName", "classType", "abv", "netContents", "bottler", "countryOfOrigin", "governmentWarning"]
     for (const field of fields) {
-      const bbox = result.boundingBoxes![field as keyof typeof result.boundingBoxes]
-      expect(bbox).not.toBeNull()
-      expect(bbox).toHaveProperty("x")
-      expect(bbox).toHaveProperty("y")
-      expect(bbox).toHaveProperty("width")
-      expect(bbox).toHaveProperty("height")
+      const boxes = result.boundingBoxes![field as keyof typeof result.boundingBoxes]
+      expect(boxes).toHaveLength(1)
+      expect(boxes![0]).toHaveProperty("x")
+      expect(boxes![0]).toHaveProperty("y")
+      expect(boxes![0]).toHaveProperty("width")
+      expect(boxes![0]).toHaveProperty("height")
     }
   }, 5000)
 })

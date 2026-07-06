@@ -113,12 +113,10 @@ export default function QueueDetailPage() {
   const displayedFieldKey = pinnedFieldKey ?? currentFieldKey;
   const displayedField =
     displayedFieldKey ? (fieldByKey.get(displayedFieldKey) ?? null) : null;
-  const displayedBbox =
+  const displayedBoxes =
     displayedFieldKey ?
-      (app?.ocrData?.boundingBoxes?.[
-        displayedFieldKey as keyof BoundingBoxMap
-      ] ?? undefined)
-    : undefined;
+      (app?.ocrData?.boundingBoxes?.[displayedFieldKey as keyof BoundingBoxMap] ?? [])
+    : [];
   const isDisplayedNaturallyFlagged =
     displayedFieldKey ? flaggedFieldKeys.includes(displayedFieldKey) : false;
   const displayedFieldNumber =
@@ -375,7 +373,7 @@ export default function QueueDetailPage() {
                   fieldLabel={displayedField.label}
                   fieldNumber={displayedFieldNumber}
                   extractedText={displayedField.extracted}
-                  bbox={displayedBbox}
+                  boxes={displayedBoxes}
                 />
               : <div className="h-full flex items-center justify-center text-white/40 text-sm py-16">
                   Review complete — see summary

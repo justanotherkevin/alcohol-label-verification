@@ -54,7 +54,7 @@ export function mergeOcrResults(perImageResults: OcrResult[]): MergedOcrResult {
 
     if (candidates.length === 0) {
       data[field] = null
-      boundingBoxes[field] = null
+      boundingBoxes[field] = []
       continue
     }
 
@@ -66,8 +66,8 @@ export function mergeOcrResults(perImageResults: OcrResult[]): MergedOcrResult {
 
     data[field] = best.value
     if (best.confidence !== undefined) confidence[field] = best.confidence
-    const bbox = perImageResults[best.imageIndex].boundingBoxes?.[field]
-    boundingBoxes[field] = bbox ? { ...bbox, imageIndex: best.imageIndex } : null
+    const boxes = perImageResults[best.imageIndex].boundingBoxes?.[field] ?? []
+    boundingBoxes[field] = boxes.map((b) => ({ ...b, imageIndex: best.imageIndex }))
 
     if (distinctValues.size > 1) {
       conflicts[field] = candidates.map((c) => ({ imageIndex: c.imageIndex, value: c.value }))

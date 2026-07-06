@@ -1,4 +1,4 @@
-import { computeFieldBbox, extractFields, WordLike } from "./extraction"
+import { computeFieldBoxes, extractFields, WordLike } from "./extraction"
 import { logRawOcrText } from "./tesseract"
 import { BoundingBoxMap, ExtractedLabelData, GuidedSearchHints, OcrProvider, OcrResult } from "./types"
 
@@ -79,7 +79,7 @@ export function googleVisionOcrProvider(apiKey: string): OcrProvider {
 
       const boundingBoxes: BoundingBoxMap = {}
       for (const field of Object.keys(extracted) as (keyof ExtractedLabelData)[]) {
-        boundingBoxes[field] = computeFieldBbox(words, extracted[field], W, H)
+        boundingBoxes[field] = computeFieldBoxes(words, extracted[field], W, H)
       }
 
       return { data: extracted, confidence: {}, boundingBoxes, rawText: text }

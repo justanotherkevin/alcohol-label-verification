@@ -1,6 +1,6 @@
 import fs from "fs"
 import path from "path"
-import { computeFieldBbox, extractFields } from "@/lib/ocr/extraction"
+import { computeFieldBoxes, extractFields } from "@/lib/ocr/extraction"
 import { BoundingBoxMap, ExtractedLabelData } from "@/lib/ocr/types"
 import { SEED_HINTS } from "@/lib/queue/seed-data"
 
@@ -49,8 +49,8 @@ function processVisionFile(
 
   const boundingBoxes: BoundingBoxMap = {}
   for (const field of Object.keys(extracted) as (keyof ExtractedLabelData)[]) {
-    const bbox = computeFieldBbox(words, extracted[field], W, H)
-    boundingBoxes[field] = bbox ? { ...bbox, imageIndex } : null
+    const boxes = computeFieldBoxes(words, extracted[field], W, H)
+    boundingBoxes[field] = boxes.map((b) => ({ ...b, imageIndex }))
   }
 
   return { extracted, boundingBoxes }
