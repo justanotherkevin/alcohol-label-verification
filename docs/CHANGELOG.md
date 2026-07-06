@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — fuzzy partial-match bounding boxes
+
+### Added
+
+- `lib/text-similarity.ts`: standalone Dice-coefficient bigram `diceSimilarity()` helper, used by the new fuzzy matching below.
+- `lib/ocr/extraction.ts`: `findFuzzyMatch()` — a fallback used when a field's strict matcher (exact/format-variant) returns `null`, so OCR noise (typos, garbled small print) still resolves a value instead of leaving the field unfound. `computeFieldBbox()` now walks OCR words consecutively (ported from excisely's `findMatchingWords`, see `docs/CHANGELOG.md` history) and scores partial coverage instead of requiring every word to independently contain a token, populating `BoundingBox.confidence` (0-1) with the coverage score.
+- `components/queue/LabelRegionPanel.tsx`: draws a percentage badge on the highlighted region when `bbox.confidence < 1`, so a partial match is visibly distinguishable from a perfect one.
+- `lib/text-similarity.test.ts`, new cases in `lib/ocr/extraction.test.ts`: cover fuzzy-fallback resolution, no-false-positive regression, and bbox confidence scoring (perfect, partial, below acceptance floor).
+
+### Changed
+
+- `tests/mocks/labels/_extracted.json`: regenerated via `scripts/regenerate-extracted.ts` against the real Vision API fixtures to reflect the new matching logic — e.g. a previously-`null` `bottler` field now resolves, and bounding boxes carry real `confidence` scores (e.g. `abv: 0.636` on one seed label).
+
 ## [2026-07-06] — fix production 500 on queue load, document dev tools and schema-drift backlog
 
 ### Fixed
