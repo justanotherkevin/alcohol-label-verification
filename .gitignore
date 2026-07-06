@@ -43,6 +43,9 @@ next-env.d.ts
 # Tesseract trained data (runtime artifact, downloaded by tesseract.js)
 *.traineddata
 
+# local-dev fallback for uploaded label photos (see app/api/uploads/route.ts)
+/public/uploads
+
 # testing
 /test-results
 /playwright-report

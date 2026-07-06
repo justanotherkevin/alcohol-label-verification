@@ -1,12 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useIdentity } from "@/components/AppShell";
 import { LABEL_CATALOG, LabelCatalogEntry } from "@/lib/queue/label-catalog";
 import { ApplicationData } from "@/lib/verify";
 
 type Step = "pick" | "review" | "submitted";
+
+interface PhotoSlot {
+  imageKey: string;
+  displayUrl: string;
+  overridePath: string | null;
+  overrideMimeType: string | null;
+  uploading: boolean;
+  error: string | null;
+}
+
+function defaultDisplayUrl(imageKey: string): string {
+  return `/demo-labels/${imageKey.split("/").pop()}`;
+}
+
+function makePhotoSlots(entry: LabelCatalogEntry): PhotoSlot[] {
+  return entry.imageKeys.map((imageKey) => ({
+    imageKey,
+    displayUrl: defaultDisplayUrl(imageKey),
+    overridePath: null,
+    overrideMimeType: null,
+    uploading: false,
+    error: null,
+  }));
+}
 
 const FIELD_LABELS: { key: keyof ApplicationData; label: string }[] = [
   { key: "brandName", label: "Brand Name" },
@@ -23,6 +47,7 @@ export default function ApplyPage() {
   const [step, setStep] = useState<Step>("pick");
   const [selected, setSelected] = useState<LabelCatalogEntry | null>(null);
   const [formData, setFormData] = useState<ApplicationData | null>(null);
+  const [photoSlots, setPhotoSlots] = useState<PhotoSlot[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
@@ -30,6 +55,7 @@ export default function ApplyPage() {
   function handlePick(entry: LabelCatalogEntry) {
     setSelected(entry);
     setFormData(entry.applicationData);
+    setPhotoSlots(makePhotoSlots(entry));
     setStep("review");
   }
 
@@ -37,11 +63,75 @@ export default function ApplyPage() {
     setFormData((prev) => (prev ? { ...prev, [key]: value } : prev));
   }
 
+  async function handlePhotoFile(index: number, file: File) {
+    const objectUrl = URL.createObjectURL(file);
+    setPhotoSlots((prev) =>
+      prev.map((slot, i) =>
+        i === index ?
+          { ...slot, displayUrl: objectUrl, uploading: true, error: null }
+        : slot,
+      ),
+    );
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/uploads", { method: "POST", body: form });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Upload failed");
+      }
+      const { url, mimeType } = (await res.json()) as {
+        url: string;
+        mimeType: string;
+      };
+      URL.revokeObjectURL(objectUrl);
+      setPhotoSlots((prev) =>
+        prev.map((slot, i) =>
+          i === index ?
+            {
+              ...slot,
+              displayUrl: url,
+              overridePath: url,
+              overrideMimeType: mimeType,
+              uploading: false,
+            }
+          : slot,
+        ),
+      );
+    } catch (e) {
+      URL.revokeObjectURL(objectUrl);
+      setPhotoSlots((prev) =>
+        prev.map((slot, i) =>
+          i === index ?
+            {
+              ...slot,
+              displayUrl: defaultDisplayUrl(slot.imageKey),
+              uploading: false,
+              error: e instanceof Error ? e.message : "Upload failed",
+            }
+          : slot,
+        ),
+      );
+    }
+  }
+
   async function handleSubmit() {
     if (!selected || !applicant || !formData) return;
     setSubmitting(true);
     setError(null);
     try {
+      const imageOverrides: Record<number, { path: string; mimeType: string }> =
+        {};
+      photoSlots.forEach((slot, i) => {
+        if (slot.overridePath && slot.overrideMimeType) {
+          imageOverrides[i] = {
+            path: slot.overridePath,
+            mimeType: slot.overrideMimeType,
+          };
+        }
+      });
+
       const res = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -49,6 +139,7 @@ export default function ApplyPage() {
           applicant: applicant.name,
           catalogKey: selected.key,
           applicationData: formData,
+          imageOverrides,
         }),
       });
       if (!res.ok) {
@@ -68,6 +159,7 @@ export default function ApplyPage() {
   function handleSubmitAnother() {
     setSelected(null);
     setFormData(null);
+    setPhotoSlots([]);
     setSubmittedId(null);
     setError(null);
     setStep("pick");
@@ -75,7 +167,7 @@ export default function ApplyPage() {
 
   if (!applicant) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-8">
+      <div className="max-h-screen flex items-center justify-center px-8">
         <div className="bg-surface-card border border-outline rounded-2xl p-8 text-center max-w-sm">
           <p className="text-base text-on-surface-muted mb-6">
             You&apos;re not signed in as an applicant.
@@ -91,7 +183,7 @@ export default function ApplyPage() {
   }
 
   return (
-    <div className="min-h-screen px-8 py-8 max-w-5xl mx-auto">
+    <div className="max-h-screen px-8 py-8 max-w-5xl mx-auto">
       <div className="mb-8 flex items-start justify-between">
         <div>
           <h1
@@ -113,8 +205,9 @@ export default function ApplyPage() {
             Select a label image
           </h2>
           <p className="text-base text-on-surface-muted mb-6 max-w-2xl">
-            This is a demo environment. Each label below comes with its application data
-            pre-filled so you can focus on trying out the submission flow — choose one to continue.
+            This is a demo environment. Each label below comes with its
+            application data pre-filled so you can focus on trying out the
+            submission flow — choose one to continue.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {LABEL_CATALOG.map((entry) => (
@@ -155,7 +248,9 @@ export default function ApplyPage() {
           <button
             onClick={() => setStep("pick")}
             className="flex items-center gap-1.5 px-4 py-2 text-base font-semibold text-on-surface-dim bg-surface-dim hover:bg-outline rounded-lg mb-6 transition-colors cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
+            <span className="material-symbols-outlined text-lg">
+              arrow_back
+            </span>
             Choose a different label
           </button>
 
@@ -165,13 +260,12 @@ export default function ApplyPage() {
                 {selected.displayName}
               </p>
               <div className="space-y-4">
-                {selected.imageKeys.map((imgKey) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={imgKey}
-                    src={`/demo-labels/${imgKey.split("/").pop()}`}
+                {photoSlots.map((slot, i) => (
+                  <PhotoDropSlot
+                    key={slot.imageKey}
+                    slot={slot}
                     alt={selected.displayName}
-                    className="w-full rounded-2xl border border-outline bg-surface-dim shadow-sm"
+                    onFile={(file) => handlePhotoFile(i, file)}
                   />
                 ))}
               </div>
@@ -215,7 +309,9 @@ export default function ApplyPage() {
 
               {error && (
                 <p className="flex items-center gap-2 text-base text-bp-error mt-6 font-semibold bg-bp-error-surface border border-bp-error-border rounded-lg px-4 py-3">
-                  <span className="material-symbols-outlined text-xl">error</span>
+                  <span className="material-symbols-outlined text-xl">
+                    error
+                  </span>
                   {error}
                 </p>
               )}
@@ -262,6 +358,75 @@ export default function ApplyPage() {
             </Link>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+function PhotoDropSlot({
+  slot,
+  alt,
+  onFile,
+}: {
+  slot: PhotoSlot;
+  alt: string;
+  onFile: (file: File) => void;
+}) {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) onFile(file);
+  }
+
+  return (
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={handleDrop}
+      className={`relative rounded-2xl border-2 shadow-sm overflow-hidden transition-colors ${
+        isDragOver ? "border-primary bg-primary/5" : "border-outline"
+      }`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={slot.displayUrl} alt={alt} className="w-full bg-surface-dim" />
+
+      {slot.uploading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+          <span className="material-symbols-outlined text-white text-3xl animate-spin">
+            progress_activity
+          </span>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-surface-card/95 text-on-surface rounded-lg shadow-sm border border-outline hover:bg-surface-dim transition-colors cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
+        <span className="material-symbols-outlined text-lg">upload</span>
+        Replace photo
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.target.value = "";
+        }}
+      />
+
+      {slot.error && (
+        <p className="absolute bottom-0 inset-x-0 px-3 py-2 text-sm font-semibold text-white bg-bp-error/90">
+          {slot.error}
+        </p>
       )}
     </div>
   );
