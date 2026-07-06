@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — add requirements-traceability test suite, align user-flow doc with source requirements
+
+### Added
+
+- `lib/baseRequirementsTest.test.ts`: a Vitest suite where each test ties directly to a stakeholder example or rule from the take-home requirements doc (Dave's fuzzy brand-name match, Sarah's ABV normalization, Jenny's strict govt-warning match, unreadable-field handling, and the override/approve/reject gating) rather than to implementation details — doubling as a runnable demo that core stated requirements are met.
+
+### Changed
+
+- `docs/users-flow.md`: made three things explicit that were previously implied — why pre-analysis exists (a prior scanning-vendor pilot's 30-40s per-label processing killed adoption), a "no training required" design principle (reviewers span a wide range of tech comfort), and why batch processing is parallelized (same failed-pilot lesson).
+
+---
+
 ## [2026-07-05] — replace review table with a one-field-at-a-time stepper
 
 ### Changed

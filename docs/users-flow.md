@@ -14,12 +14,14 @@
 
 > **Core model:** A Labeling Specialist never types or invents application data. Every application in the queue was already submitted by a producer/importer, with its label artwork attached — the specialist's job is to _review_, not to _enter data and wait for a result_. AI pre-analysis runs ahead of time (see below), so opening a queue item shows findings that are already computed.
 
+> **Design principle — no training required:** The review team spans a wide range of tech comfort, from a 28-year veteran who still prints his email to a specialist eight months into the job who's comfortable with any modern tool. Every screen must be self-explanatory on first use — no hidden actions, no multi-step discovery, nothing that requires a walkthrough. If a screen needs an explanation, it needs a redesign, not a tooltip.
+
 ---
 
 ## Flow 1: Single Application Review
 
 **Actors:** Jenny, Dave
-**Goal:** Review one already-analyzed application in ≤5 seconds
+**Goal:** AI analysis must already be complete before a specialist opens an application. A prior scanning-vendor pilot was abandoned because per-label processing took 30-40 seconds — agents could review five labels by eye in the time the machine took to do one. Pre-analysis exists specifically to make that a non-issue: the specialist never watches a spinner, so reviewing a single already-analyzed application takes ≤5 seconds of their own time.
 
 ```
 1. LAND
@@ -125,7 +127,10 @@
    └── User can proceed or fix mismatches
 
 4. PROCESS
-   ├── All labels processed in parallel (not sequentially)
+   ├── All labels processed in parallel (not sequentially) — the abandoned
+   │   vendor pilot processed one label at a time and left agents staring
+   │   at a frozen screen; parallel processing plus incremental results is
+   │   a deliberate fix for that failure, not just a nice-to-have
    ├── Progress indicator: "Processing 47 / 300..."
    └── Results populate incrementally as each label completes
 
