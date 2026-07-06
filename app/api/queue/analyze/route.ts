@@ -8,11 +8,16 @@ export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("X-Api-Key") ?? undefined
 
   let pending
-  const body = await req.json().catch(() => null) as { ids?: string[] } | null
+  const body = await req.json().catch(() => null) as { ids?: string[]; force?: boolean } | null
   if (body?.ids) {
     const apps = await Promise.all(body.ids.map((id) => getApplication(id)))
+    // `force` allows re-running OCR on an application that's already been
+    // analyzed (e.g. to correct a bad or stale result), but never on one
+    // that's been resolved — a specialist's decision must be reverted first.
+    const allowedStatuses = body.force ? ["pending", "analyzed"] : ["pending"]
     pending = apps.filter(
-      (app): app is QueueApplication => app !== undefined && app.status === "pending"
+      (app): app is QueueApplication =>
+        app !== undefined && allowedStatuses.includes(app.status)
     )
   } else {
     pending = await unanalyzedApplications()
