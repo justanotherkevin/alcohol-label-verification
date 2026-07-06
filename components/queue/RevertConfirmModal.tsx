@@ -25,13 +25,13 @@ export function RevertConfirmModal({ open, submitting, onConfirm, onClose }: Rev
         <div className="flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim">
+            className="cursor-pointer text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim">
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={submitting}
-            className="text-xs px-3 py-2 bg-primary text-white rounded-lg disabled:opacity-50">
+            className="cursor-pointer text-xs px-3 py-2 bg-primary text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? "Reverting…" : "Revert"}
           </button>
         </div>

@@ -39,12 +39,13 @@ test('batch review: select 3, reject each in sequence, auto-advance, return home
       page.getByText(`Batch review — application ${i + 1} of ${orderedIds.length}`)
     ).toBeVisible()
 
-    await page.getByRole('button', { name: 'Reject', exact: true }).click()
+    await page.getByRole('button', { name: '✗ Reject', exact: true }).click()
+    await page.getByRole('button', { name: 'Skip to summary' }).click()
+    await page.getByRole('button', { name: '✗ Deny' }).click()
     const noteInput = page.getByPlaceholder('Rejection note (required)…')
     await expect(noteInput).toBeVisible()
-    await page.getByRole('checkbox').first().check()
     await noteInput.fill('Government warning is not compliant')
-    const confirmBtn = page.getByRole('button', { name: 'Confirm Reject' })
+    const confirmBtn = page.getByRole('button', { name: 'Confirm Deny' })
     await expect(confirmBtn).toBeEnabled()
     await confirmBtn.click()
 
