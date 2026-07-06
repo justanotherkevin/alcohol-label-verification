@@ -11,7 +11,14 @@ export interface AnalyzeResult {
   images: LabelImage[]
 }
 
-function readImageBase64(imagePath: string): string {
+async function readImageBase64(imagePath: string): Promise<string> {
+  if (/^https?:\/\//i.test(imagePath)) {
+    const res = await fetch(imagePath)
+    if (!res.ok) {
+      throw new Error(`Failed to fetch image ${imagePath}: ${res.status} ${res.statusText}`)
+    }
+    return Buffer.from(await res.arrayBuffer()).toString("base64")
+  }
   const publicDir = path.join(process.cwd(), "public")
   const resolved = path.join(publicDir, imagePath)
   if (!resolved.startsWith(publicDir + path.sep)) {
@@ -27,8 +34,8 @@ export async function analyzeApplication(
 ): Promise<AnalyzeResult> {
   const provider = getProvider(providerName, apiKey)
   const perImageResults = await Promise.all(
-    app.images.map((img) => {
-      const base64 = readImageBase64(img.path)
+    app.images.map(async (img) => {
+      const base64 = await readImageBase64(img.path)
       return provider.extract(base64, img.mimeType, app.applicationData)
     })
   )

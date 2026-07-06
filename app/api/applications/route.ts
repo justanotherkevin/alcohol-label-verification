@@ -4,12 +4,14 @@ import { loadMockImage } from "@/lib/queue/load-image"
 import { LABEL_CATALOG } from "@/lib/queue/label-catalog"
 import { QueueApplication } from "@/lib/queue/types"
 import { ApplicationData } from "@/lib/verify"
+import { ALLOWED_IMAGE_MIME_TYPES, isTrustedUploadPath } from "@/lib/uploads"
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
     applicant?: string
     catalogKey?: string
     applicationData?: Partial<ApplicationData>
+    imageOverrides?: Record<number, { path: string; mimeType: string }>
   }
   const applicant = body.applicant?.trim()
   const catalogKey = body.catalogKey
@@ -33,11 +35,32 @@ export async function POST(request: Request) {
     if (typeof edits[key] === "string") submitted[key] = edits[key] as string
   }
 
+  // Overrides must point at a URL we actually wrote ourselves (our local-dev
+  // fallback or a Vercel Blob public store) — analysis later fetches img.path
+  // over HTTP, so accepting an arbitrary client-supplied URL here would let a
+  // submission turn the server into an SSRF proxy.
+  const overrides = body.imageOverrides ?? {}
+  for (const override of Object.values(overrides)) {
+    if (!isTrustedUploadPath(override.path) || !ALLOWED_IMAGE_MIME_TYPES.has(override.mimeType)) {
+      return NextResponse.json({ error: "invalid imageOverrides" }, { status: 400 })
+    }
+  }
+
+  // A replaced photo drops the demo catalog's precomputed OCR vision text —
+  // it belongs to a different image now — but untouched slots keep it.
+  const images = entry.imageKeys.map((imgKey, i) => {
+    const override = overrides[i]
+    if (override?.path) {
+      return { ...loadMockImage(imgKey), path: override.path, mimeType: override.mimeType, rawOcrText: undefined }
+    }
+    return loadMockImage(imgKey)
+  })
+
   const app: QueueApplication = {
     id: `demo-TTB-2026-${Date.now()}`,
     applicant,
     submittedAt: new Date().toISOString(),
-    images: entry.imageKeys.map(loadMockImage),
+    images,
     applicationData: submitted,
     ocrData: null,
     status: "pending",
