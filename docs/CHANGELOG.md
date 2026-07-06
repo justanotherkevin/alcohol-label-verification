@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — production OCR analysis defaults to real Tesseract, not mock data
+
+### Fixed
+
+- `app/api/cron/analyze-queue/route.ts`: the Vercel Cron job that auto-analyzes pending applications twice daily hardcoded the `"mock"` OCR provider, so every applicant submission processed automatically in production received fixed fake extraction data (e.g. `brandName: "OLD TOM DISTILLERY"`) instead of a real OCR read of the uploaded label. Changed the default to `"tesseract"`.
+- `app/api/queue/analyze/route.ts`, `app/page.tsx`, `app/settings/page.tsx`: the manual "Run pre-analysis" and batch-review triggers also fell back to `"mock"` whenever no OCR provider had been explicitly saved in browser `localStorage`, making the mock provider an easy-to-miss silent default rather than an opt-in testing tool. Changed all three fallbacks to `"tesseract"`.
+
 ## [2026-07-06] — applicants can replace demo label photos with their own
 
 ### Added
