@@ -328,7 +328,7 @@ export default function QueueDetailPage() {
   const showStepper = Boolean(app.ocrData) && app.status !== "resolved";
 
   return (
-    <div className="px-8 py-8 max-w-5xl mx-auto">
+    <div className="px-8 py-8 max-w-7xl">
       <div className="mb-6">
         <h1
           className="text-2xl font-bold text-on-surface"
@@ -368,7 +368,7 @@ export default function QueueDetailPage() {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="bg-[#141414] p-6">
+            <div className="bg-surface-card p-6">
               {displayedField ?
                 <LabelRegionPanel
                   images={app.images}

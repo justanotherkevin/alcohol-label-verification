@@ -31,6 +31,7 @@ export function LabelRegionPanel({
 }: LabelRegionPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [expandOpen, setExpandOpen] = useState(false);
+  const [expandImageIndex, setExpandImageIndex] = useState(bbox?.imageIndex ?? 0);
   const thumbImage = images[bbox?.imageIndex ?? 0];
 
   useEffect(() => {
@@ -79,58 +80,58 @@ export function LabelRegionPanel({
   }, [bbox, images]);
 
   return (
-    <div className="bg-[#1c1c1c] rounded-lg p-6 flex flex-col gap-4 h-full">
-      <p className="text-xs uppercase tracking-wide text-white/50">
+    <div className="bg-surface-card rounded-lg p-6 flex flex-col gap-4 h-full">
+      <p className="text-xs uppercase tracking-wide text-on-surface-muted">
         Label region · Field {fieldNumber}
       </p>
 
-      <div
-        className="rounded-lg bg-black/30 border border-white/10 flex items-center justify-center overflow-hidden"
-        style={{ height: CANVAS_HEIGHT }}>
-        {bbox ?
+      {bbox && (
+        <div
+          className="rounded-lg bg-outline/20 border border-outline flex items-center justify-center overflow-hidden"
+          style={{ height: CANVAS_HEIGHT }}>
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
             aria-hidden="true"
           />
-        : <p className="text-sm text-white/40 px-6 text-center">No location found on label</p>}
-      </div>
-
-      <p className="text-center text-sm font-mono text-white/80">{extractedText ?? "not found"}</p>
-
-      {thumbImage && (
-        <button
-          type="button"
-          onClick={() => setExpandOpen(true)}
-          aria-label={`Expand full label image for ${fieldLabel}`}
-          className="cursor-pointer mt-auto flex flex-col items-center gap-1">
-          <div className="relative inline-block">
-            <img
-              src={thumbImage.path}
-              alt="Full label"
-              className="w-28 rounded border border-white/20"
-            />
-            {bbox && (
-              <div
-                className="absolute border-2 border-orange-400"
-                style={{
-                  left: `${bbox.x * 100}%`,
-                  top: `${bbox.y * 100}%`,
-                  width: `${bbox.width * 100}%`,
-                  height: `${bbox.height * 100}%`,
-                }}
-              />
-            )}
-          </div>
-          <p className="text-xs text-white/40">click to expand</p>
-        </button>
+        </div>
       )}
 
-      {expandOpen && thumbImage && (
+      {!bbox && (
+        <div
+          className="rounded-lg bg-outline/20 border border-outline flex items-center justify-center"
+          style={{ height: CANVAS_HEIGHT }}>
+          <p className="text-sm text-on-surface-dim px-6 text-center">No location found on label</p>
+        </div>
+      )}
+
+      <p className="text-center text-sm font-mono text-on-surface">{extractedText ?? "not found"}</p>
+
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {images.map((image, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => {
+              setExpandImageIndex(idx);
+              setExpandOpen(true);
+            }}
+            aria-label={`Expand label image ${idx + 1} of ${images.length}${image.side ? ` (${image.side})` : ""}`}
+            className="cursor-pointer flex-shrink-0 rounded border border-outline hover:border-primary transition-colors">
+            <img
+              src={image.path}
+              alt={`Label image ${idx + 1}${image.side ? ` - ${image.side}` : ""}`}
+              className="h-24 w-auto object-contain"
+            />
+          </button>
+        ))}
+      </div>
+
+      {expandOpen && images[expandImageIndex] && (
         <ImageExpandModal
-          image={thumbImage}
-          bbox={bbox}
+          image={images[expandImageIndex]}
+          bbox={expandImageIndex === (bbox?.imageIndex ?? 0) ? bbox : undefined}
           fieldLabel={fieldLabel}
           onClose={() => setExpandOpen(false)}
         />
