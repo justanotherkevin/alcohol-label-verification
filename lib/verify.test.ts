@@ -83,3 +83,44 @@ describe("verifyLabel — Layer 2 regulatory", () => {
     expect(field?.confidence).toBe(0.95)
   })
 })
+
+describe("verifyLabel — matchScore", () => {
+  it("scores identical strings as 1", () => {
+    const result = verifyLabel(baseApp, baseExtracted)
+    const field = result.fields.find((f) => f.field === "countryOfOrigin")
+    expect(field?.matchScore).toBe(1)
+  })
+
+  it("scores minor OCR noise (case/whitespace only) as 1", () => {
+    const result = verifyLabel(baseApp, baseExtracted)
+    const field = result.fields.find((f) => f.field === "brandName")
+    expect(field?.matchScore).toBe(1)
+  })
+
+  it("scores completely different strings low", () => {
+    const result = verifyLabel(baseApp, { ...baseExtracted, brandName: "Zephyr Nightshade Vodka" })
+    const field = result.fields.find((f) => f.field === "brandName")
+    expect(field?.matchScore).toBeLessThan(0.3)
+  })
+
+  it("scores ABV format variants near 1 despite differing characters", () => {
+    const result = verifyLabel(baseApp, baseExtracted)
+    const field = result.fields.find((f) => f.field === "abv")
+    expect(field?.matchScore).toBe(1)
+  })
+
+  it("scores net contents format variants near 1 despite differing characters", () => {
+    const result = verifyLabel(
+      { ...baseApp, netContents: "750 mL" },
+      { ...baseExtracted, netContents: "750ml" }
+    )
+    const field = result.fields.find((f) => f.field === "netContents")
+    expect(field?.matchScore).toBe(1)
+  })
+
+  it("scores 0 when extracted value is missing", () => {
+    const result = verifyLabel(baseApp, { ...baseExtracted, abv: null })
+    const field = result.fields.find((f) => f.field === "abv")
+    expect(field?.matchScore).toBe(0)
+  })
+})
