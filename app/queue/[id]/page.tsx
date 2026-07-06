@@ -66,6 +66,8 @@ export default function QueueDetailPage() {
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
   const [reverting, setReverting] = useState(false);
   const [revertError, setRevertError] = useState<string | null>(null);
+  const [reanalyzing, setReanalyzing] = useState(false);
+  const [reanalyzeError, setReanalyzeError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -83,6 +85,37 @@ export default function QueueDetailPage() {
         setLoading(false);
       });
   }, [params.id]);
+
+  async function handleReanalyze() {
+    if (!app) return;
+    setReanalyzing(true);
+    setReanalyzeError(null);
+    try {
+      const res = await fetch("/api/queue/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [app.id], force: true }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error: string };
+        throw new Error(data.error);
+      }
+      const refreshed = await fetch(`/api/queue/${app.id}`);
+      const data = (await refreshed.json()) as {
+        application: QueueApplicationDetail;
+      };
+      setApp(data.application);
+      setCurrentStepIndex(0);
+      setPinnedFieldKey(null);
+      setActionedFields(new Set());
+      setOverrides({});
+      setRejectedFields([]);
+    } catch (e) {
+      setReanalyzeError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setReanalyzing(false);
+    }
+  }
 
   const allFields = app?.ocrData?.result.fields ?? [];
 
@@ -327,20 +360,37 @@ export default function QueueDetailPage() {
 
   return (
     <div className="px-8 py-8 max-w-10xl">
-      <div className="mb-6">
-        <h1
-          className="text-2xl font-bold text-on-surface"
-          style={{ fontFamily: "var(--font-inter)" }}>
-          {app.applicationData.brandName}
-        </h1>
-        <p className="text-sm text-on-surface-muted mt-1">
-          {app.id} · {app.applicant} · submitted{" "}
-          {new Date(app.submittedAt).toLocaleString()}
-        </p>
-        {batchIndex >= 0 && (
-          <p className="text-xs text-primary font-medium mt-2">
-            Batch review — application {batchIndex + 1} of {batchIds.length}
+      <div className="mb-6 flex items-start justify-between gap-6">
+        <div>
+          <h1
+            className="text-2xl font-bold text-on-surface"
+            style={{ fontFamily: "var(--font-inter)" }}>
+            {app.applicationData.brandName}
+          </h1>
+          <p className="text-sm text-on-surface-muted mt-1">
+            {app.id} · {app.applicant} · submitted{" "}
+            {new Date(app.submittedAt).toLocaleString()}
           </p>
+          {batchIndex >= 0 && (
+            <p className="text-xs text-primary font-medium mt-2">
+              Batch review — application {batchIndex + 1} of {batchIds.length}
+            </p>
+          )}
+        </div>
+        {app.status === "analyzed" && (
+          <div className="shrink-0 text-right">
+            <button
+              onClick={handleReanalyze}
+              disabled={reanalyzing}
+              className="cursor-pointer px-4 py-2 border border-outline text-on-surface-dim text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+              {reanalyzing ? "Re-running OCR…" : "Re-run OCR"}
+            </button>
+            {reanalyzeError && (
+              <p className="text-xs text-bp-error font-semibold mt-2 max-w-xs">
+                {reanalyzeError}
+              </p>
+            )}
+          </div>
         )}
       </div>
 
