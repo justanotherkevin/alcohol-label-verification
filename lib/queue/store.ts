@@ -218,8 +218,15 @@ export interface QueuePage {
 export async function listQueue(
   page = 1,
   pageSize = 25,
+  applicant?: string,
 ): Promise<QueuePage> {
-  const { rows } = await pool.query(`
+  // Applicant-scoped queries (the applicant portal home screen) show that
+  // applicant's full history, including resolved applications; the specialist
+  // queue otherwise only ever shows active (unresolved) work.
+  const whereClause = applicant ? `a.applicant = $1` : `a.status != 'resolved'`;
+  const params = applicant ? [applicant] : [];
+  const { rows } = await pool.query(
+    `
     SELECT
       a.id, a.applicant, a.submitted_at, a.status,
       COALESCE(ad.brand_name, a.applicant) AS brand_name,
@@ -230,8 +237,10 @@ export async function listQueue(
     LEFT JOIN application_data ad ON ad.application_id = a.id
     LEFT JOIN application_images ai ON ai.application_id = a.id AND ai.position = 0
     LEFT JOIN ocr_data od ON od.application_image_id = ai.id
-    WHERE a.status != 'resolved'
-  `);
+    WHERE ${whereClause}
+  `,
+    params,
+  );
 
   const summaries = rows
     .map((row) => {

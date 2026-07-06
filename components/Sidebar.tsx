@@ -3,8 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { getCurrentSpecialist, StoredSpecialist, DEMO_SPECIALISTS } from "@/lib/queue/specialist"
-import SpecialistLoginModal from "@/components/SpecialistLoginModal"
+import { StoredSpecialist, DEMO_SPECIALISTS } from "@/lib/queue/specialist"
 
 const SETTINGS_KEY = "ttb-ocr-settings"
 const PROVIDER_LABELS: Record<string, string> = {
@@ -24,11 +23,15 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/settings", icon: "settings",   label: "Settings" },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  onRequestLogin: () => void
+  onLogout: () => void
+  specialist: StoredSpecialist | null
+}
+
+export default function Sidebar({ onRequestLogin, onLogout, specialist }: SidebarProps) {
   const pathname = usePathname()
   const [providerLabel, setProviderLabel] = useState("Tesseract")
-  const [specialist, setSpecialist] = useState<StoredSpecialist | null>(null)
-  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     const raw = localStorage.getItem(SETTINGS_KEY)
@@ -38,16 +41,7 @@ export default function Sidebar() {
         setProviderLabel(PROVIDER_LABELS[parsed.provider ?? "tesseract"] ?? "Tesseract")
       } catch { /* ignore malformed localStorage */ }
     }
-
-    const s = getCurrentSpecialist()
-    setSpecialist(s)
-    if (!s) setShowModal(true)
   }, [pathname])
-
-  function handleModalClose() {
-    setSpecialist(getCurrentSpecialist())
-    setShowModal(false)
-  }
 
   const specialistColor =
     specialist
@@ -60,13 +54,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {showModal && (
-        <SpecialistLoginModal
-          dismissible={!!specialist}
-          onClose={handleModalClose}
-        />
-      )}
-
       <aside className="fixed left-0 top-0 w-64 h-screen bg-surface-dim border-r border-outline flex flex-col z-40">
         {/* Branding */}
         <div className="px-6 py-5 border-b border-outline">
@@ -124,11 +111,18 @@ export default function Sidebar() {
               </p>
             </div>
             <button
-              onClick={() => setShowModal(true)}
+              onClick={onRequestLogin}
               className="text-on-surface-muted hover:text-on-surface transition-colors shrink-0"
               title="Switch user"
             >
               <span className="material-symbols-outlined text-[16px]">swap_horiz</span>
+            </button>
+            <button
+              onClick={onLogout}
+              className="text-on-surface-muted hover:text-on-surface transition-colors shrink-0"
+              title="Log out"
+            >
+              <span className="material-symbols-outlined text-[16px]">logout</span>
             </button>
           </div>
 

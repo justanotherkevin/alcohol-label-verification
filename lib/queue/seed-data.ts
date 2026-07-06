@@ -1,11 +1,14 @@
 import fs from "fs";
 import path from "path";
-import { ApplicationData, REQUIRED_GOVERNMENT_WARNING } from "@/lib/verify";
+import { ApplicationData } from "@/lib/verify";
 import { BoundingBoxMap, ExtractedLabelData, OcrResult } from "@/lib/ocr/types";
 import { mergeOcrResults } from "@/lib/ocr/merge";
 import { verifyLabel } from "@/lib/verify";
 import { QueueApplication, ApplicationReviewData } from "./types";
 import { loadMockImage } from "./load-image";
+import { SEED_HINTS } from "./label-catalog";
+
+export { SEED_HINTS };
 
 type ExtractedEntry = {
   extracted: ExtractedLabelData;
@@ -92,101 +95,6 @@ function seed(
   };
 }
 
-// imageKey → applicationData — imported by regenerate-extracted.ts to guide Layer 2 extraction
-export const SEED_HINTS: Record<string, ApplicationData> = {};
-
-const HOLLOW_CREEK_DATA: ApplicationData = {
-  brandName: "HOLLOW CREEK",
-  classType: "Moonshine",
-  abv: "35% ABV",
-  netContents: "750 mL",
-  bottler: "Hollow Creek Distillery, Bowdon, GA",
-  countryOfOrigin: "USA",
-  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-};
-SEED_HINTS["hollow-creek"] = HOLLOW_CREEK_DATA;
-
-const ABC_DISTILLERY_DATA: ApplicationData = {
-  brandName: "ABC DISTILLERY",
-  classType: "Single Barrel Straight Rye Whisky",
-  abv: "45% ABV",
-  netContents: "750 ML",
-  bottler: "Distilled and Bottled by: ABC Distillery",
-  countryOfOrigin: "",
-  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-};
-SEED_HINTS["abc-distillery"] = ABC_DISTILLERY_DATA;
-
-const MALT_HOP_BREWERY_DATA: ApplicationData = {
-  brandName: "MALT & HOP BREWERY",
-  classType: "Pale Ale",
-  abv: "5% ABV",
-  netContents: "1 pint",
-  bottler: "Brewed and Bottled by Malt & Hop Brewery, Hyattsville, MD",
-  countryOfOrigin: "USA",
-  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-};
-SEED_HINTS["malt-hop-brewery"] = MALT_HOP_BREWERY_DATA;
-
-const IMPORTS_12345_DATA: ApplicationData = {
-  brandName: "12345 IMPORTS",
-  classType: "Rum with Coconut Liqueur",
-  abv: "18% ABV",
-  netContents: "200 mL",
-  bottler: "Imported by 12345 Imports, Miami, FL",
-  countryOfOrigin: "Canada",
-  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-};
-SEED_HINTS["12345-imports"] = IMPORTS_12345_DATA;
-
-const ELDERBERRY_OAK_DATA: ApplicationData = {
-  brandName: "ELDERBERRY & OAK",
-  classType: "Small Batch Gin",
-  abv: "43% ABV",
-  netContents: "750 mL",
-  bottler: "Elderberry & Oak Distillers, Portland, OR",
-  countryOfOrigin: "USA",
-  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-};
-SEED_HINTS["label-1-front"] = ELDERBERRY_OAK_DATA;
-SEED_HINTS["label-1-back"] = ELDERBERRY_OAK_DATA;
-
-const DESERT_LUNA_RESUBMIT_DATA: ApplicationData = {
-  brandName: "DESERT LUNA & AGAVE",
-  classType: "Premium Botanical Spirit",
-  abv: "40% ABV",
-  netContents: "750 mL",
-  bottler: "Desert Luna Spirits, Oaxaca, MX",
-  countryOfOrigin: "Mexico",
-  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-};
-SEED_HINTS["label-3-front"] = DESERT_LUNA_RESUBMIT_DATA;
-SEED_HINTS["label-3-back"] = DESERT_LUNA_RESUBMIT_DATA;
-
-const HAWKS_SHADOW_DATA: ApplicationData = {
-  brandName: "HAWK'S SHADOW ESTATE WINERY",
-  classType: "Orange Muscat",
-  abv: "13.68 % ABV",
-  netContents: "375 mL",
-  bottler: "Hawk's Shadow Estate, Dripping Springs, TX",
-  countryOfOrigin: "USA",
-  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-};
-SEED_HINTS["label-4-front"] = HAWKS_SHADOW_DATA;
-SEED_HINTS["label-4-back"] = HAWKS_SHADOW_DATA;
-
-const CASAMIGOS_DATA: ApplicationData = {
-  brandName: "CASAMIGOS",
-  classType: "Blanco Tequila",
-  abv: "40% ABV",
-  netContents: "750 mL",
-  bottler: "Imported by Casamigos Spirits Company, Manhasset, NY",
-  countryOfOrigin: "Mexico",
-  governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-};
-SEED_HINTS["label-5-front"] = CASAMIGOS_DATA;
-SEED_HINTS["label-5-back"] = CASAMIGOS_DATA;
-
 export const SEED_APPLICATIONS: QueueApplication[] = [
   // 1. Hollow Creek — visible fields pass, but bottler / country / gov warning not on label
   seed(
@@ -268,15 +176,7 @@ const pendingSeed: QueueApplication = {
   id: "demo-TTB-2026-1006",
   applicant: "Desert Luna Spirits",
   submittedAt: "2026-06-30T16:00:00.000Z",
-  applicationData: {
-    brandName: "DESERT LUNA & AGAVE",
-    classType: "Premium Botanical Spirit",
-    abv: "40% ABV",
-    netContents: "750 mL",
-    bottler: "Desert Luna Spirits, Oaxaca, MX",
-    countryOfOrigin: "Mexico",
-    governmentWarning: REQUIRED_GOVERNMENT_WARNING,
-  },
+  applicationData: SEED_HINTS["label-2-front"],
   images: [
     loadMockImage("labels/label-2-front.png"),
     loadMockImage("labels/label-2-back.png"),

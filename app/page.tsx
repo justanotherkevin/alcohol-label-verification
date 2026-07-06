@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useIdentity } from "@/components/AppShell"
+import ApplicantHome from "@/components/ApplicantHome"
 
 interface QueueSummary {
   id: string
@@ -41,6 +43,7 @@ function verdictBadge(item: QueueSummary) {
 const PAGE_SIZE = 25
 
 export default function DashboardPage() {
+  const { applicant } = useIdentity()
   const router = useRouter()
   const [items, setItems] = useState<QueueSummary[]>([])
   const [total, setTotal] = useState(0)
@@ -114,12 +117,16 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    loadQueue(1)
+    if (!applicant) loadQueue(1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [applicant])
 
   const { pending: pendingCount, flagged: flaggedCount, clean: cleanCount } = counts
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+
+  if (applicant) {
+    return <ApplicantHome applicantName={applicant.name} />
+  }
 
   return (
     <div className="px-8 py-8 max-w-7xl">
