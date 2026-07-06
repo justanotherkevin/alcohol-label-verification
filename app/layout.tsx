@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
+import AppShell from "@/components/AppShell";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,12 +39,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=assignment_turned_in,check,close,edit,gavel,history,inbox,layers,memory,settings,swap_horiz,timer,upload,verified,warning"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=assignment_turned_in,check,close,edit,gavel,history,inbox,layers,logout,memory,settings,swap_horiz,timer,upload,verified,warning"
         />
       </head>
       <body className="min-h-full flex bg-surface" suppressHydrationWarning>
-        <Sidebar />
-        <main className="ml-64 flex-1 min-h-screen">{children}</main>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

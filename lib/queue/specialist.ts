@@ -35,6 +35,7 @@ export function getCurrentSpecialist(): StoredSpecialist | null {
 
 export function setCurrentSpecialist(specialist: StoredSpecialist): void {
   localStorage.setItem(SPECIALIST_KEY, JSON.stringify(specialist))
+  localStorage.removeItem("ttb-applicant")
 }
 
 export function clearCurrentSpecialist(): void {

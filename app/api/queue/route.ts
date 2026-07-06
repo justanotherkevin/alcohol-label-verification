@@ -11,7 +11,8 @@ export async function GET(request: Request) {
     MAX_PAGE_SIZE,
     Math.max(1, Number(url.searchParams.get("pageSize")) || DEFAULT_PAGE_SIZE),
   )
-  const { items, total, counts } = await listQueue(page, pageSize)
+  const applicant = url.searchParams.get("applicant") ?? undefined
+  const { items, total, counts } = await listQueue(page, pageSize, applicant)
   return NextResponse.json({ items, total, page, pageSize, counts })
 }
 
