@@ -153,22 +153,22 @@ export default function SettingsPage() {
     <div className="px-8 py-8 max-w-2xl">
       <div className="mb-8">
         <h1
-          className="text-2xl font-bold text-on-surface"
+          className="text-3xl font-bold text-on-surface"
           style={{ fontFamily: "var(--font-inter)" }}>
           Settings
         </h1>
-        <p className="text-sm text-on-surface-muted mt-1">
+        <p className="text-base text-on-surface-muted mt-2">
           Choose your OCR provider. API keys are stored in your browser only and
           never sent to our servers. Estimates vary by image resolution.
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {PROVIDERS.map((p) => (
           <label
             key={p.id}
             title={p.tested ? undefined : "Future feature"}
-            className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${
+            className={`flex items-start gap-4 p-5 rounded-lg border-2 transition-colors ${
               !p.tested ?
                 "cursor-not-allowed opacity-50 border-outline bg-surface-card"
               : provider === p.id ?
@@ -185,21 +185,21 @@ export default function SettingsPage() {
                 setProvider(p.id);
                 if (!p.requiresKey) setApiKey("");
               }}
-              className="mt-1 disabled:cursor-not-allowed"
+              className="mt-2 w-6 h-6 disabled:cursor-not-allowed"
             />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-on-surface">{p.label}</span>
-                <span className="text-xs px-2 py-0.5 rounded bg-surface-dim text-on-surface-muted">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-on-surface text-base">{p.label}</span>
+                <span className="text-xs px-3 py-1 rounded bg-surface-dim text-on-surface-muted font-semibold">
                   {p.cost}
                 </span>
                 {!p.tested && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-surface-dim text-on-surface-muted italic">
+                  <span className="text-xs px-3 py-1 rounded bg-surface-dim text-on-surface-muted italic font-semibold">
                     Coming soon
                   </span>
                 )}
               </div>
-              <p className="text-sm text-on-surface-muted mt-0.5">
+              <p className="text-base text-on-surface-muted mt-2">
                 {p.description}
               </p>
             </div>
@@ -208,8 +208,8 @@ export default function SettingsPage() {
       </div>
 
       {selectedProvider?.requiresKey && (
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-on-surface-dim mb-1">
+        <div className="mt-8">
+          <label className="block text-base font-semibold text-on-surface-dim mb-3">
             API Key for {selectedProvider.label}
           </label>
           <input
@@ -217,27 +217,27 @@ export default function SettingsPage() {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="API key"
-            className="w-full border border-outline rounded-lg px-3 py-2 text-sm font-mono bg-surface-card text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            className="w-full h-12 border-2 border-outline rounded-lg px-4 py-3 text-base font-mono bg-surface-card text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           />
         </div>
       )}
 
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-8 flex items-center gap-4">
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
+          className="px-5 py-3 bg-primary text-white text-base font-semibold rounded-lg hover:bg-primary-hover transition-colors cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
           Save Settings
         </button>
-        {saved && <span className="text-sm text-bp-success">Saved!</span>}
+        {saved && <span className="text-base text-bp-success font-semibold">Saved!</span>}
       </div>
 
-      <div className="mt-10 pt-8 border-t border-outline">
+      <div className="mt-12 pt-8 border-t border-outline">
         <h2
-          className="text-lg font-bold text-on-surface"
+          className="text-2xl font-bold text-on-surface"
           style={{ fontFamily: "var(--font-inter)" }}>
           Development tools
         </h2>
-        <p className="text-sm text-on-surface-muted mt-1">
+        <p className="text-base text-on-surface-muted mt-3">
           These buttons manipulate the queue directly and exist to make it easy
           to demo and test this app without a real intake pipeline. &quot;Reset
           seed data&quot; and &quot;Add mock application&quot; only ever touch
@@ -245,13 +245,13 @@ export default function SettingsPage() {
           safe to use on the production deployment too.
         </p>
 
-        <div className="mt-4 space-y-3">
-          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border border-outline bg-surface-card">
+        <div className="mt-6 space-y-4">
+          <div className="flex items-start justify-between gap-6 p-5 rounded-lg border border-outline bg-surface-card">
             <div>
-              <p className="text-sm font-medium text-on-surface">
+              <p className="text-base font-semibold text-on-surface">
                 Reset seed data
               </p>
-              <p className="text-sm text-on-surface-muted mt-0.5">
+              <p className="text-base text-on-surface-muted mt-2">
                 Deletes every application currently in the queue and replaces
                 them with the original fixed set of sample applications. Use
                 this to return to a known-clean starting point after testing —
@@ -263,17 +263,17 @@ export default function SettingsPage() {
             <button
               onClick={handleReset}
               disabled={resetting}
-              className="shrink-0 text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50">
+              className="shrink-0 px-4 py-3 text-base font-semibold border-2 border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary whitespace-nowrap">
               {resetting ? "Resetting…" : "Reset seed data"}
             </button>
           </div>
 
-          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border border-outline bg-surface-card">
+          <div className="flex items-start justify-between gap-6 p-5 rounded-lg border border-outline bg-surface-card">
             <div>
-              <p className="text-sm font-medium text-on-surface">
+              <p className="text-base font-semibold text-on-surface">
                 + Add mock application
               </p>
-              <p className="text-sm text-on-surface-muted mt-0.5">
+              <p className="text-base text-on-surface-muted mt-2">
                 Inserts one randomly-generated application (based on the sample
                 templates) into the queue in &quot;pending&quot; status. Use
                 this when you want to test the pre-analysis or review flow on a
@@ -283,17 +283,17 @@ export default function SettingsPage() {
             <button
               onClick={handleAddMock}
               disabled={adding}
-              className="shrink-0 text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50">
-              {adding ? "Adding…" : "+ Add mock application"}
+              className="shrink-0 px-4 py-3 text-base font-semibold border-2 border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary whitespace-nowrap">
+              {adding ? "Adding…" : "+ Add mock"}
             </button>
           </div>
 
-          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border border-outline bg-surface-card">
+          <div className="flex items-start justify-between gap-6 p-5 rounded-lg border border-outline bg-surface-card">
             <div>
-              <p className="text-sm font-medium text-on-surface">
+              <p className="text-base font-semibold text-on-surface">
                 Run pre-analysis now
               </p>
-              <p className="text-sm text-on-surface-muted mt-0.5">
+              <p className="text-base text-on-surface-muted mt-2">
                 Normally, pending applications are pre-analyzed automatically.
                 This button lets you trigger that analysis on demand using the
                 OCR provider selected above, instead of waiting — useful when
@@ -304,17 +304,17 @@ export default function SettingsPage() {
             <button
               onClick={handleAnalyze}
               disabled={analyzing || pendingCount === 0}
-              className="shrink-0 text-xs px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50">
+              className="shrink-0 px-4 py-3 text-base font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary whitespace-nowrap">
               {analyzing ?
                 "Analyzing…"
-              : `Run pre-analysis now (${pendingCount} pending)`}
+              : `Run pre-analysis (${pendingCount})`}
             </button>
           </div>
         </div>
 
         {devMessage && (
           <p
-            className={`mt-3 text-sm ${devMessage.ok ? "text-bp-success" : "text-bp-warning"}`}>
+            className={`mt-4 text-base font-semibold ${devMessage.ok ? "text-bp-success" : "text-bp-warning"}`}>
             {devMessage.text}
           </p>
         )}
