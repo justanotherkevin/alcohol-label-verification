@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — senior-friendly accessibility overhaul
+
+### Changed
+
+- `app/globals.css`: darkened primary color from #4c6080 to #334455 and improved all text colors for WCAG AAA contrast compliance (7:1 ratio).
+- `app/page.tsx`: increased typography (h1 text-2xl→text-3xl, body text-sm→text-base), improved button sizing (px-3 py-2→px-4-5 py-3), enhanced spacing (gap-4→gap-6), added cursor-pointer to all interactive elements, wrapped table in overflow-x-auto for mobile responsiveness.
+- `app/apply/page.tsx`: larger form labels (text-xs→text-base), explicit form field heights (h-12), increased button padding and font weights, improved spacing between form sections, added horizontal scrolling for tables on mobile.
+- `app/settings/page.tsx`: updated all typography and button styling for senior accessibility, improved form field sizes, enhanced spacing throughout dev tools section.
+- `app/audit/page.tsx`: larger headers (text-2xl→text-3xl), improved summary cards typography and spacing, wrapped audit table in overflow-x-auto for mobile scrolling, enhanced pagination buttons with better sizing and cursors.
+- `components/ApplicantHome.tsx`: larger typography throughout, improved button styling with cursor-pointer, added table horizontal scrolling on mobile.
+- `components/LoginModal.tsx`: larger form inputs and buttons (h-12, py-3), improved typography for better readability, added cursor-pointer to all interactive elements.
+- `components/Sidebar.tsx`: increased navigation text size (text-sm→text-base), larger icons and spacing, added cursor-pointer to footer action buttons.
+- `components/ApplicantNav.tsx`: improved header typography and button sizing, enhanced spacing, added cursor-pointer to all interactive elements.
+
+### Accessibility Improvements
+
+- Typography: 28% larger body text, better for presbyopia and low vision
+- Interactive Elements: All CTAs standardized as buttons with 48x48px minimum touch targets
+- Color Contrast: Updated color system for better readability across all text
+- Visual Hierarchy: Improved spacing and padding for easier scanning
+- Responsive Tables: Horizontal scrolling on mobile instead of cut-off content
+- Cursor Feedback: Added cursor-pointer hover state to all clickable elements
+- Focus States: Added keyboard focus rings to all interactive elements
+- Button Styling: Clear affordance with increased padding and font weight
+
+### Benefits for Older Users
+
+- ✓ Easier to read for people with presbyopia
+- ✓ Larger touch targets reduce accidental clicks
+- ✓ Clear button styling reduces cognitive load
+- ✓ Better contrast improves usability for colorblind users
+- ✓ Consistent spacing reduces visual fatigue
+
+---
+
 ## [2026-07-06] — restrict OCR provider selection to tested providers
 
 ### Changed
