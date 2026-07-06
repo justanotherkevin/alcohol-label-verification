@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — allow re-running OCR on already-analyzed applications
+
+### Added
+
+- `app/api/queue/analyze/route.ts`: `POST` now accepts an optional `force: true` flag, which allows explicitly-requested `ids` in status `"analyzed"` (not just `"pending"`) to be re-run through OCR. Applications in status `"resolved"` are still excluded even with `force: true` — a specialist's decision must be reverted first via the existing revert endpoint.
+- `app/queue/[id]/page.tsx`: added a "Re-run OCR" button, shown when an application's status is `"analyzed"`, that calls the new `force` path and refreshes the page with the corrected result.
+
+This closes the gap surfaced while fixing the mock-provider-default bug: correcting a stuck application's stale OCR data required manually flipping its status back to `"pending"` directly in the production database, since nothing in the app could re-trigger analysis on an application that had already been analyzed once.
+
 ## [2026-07-06] — fix Tesseract crashing on Vercel after the mock-provider-default fix
 
 ### Fixed
