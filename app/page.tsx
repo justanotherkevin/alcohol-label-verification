@@ -175,30 +175,16 @@ export default function DashboardPage() {
           onDismiss={() => setToastMessage(null)}
         />
       )}
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1
-            className="text-3xl font-bold text-on-surface"
-            style={{ fontFamily: "var(--font-inter)" }}>
-            Verification Queue
-          </h1>
-          <p className="text-base text-on-surface-muted mt-2">
-            TTB COLA applications awaiting specialist review — AI pre-analysis
-            runs ahead of you.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          {selected.size > 0 && (
-            <button
-              onClick={handleStartBatchReview}
-              disabled={startingBatch}
-              className="px-5 py-3 text-base font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary whitespace-nowrap">
-              {startingBatch ?
-                "Starting…"
-              : `Start batch review (${selected.size})`}
-            </button>
-          )}
-        </div>
+      <div className="mb-8">
+        <h1
+          className="text-3xl font-bold text-on-surface"
+          style={{ fontFamily: "var(--font-inter)" }}>
+          Verification Queue
+        </h1>
+        <p className="text-base text-on-surface-muted mt-2">
+          TTB COLA applications awaiting specialist review — AI pre-analysis
+          runs ahead of you.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -235,12 +221,22 @@ export default function DashboardPage() {
       </div>
 
       <div className="bg-surface-card border border-outline rounded-2xl overflow-hidden flex flex-col">
-        <div className="px-6 py-5 border-b border-outline">
+        <div className="px-6 py-5 border-b border-outline flex items-center justify-between">
           <h2
             className="text-lg font-semibold text-on-surface"
             style={{ fontFamily: "var(--font-inter)" }}>
             Pending Applications
           </h2>
+          {selected.size > 0 && (
+            <button
+              onClick={handleStartBatchReview}
+              disabled={startingBatch}
+              className="px-5 py-3 text-base font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary whitespace-nowrap">
+              {startingBatch ?
+                "Starting…"
+              : `Start batch review (${selected.size})`}
+            </button>
+          )}
         </div>
         {loading ?
           <p className="px-6 py-8 text-base text-on-surface-muted">

@@ -23,18 +23,18 @@ export default function ApplicantNav({
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-outline bg-surface-dim">
-      <div className="max-w-4xl mx-auto px-8 py-4 flex items-center justify-between gap-6">
+    <header className="sticky top-0 z-10 border-b border-outline bg-surface-card/90 backdrop-blur supports-[backdrop-filter]:bg-surface-card/70 shadow-sm">
+      <div className="max-w-5xl mx-auto px-8 py-4 flex items-center justify-between gap-6">
         <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-2xl">
-              verified
+          <div className="flex items-center gap-2.5">
+            <span className="flex items-center justify-center size-9 rounded-lg bg-primary text-white">
+              <span className="material-symbols-outlined text-xl">verified</span>
             </span>
             <p className="text-sm font-bold text-primary tracking-widest uppercase">
               TTB
             </p>
           </div>
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-1.5">
             {NAV_ITEMS.map(({ href, label }) => {
               const active = pathname === href;
               return (
@@ -44,8 +44,8 @@ export default function ApplicantNav({
                   aria-current={active ? "page" : undefined}
                   className={`px-4 py-2.5 rounded-lg text-base font-semibold transition-colors cursor-pointer ${
                     active ?
-                      "bg-primary text-white"
-                    : "text-on-surface-dim hover:bg-outline hover:text-on-surface"
+                      "bg-primary text-white shadow-sm"
+                    : "text-on-surface-dim hover:bg-surface-dim hover:text-on-surface"
                   }`}>
                   {label}
                 </Link>
@@ -54,15 +54,20 @@ export default function ApplicantNav({
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <p className="text-base text-on-surface-muted whitespace-nowrap">
-            Signed in as{" "}
-            <span className="font-semibold text-on-surface">
-              {applicant.name}
+          <div className="flex items-center gap-3 pl-1">
+            <span className="flex items-center justify-center size-8 rounded-full bg-surface-dim text-on-surface-dim text-sm font-bold uppercase">
+              {applicant.name.charAt(0)}
             </span>
-          </p>
+            <p className="text-base text-on-surface-muted whitespace-nowrap hidden sm:block">
+              Signed in as{" "}
+              <span className="font-semibold text-on-surface">
+                {applicant.name}
+              </span>
+            </p>
+          </div>
           <button
             onClick={onSwitchUser}
-            className="px-4 py-2.5 text-base font-semibold border-2 border-outline rounded-lg text-on-surface-dim hover:bg-surface transition-colors cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
+            className="px-4 py-2.5 text-base font-semibold border-2 border-outline rounded-lg text-on-surface-dim hover:bg-surface-dim hover:border-outline-variant transition-colors cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
             Switch user
           </button>
           {/* <button
