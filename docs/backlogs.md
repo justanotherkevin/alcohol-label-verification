@@ -140,3 +140,20 @@ Still worth checking separately if preview deployments recur: whether Vercel's P
 - Local dev setup changes from a plain Postgres container to the Supabase CLI stack — a bigger onboarding/tooling change than it sounds, and diverges further from "just Docker Postgres" if that simplicity was intentional
 - No functional bug is being fixed — purely a bet on future Supabase-feature needs or RLS posture, both of which can also be addressed narrowly (e.g. RLS can be enabled today with a service-role-only policy without touching the `pg` client at all)
 - Existing integration tests (`app/api/queue/*.test.ts`, `lib/queue/store.test.ts`) run directly against Postgres today; they'd need the local Supabase stack running to pass post-migration
+
+---
+
+## Guardrail against schema drift between local and production DB
+
+**Why:** This has now caused production 500s twice — once when `scripts/init-db.sql` had never been run against production at all (2026-07-04, see CHANGELOG), and again on 2026-07-06 when the `batch_runs` table (added for the batch-review cron feature) was created locally but never applied to the production Supabase database, causing `GET /api/queue` to throw `relation "batch_runs" does not exist` and 500. Both times the bug shipped silently because nothing checks that the schema a deploy's code expects actually exists in the target database.
+
+**Affected files:**
+
+- `scripts/init-db.sql` — currently a single hand-run, drop-and-recreate script with no tracking of what's been applied where; would need to become incremental numbered migrations (e.g. `scripts/migrations/0001_init.sql`, `0002_add_batch_runs.sql`) run through a tool that tracks applied versions (Supabase CLI `supabase db push`, or `node-pg-migrate`)
+- CI/deploy pipeline (currently no migration step) — would need a required step that runs migrations against `DATABASE_URL` before/as part of deploy, so a deploy can't ship code expecting a table that was never created
+- Optionally, a `/api/health` route that touches every table the app depends on, hit automatically against preview deployments to fail the build before it reaches production
+
+**Findings:**
+
+- Minimum viable version without adopting a full migration framework: keep incremental SQL files in `scripts/migrations/`, and add a one-line CI check (e.g. `psql $DATABASE_URL -c "\dt"` diffed against the expected table list) that fails the deploy if any expected table is missing
+- Separately (not a guardrail, still open): `app/page.tsx`'s `loadQueue()` has no error handling around the fetch/`res.json()` call, so a 500 from `/api/queue` leaves the UI stuck on "Loading queue…" forever with no visible error — masking the underlying DB issue from the user entirely instead of surfacing a retry/error state
