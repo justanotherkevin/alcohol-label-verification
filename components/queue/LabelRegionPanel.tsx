@@ -106,7 +106,7 @@ export function LabelRegionPanel({
 
   return (
     <div className="bg-surface-card rounded-lg p-6 flex flex-col gap-4 h-full">
-      <p className="text-xs uppercase tracking-wide text-on-surface-muted">
+      <p className="text-sm uppercase tracking-wide text-on-surface-muted">
         Label region · Field {fieldNumber}
       </p>
 
@@ -127,11 +127,11 @@ export function LabelRegionPanel({
         <div
           className="rounded-lg bg-outline/20 border border-outline flex items-center justify-center"
           style={{ height: CANVAS_HEIGHT }}>
-          <p className="text-sm text-on-surface-dim px-6 text-center">No location found on label</p>
+          <p className="text-base text-on-surface-dim px-6 text-center">No location found on label</p>
         </div>
       )}
 
-      <p className="text-center text-sm font-mono text-on-surface">{extractedText ?? "not found"}</p>
+      <p className="text-center text-base font-mono text-on-surface">{extractedText ?? "not found"}</p>
 
       <div className="flex gap-3 overflow-x-auto pb-2">
         {images.map((image, idx) => (

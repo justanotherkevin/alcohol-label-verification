@@ -48,6 +48,12 @@ interface OverrideEntry {
   decision: OverrideDecision;
 }
 
+const SETTINGS_KEY = "ttb-ocr-settings";
+
+function flaggedFieldCount(application: QueueApplicationDetail): number {
+  return (application.ocrData?.result.fields ?? []).filter(isFieldFlagged).length;
+}
+
 export default function QueueDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -83,6 +89,9 @@ export default function QueueDetailPage() {
       .then((res) => res.json())
       .then((data: { application: QueueApplicationDetail }) => {
         setApp(data.application);
+        // Land on the Summary slide first — it's the most useful starting
+        // point for a reviewer picking up an application.
+        setCurrentStepIndex(flaggedFieldCount(data.application));
         setLoading(false);
       });
   }, [params.id]);
@@ -92,9 +101,21 @@ export default function QueueDetailPage() {
     setReanalyzing(true);
     setReanalyzeError(null);
     try {
+      let settings: { provider?: string; apiKey?: string } = {};
+      try {
+        settings = JSON.parse(
+          localStorage.getItem(SETTINGS_KEY) ?? "{}",
+        ) as typeof settings;
+      } catch {
+        /* ignore malformed localStorage */
+      }
       const res = await fetch("/api/queue/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Ocr-Provider": settings.provider ?? "tesseract",
+          ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
+        },
         body: JSON.stringify({ ids: [app.id], force: true }),
       });
       if (!res.ok) {
@@ -106,7 +127,7 @@ export default function QueueDetailPage() {
         application: QueueApplicationDetail;
       };
       setApp(data.application);
-      setCurrentStepIndex(0);
+      setCurrentStepIndex(flaggedFieldCount(data.application));
       setPinnedFieldKey(null);
       setActionedFields(new Set());
       setOverrides({});
@@ -252,6 +273,13 @@ export default function QueueDetailPage() {
     setCurrentStepIndex(totalFlagged);
   }
 
+  // Always-available header button: steps forward one flagged field at a
+  // time, wrapping from the Summary slide back to the first flagged field.
+  function handleCycleField() {
+    setPinnedFieldKey(null);
+    setCurrentStepIndex((i) => (i >= totalFlagged ? 0 : i + 1));
+  }
+
   function handleViewField(fieldKey: string) {
     const flaggedIndex = flaggedFieldKeys.indexOf(fieldKey);
     if (flaggedIndex >= 0) {
@@ -346,13 +374,13 @@ export default function QueueDetailPage() {
 
   if (loading)
     return (
-      <div className="px-8 py-8 text-sm text-on-surface-muted">
+      <div className="px-8 py-8 text-base text-on-surface-muted">
         Loading application…
       </div>
     );
   if (!app)
     return (
-      <div className="px-8 py-8 text-sm text-bp-error">
+      <div className="px-8 py-8 text-base text-bp-error">
         Application not found.
       </div>
     );
@@ -368,12 +396,12 @@ export default function QueueDetailPage() {
             style={{ fontFamily: "var(--font-inter)" }}>
             {app.applicationData.brandName}
           </h1>
-          <p className="text-sm text-on-surface-muted mt-1">
+          <p className="text-base text-on-surface-muted mt-1">
             {app.id} · {app.applicant} · submitted{" "}
             {new Date(app.submittedAt).toLocaleString()}
           </p>
           {batchIndex >= 0 && (
-            <p className="text-xs text-primary font-medium mt-2">
+            <p className="text-sm text-primary font-medium mt-2">
               Batch review — application {batchIndex + 1} of {batchIds.length}
             </p>
           )}
@@ -383,11 +411,11 @@ export default function QueueDetailPage() {
             <button
               onClick={handleReanalyze}
               disabled={reanalyzing}
-              className="cursor-pointer px-4 py-2 border border-outline text-on-surface-dim text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+              className="cursor-pointer px-4 py-2 border border-outline text-on-surface-dim text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
               {reanalyzing ? "Re-running OCR…" : "Re-run OCR"}
             </button>
             {reanalyzeError && (
-              <p className="text-xs text-bp-error font-semibold mt-2 max-w-xs">
+              <p className="text-sm text-bp-error font-semibold mt-2 max-w-xs">
                 {reanalyzeError}
               </p>
             )}
@@ -396,7 +424,7 @@ export default function QueueDetailPage() {
       </div>
 
       {!app.ocrData && (
-        <p className="text-sm text-on-surface-muted">
+        <p className="text-base text-on-surface-muted">
           This application has not been analyzed yet. Run pre-analysis from the
           queue screen first.
         </p>
@@ -414,6 +442,7 @@ export default function QueueDetailPage() {
             selectedFieldKey={displayedFieldKey}
             onSelectField={handleViewField}
             onSkipToSummary={handleSkipToSummary}
+            onNextField={handleCycleField}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2">
@@ -509,7 +538,7 @@ export default function QueueDetailPage() {
         <div className="mt-8 border-t border-outline pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-on-surface">
+              <p className="text-base font-medium text-on-surface">
                 {app.reviewData.resolution.decision === "approved" ?
                   "Approved"
                 : "Rejected"}{" "}
@@ -518,25 +547,25 @@ export default function QueueDetailPage() {
                   specialistNameById(app.reviewData.resolution.specialistId)
                 : "Unknown"}
               </p>
-              <p className="text-xs text-on-surface-muted mt-1">
+              <p className="text-sm text-on-surface-muted mt-1">
                 {new Date(
                   app.reviewData.resolution.resolvedAt,
                 ).toLocaleString()}
               </p>
               {app.reviewData.resolution.note && (
-                <p className="text-sm text-on-surface-dim mt-2">
+                <p className="text-base text-on-surface-dim mt-2">
                   {app.reviewData.resolution.note}
                 </p>
               )}
             </div>
             <button
               onClick={() => setRevertConfirmOpen(true)}
-              className="cursor-pointer px-4 py-2 border border-outline text-on-surface-dim text-sm font-semibold rounded-lg">
+              className="cursor-pointer px-4 py-2 border border-outline text-on-surface-dim text-base font-semibold rounded-lg">
               Revert to Queue
             </button>
           </div>
           {revertError && (
-            <div className="mt-4 bg-bp-error-surface border border-bp-error-border text-bp-error rounded-lg px-4 py-3 text-sm">
+            <div className="mt-4 bg-bp-error-surface border border-bp-error-border text-bp-error rounded-lg px-4 py-3 text-base">
               {revertError}
             </div>
           )}

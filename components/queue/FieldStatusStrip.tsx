@@ -25,6 +25,7 @@ interface FieldStatusStripProps {
   selectedFieldKey: string | null;
   onSelectField: (fieldKey: string) => void;
   onSkipToSummary: () => void;
+  onNextField: () => void;
 }
 
 export function FieldStatusStrip({
@@ -37,6 +38,7 @@ export function FieldStatusStrip({
   selectedFieldKey,
   onSelectField,
   onSkipToSummary,
+  onNextField,
 }: FieldStatusStripProps) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-outline bg-surface-dim px-6 py-5">
@@ -64,13 +66,22 @@ export function FieldStatusStrip({
           : `${currentFlaggedIndex + 1} / ${totalFlagged} — showing flagged first`}
         </span>
       </div>
-      {!atSummary && totalFlagged > 0 && (
-        <button
-          onClick={onSkipToSummary}
-          className="cursor-pointer shrink-0 px-4 py-2.5 border border-outline rounded-lg text-base font-medium text-on-surface-dim hover:text-on-surface">
-          Skip to summary
-        </button>
-      )}
+      <div className="flex items-center gap-2 shrink-0">
+        {totalFlagged > 0 && (
+          <button
+            onClick={onNextField}
+            className="cursor-pointer px-4 py-2.5 bg-primary text-white rounded-lg text-base font-medium hover:bg-primary-hover">
+            Next field →
+          </button>
+        )}
+        {!atSummary && totalFlagged > 0 && (
+          <button
+            onClick={onSkipToSummary}
+            className="cursor-pointer px-4 py-2.5 border border-outline rounded-lg text-base font-medium text-on-surface-dim hover:text-on-surface">
+            Skip to summary
+          </button>
+        )}
+      </div>
     </div>
   );
 }

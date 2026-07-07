@@ -27,18 +27,18 @@ export function DenyNoteModal({ open, submitting, onConfirm, onClose }: DenyNote
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Rejection note (required)…"
-          className="w-full border border-outline rounded-lg px-3 py-2 text-sm bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full border border-outline rounded-lg px-3 py-2 text-base bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="cursor-pointer text-xs px-3 py-2 border border-outline rounded-lg text-on-surface-dim">
+            className="cursor-pointer text-sm px-3 py-2 border border-outline rounded-lg text-on-surface-dim">
             Cancel
           </button>
           <button
             onClick={() => onConfirm(note)}
             disabled={!note.trim() || submitting}
-            className="cursor-pointer text-xs px-3 py-2 bg-bp-error text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+            className="cursor-pointer text-sm px-3 py-2 bg-bp-error text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
             Confirm Deny
           </button>
         </div>
