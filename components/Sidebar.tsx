@@ -19,6 +19,8 @@ type NavItem = { href: string; icon: string; label: string };
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/", icon: "inbox", label: "Queue" },
+  { href: "/queue/new", icon: "add", label: "New Application" },
+  { href: "/batch", icon: "upload", label: "Batch Upload" },
   { href: "/audit", icon: "history", label: "Audit Log" },
   { href: "/settings", icon: "settings", label: "Settings" },
 ];

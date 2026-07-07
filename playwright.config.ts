@@ -25,5 +25,10 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
+    // Batch-upload E2E fixtures are served from this same localhost dev
+    // server; the real SSRF guard (lib/uploads/fetch-external-image.ts)
+    // would otherwise reject them as a private/loopback address. Only ever
+    // set for this Playwright-launched process.
+    env: { ALLOW_LOOPBACK_FETCH_IN_TESTS: 'true' },
   },
 });

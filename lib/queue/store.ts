@@ -127,6 +127,8 @@ async function assembleApplication(
       status: app.status,
       ocrData,
       reviewData,
+      batchId: app.batch_id ?? undefined,
+      errorMessage: app.error_message ?? undefined,
     };
   } finally {
     client.release();
@@ -141,8 +143,8 @@ async function insertApplication(app: QueueApplication): Promise<void> {
     await client.query("BEGIN");
 
     await client.query(
-      `INSERT INTO applications (id, applicant, submitted_at, status) VALUES ($1, $2, $3, $4)`,
-      [app.id, app.applicant, app.submittedAt, app.status],
+      `INSERT INTO applications (id, applicant, submitted_at, status, batch_id) VALUES ($1, $2, $3, $4, $5)`,
+      [app.id, app.applicant, app.submittedAt, app.status, app.batchId ?? null],
     );
 
     await client.query(
@@ -222,8 +224,15 @@ export async function listQueue(
 ): Promise<QueuePage> {
   // Applicant-scoped queries (the applicant portal home screen) show that
   // applicant's full history, including resolved applications; the specialist
-  // queue otherwise only ever shows active (unresolved) work.
-  const whereClause = applicant ? `a.applicant = $1` : `a.status != 'resolved'`;
+  // queue otherwise only ever shows active (unresolved) work. Batch-upload
+  // rows still awaiting their turn in the chunk runner (batch_id set,
+  // status still 'pending') are intake-stage only — they're not yet
+  // reviewable and shouldn't inflate the dashboard's pending count; they
+  // appear once the batch runner moves them to 'analyzed' (flagged) or
+  // resolves them (clean/auto-approved).
+  const whereClause =
+    applicant ? `a.applicant = $1`
+    : `a.status != 'resolved' AND (a.batch_id IS NULL OR a.status != 'pending')`;
   const params = applicant ? [applicant] : [];
   const { rows } = await pool.query(
     `
@@ -321,11 +330,19 @@ export async function updateApplication(
       ]);
     }
 
+    if (patch.errorMessage !== undefined) {
+      await client.query(
+        `UPDATE applications SET error_message = $1 WHERE id = $2`,
+        [patch.errorMessage, id],
+      );
+    }
+
     if (patch.images) {
       for (const [i, img] of patch.images.entries()) {
         await client.query(
-          `UPDATE application_images SET raw_ocr_text = $1 WHERE application_id = $2 AND position = $3`,
-          [img.rawOcrText ?? null, id, i],
+          `UPDATE application_images SET image_path = $1, mime_type = $2, raw_ocr_text = $3
+           WHERE application_id = $4 AND position = $5`,
+          [img.path, img.mimeType, img.rawOcrText ?? null, id, i],
         );
       }
     }
@@ -367,8 +384,12 @@ export async function updateApplication(
 }
 
 export async function unanalyzedApplications(): Promise<QueueApplication[]> {
+  // Batch-upload rows (batch_id IS NOT NULL) are processed exclusively by the
+  // batch chunk runner, never by the cron/manual pre-analysis trigger — they
+  // may be analyzed with a different provider than the cron's default, and
+  // double-processing would race the two paths against the same row.
   const { rows } = await pool.query(
-    `SELECT id FROM applications WHERE status = 'pending'`,
+    `SELECT id FROM applications WHERE status = 'pending' AND batch_id IS NULL`,
   );
   return Promise.all(
     rows.map((r) => assembleApplication(r.id).then((a) => a!)),
@@ -464,6 +485,10 @@ export async function listResolvedApplications(): Promise<QueueApplication[]> {
 
 export async function resetQueue(): Promise<void> {
   await pool.query(`DELETE FROM applications WHERE id LIKE 'demo-%'`);
+  // Also clears any batch-upload test/demo data (id prefix "batch-") and its
+  // parent submission_batches rows, so repeated batch-upload testing doesn't
+  // accumulate stale rows across resets.
+  await pool.query(`DELETE FROM submission_batches WHERE id LIKE 'batch-%'`);
   const { SEED_APPLICATIONS } = await import("./seed-data");
   for (const app of SEED_APPLICATIONS) {
     await insertApplication(app);
@@ -503,4 +528,198 @@ export async function getLastBatchRun(): Promise<BatchRun | null> {
     analyzedCount: row.analyzed_count,
     completedAt: row.completed_at,
   };
+}
+
+// ── Submission batches (Flow 2, CSV batch upload) ─────────────────────────────
+// Unrelated to batch_runs above, which logs OCR pre-analysis sweeps, not
+// importer submissions.
+
+export interface CsvRowError {
+  row: number;
+  message: string;
+}
+
+export interface SubmissionBatch {
+  id: string;
+  uploadedAt: string;
+  filename: string | null;
+  totalCount: number;
+  ocrProvider: string;
+  status: "processing" | "completed";
+  skippedRows: CsvRowError[];
+}
+
+export async function createSubmissionBatch(batch: {
+  id: string;
+  filename: string | null;
+  totalCount: number;
+  ocrProvider: string;
+  skippedRows: CsvRowError[];
+}): Promise<void> {
+  await pool.query(
+    `INSERT INTO submission_batches (id, uploaded_at, filename, total_count, ocr_provider, status, skipped_rows)
+     VALUES ($1, $2, $3, $4, $5, 'processing', $6)`,
+    [
+      batch.id,
+      new Date().toISOString(),
+      batch.filename,
+      batch.totalCount,
+      batch.ocrProvider,
+      JSON.stringify(batch.skippedRows),
+    ],
+  );
+}
+
+export async function getSubmissionBatch(
+  id: string,
+): Promise<SubmissionBatch | undefined> {
+  const { rows } = await pool.query(
+    `SELECT * FROM submission_batches WHERE id = $1`,
+    [id],
+  );
+  if (!rows.length) return undefined;
+  const row = rows[0];
+  return {
+    id: row.id,
+    uploadedAt: row.uploaded_at,
+    filename: row.filename,
+    totalCount: row.total_count,
+    ocrProvider: row.ocr_provider,
+    status: row.status,
+    skippedRows: row.skipped_rows,
+  };
+}
+
+export async function completeSubmissionBatch(id: string): Promise<void> {
+  await pool.query(
+    `UPDATE submission_batches SET status = 'completed' WHERE id = $1`,
+    [id],
+  );
+}
+
+export interface BatchCounts {
+  total: number;
+  pending: number;
+  flagged: number;
+  clean: number;
+  resolvedApproved: number;
+  resolvedRejected: number;
+  errors: number;
+}
+
+export async function getBatchCounts(batchId: string): Promise<BatchCounts> {
+  const { rows } = await pool.query(
+    `SELECT a.status, a.error_message, r.decision, r.note
+     FROM applications a
+     LEFT JOIN resolutions r ON r.application_id = a.id
+     WHERE a.batch_id = $1`,
+    [batchId],
+  );
+
+  const counts: BatchCounts = {
+    total: rows.length,
+    pending: 0,
+    flagged: 0,
+    clean: 0,
+    resolvedApproved: 0,
+    resolvedRejected: 0,
+    errors: 0,
+  };
+
+  for (const row of rows) {
+    if (row.error_message) {
+      counts.errors++;
+    } else if (row.status === "resolved") {
+      if (row.note?.startsWith("Auto-approved:")) counts.clean++;
+      else if (row.decision === "approved") counts.resolvedApproved++;
+      else counts.resolvedRejected++;
+    } else if (row.status === "analyzed") {
+      counts.flagged++;
+    } else {
+      counts.pending++;
+    }
+  }
+
+  return counts;
+}
+
+/** Up to `limit` rows in this batch still awaiting OCR analysis. Always
+ * re-derived from the DB so chunk processing is resumable across reloads. */
+export async function pendingBatchApplicationIds(
+  batchId: string,
+  limit: number,
+): Promise<string[]> {
+  const { rows } = await pool.query(
+    `SELECT id FROM applications
+     WHERE batch_id = $1 AND status = 'pending' AND error_message IS NULL
+     LIMIT $2`,
+    [batchId, limit],
+  );
+  return rows.map((r) => r.id);
+}
+
+/** Ids of rows in this batch still flagged (status 'analyzed', not yet
+ * resolved) — used to launch a "Start batch review" session covering every
+ * flagged row from a single CSV upload. */
+export async function flaggedBatchApplicationIds(
+  batchId: string,
+): Promise<string[]> {
+  const { rows } = await pool.query(
+    `SELECT id FROM applications WHERE batch_id = $1 AND status = 'analyzed'`,
+    [batchId],
+  );
+  return rows.map((r) => r.id);
+}
+
+export async function countPendingBatchApplications(
+  batchId: string,
+): Promise<number> {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*)::int AS count FROM applications
+     WHERE batch_id = $1 AND status = 'pending' AND error_message IS NULL`,
+    [batchId],
+  );
+  return rows[0].count;
+}
+
+export interface BatchExportRow {
+  id: string;
+  brandName: string;
+  abv: string;
+  netContents: string;
+  governmentWarning: string;
+  verdict: string;
+}
+
+export async function listBatchExportRows(
+  batchId: string,
+): Promise<BatchExportRow[]> {
+  const { rows } = await pool.query(
+    `SELECT a.id, a.status, a.error_message, ad.brand_name, ad.abv, ad.net_contents,
+            ad.government_warning, r.decision, r.note
+     FROM applications a
+     LEFT JOIN application_data ad ON ad.application_id = a.id
+     LEFT JOIN resolutions r ON r.application_id = a.id
+     WHERE a.batch_id = $1
+     ORDER BY a.submitted_at`,
+    [batchId],
+  );
+
+  return rows.map((row) => {
+    let verdict = "Pending Review";
+    if (row.error_message) verdict = "Error";
+    else if (row.status === "resolved") {
+      if (row.note?.startsWith("Auto-approved:")) verdict = "Passed";
+      else verdict = row.decision === "approved" ? "Approved" : "Rejected";
+    } else if (row.status === "pending") verdict = "Not Yet Processed";
+
+    return {
+      id: row.id,
+      brandName: row.brand_name ?? "",
+      abv: row.abv ?? "",
+      netContents: row.net_contents ?? "",
+      governmentWarning: row.government_warning ?? "",
+      verdict,
+    };
+  });
 }
