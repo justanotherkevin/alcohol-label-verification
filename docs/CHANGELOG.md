@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — fix batch review button UX and add label overview for clean-pass review
+
+### Fixed
+
+- `app/page.tsx`: the queue's selection-action button always read "Start batch review (N)", even with a single application selected. Now shows "Start review" for a single selection and reserves the "batch" wording/count for more than one.
+- `app/page.tsx`: the per-row "Review" button used `bg-surface-dim`, the same color the table row switches to on hover, making the button disappear into the row. Changed it to `bg-primary`/`hover:bg-primary-hover` to match the header's primary action styling and stay visible.
+
+### Added
+
+- `components/queue/LabelOverviewPanel.tsx`: a "clean pass" application (no flagged fields) previously showed an empty "Review complete — see summary" placeholder on the review screen. This new panel instead renders every label image with all fields' bounding boxes overlaid (color-coded, with a legend), reusing the existing image-expand modal, so a specialist can still see and click into the label evidence even when nothing needs review.
+
 ## [2026-07-06] — allow re-running OCR on already-analyzed applications
 
 ### Added
