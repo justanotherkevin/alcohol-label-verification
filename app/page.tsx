@@ -231,7 +231,9 @@ export default function DashboardPage() {
               className="px-5 py-3 text-base font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary whitespace-nowrap">
               {startingBatch ?
                 "Starting…"
-              : `Start batch review (${selected.size})`}
+              : selected.size > 1 ?
+                `Start batch review (${selected.size})`
+              : "Start review"}
             </button>
           )}
         </div>
@@ -310,7 +312,7 @@ export default function DashboardPage() {
                           onClick={() =>
                             (window.location.href = `/queue/${item.id}`)
                           }
-                          className="px-4 py-2 text-base font-semibold bg-surface-dim text-on-surface hover:bg-outline transition-colors rounded-lg cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
+                          className="px-4 py-2 text-base font-semibold bg-primary text-white hover:bg-primary-hover transition-colors rounded-lg cursor-pointer focus:outline-2 focus:outline-offset-2 focus:outline-primary">
                           Review
                         </button>
                       }
