@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-07] — reintroduce CSV batch upload and add specialist-initiated application creation
+
+Batch upload (Flow 2 of `docs/users-flow.md`) was built once, then deliberately removed (`dafa627`, "replace bulk-upload batch page with queue selection-based batch review") on the reasoning that "batch" should mean reviewing already-queued applications, not bulk-uploading new ones. Re-reading the user-flow doc's persona table more carefully: Janet is listed as a **"Compliance agent, high-volume importer handling"** — the same role category as Jenny and Dave, not a self-service importer. That reframes Flow 2 as a specialist-initiated intake path, not something in conflict with the existing multi-select queue-review flow. This reintroduces batch upload on that basis, and extends the same reasoning to single-application creation.
+
+### Added
+
+- `app/batch/page.tsx`, `app/api/batch/*`, `lib/batch/csv.ts`, `lib/batch/pool.ts`, `lib/batch/runner.ts`: CSV batch upload. Each row carries application data plus `front_image_url`/`back_image_url` columns; images are importer-supplied HTTPS URLs fetched server-side. Processing runs through a concurrency-limited pool (not sequential), clean-pass rows auto-resolve via the existing `Resolution` mechanism, and flagged rows land in the normal specialist queue exactly like any other application. A `submission_batches` table (`scripts/init-db.sql`) tracks each upload so progress/summary/export survive a page reload.
+- `lib/uploads/fetch-external-image.ts`: SSRF-safe fetch for those importer-supplied image URLs — HTTPS-only, blocks DNS-resolved private/loopback/link-local addresses (including the cloud metadata IP), fetch timeout, content-type allowlist, streamed size cap (not trusting `Content-Length`), and magic-byte verification against a spoofed content-type.
+- `app/batch/page.tsx`: "Start batch review (N)" button, shown once a CSV finishes processing, that launches the existing multi-select queue-review session (`?batch=id1,id2,...`) pre-populated with every flagged row from that upload, so a specialist can resolve a batch's flagged rows in one sitting without manually re-selecting them from the dashboard.
+- `components/batch/CsvDropzone.tsx`: drag-and-drop CSV upload zone (click-to-browse fallback, drag-over/file-selected states, rejects non-CSV drops inline).
+- `components/ApplicationCreationFlow.tsx`, `app/queue/new/page.tsx`: specialist-initiated single application creation, alongside the existing applicant self-service flow at `/apply` (`app/apply/page.tsx`, refactored to share the same component). The specialist flow adds a free-text "Applicant / Bottler Name" field (pre-filled from the picked label's bottler) since a specialist is creating this on behalf of an importer, and redirects straight into `/queue/[id]` on submit rather than the applicant flow's confirmation screen.
+- `public/batch-template.csv`: downloadable example CSV linked from the upload page.
+- 25 new unit tests (CSV parsing, the concurrency pool, the SSRF-guarded fetch, row classification) and a new `tests/batch-upload.spec.ts` E2E spec covering upload → process → queue → resolve → export → "Start batch review".
+
+### Changed
+
+- `lib/uploads.ts`, `lib/uploads/constants.ts` (new): the image size cap dropped from 8MB to 1MB, enforced both client-side (`ApplicationCreationFlow.tsx`, before a file is even uploaded) and server-side (`/api/uploads`, the batch CSV image fetch) against a single shared constant. Split the pure constants (`MAX_IMAGE_BYTES`, `ALLOWED_IMAGE_MIME_TYPES`, `EXTENSION_BY_MIME_TYPE`) into `lib/uploads/constants.ts` with no Node built-ins, so a client component can import the cap without pulling `fs`/`path`/`@vercel/blob` into the browser bundle.
+- `lib/queue/store.ts`: `listQueue` now excludes batch rows still awaiting their turn in the chunk runner (`batch_id` set, `status = 'pending'`) from the pending-count/queue table — they're intake-stage only, not yet reviewable. `unanalyzedApplications()` (the pre-analysis cron/manual-trigger query) similarly excludes batch rows, so they're processed only by the batch chunk runner and never double-processed by the cron with a possibly different OCR provider. `resetQueue()` now also clears batch-upload test data (`submission_batches` rows, id prefix `batch-`) so repeated batch testing doesn't accumulate stale rows.
+- `components/queue/FieldStatusStrip.tsx`: the application-id/status-dots/actions row is now two rows instead of one (app ID on its own line above the status strip), giving each element more room.
+- `components/Sidebar.tsx`: added "New Application" and "Batch Upload" nav items.
+
+
 ## [2026-07-06] — fix re-run OCR provider, redesign review page, fix ABV extraction
 
 ### Fixed
