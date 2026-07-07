@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BatchSummaryBar } from "@/components/batch/BatchSummaryBar";
 import { CsvDropzone } from "@/components/batch/CsvDropzone";
+import { Toast } from "@/components/Toast";
+import { PROVIDER_LABELS } from "@/lib/ocr/provider-labels";
 
 const SETTINGS_KEY = "ttb-ocr-settings";
 
@@ -65,7 +67,18 @@ function BatchUploadPageInner() {
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState<"processing" | "completed" | null>(null);
   const [flaggedIds, setFlaggedIds] = useState<string[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const processingRef = useRef(false);
+
+  function providerId(): string {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      const parsed = raw ? (JSON.parse(raw) as { provider?: string }) : {};
+      return parsed.provider ?? "tesseract";
+    } catch {
+      return "tesseract";
+    }
+  }
 
   function providerHeaders(): Record<string, string> {
     try {
@@ -99,6 +112,8 @@ function BatchUploadPageInner() {
       if (processingRef.current) return;
       processingRef.current = true;
       setProcessing(true);
+      const provider = providerId();
+      setToastMessage(`Processing batch with ${PROVIDER_LABELS[provider] ?? provider}…`);
       try {
         while (true) {
           const res = await fetch(`/api/batch/${id}/process`, {
@@ -223,6 +238,9 @@ function BatchUploadPageInner() {
 
   return (
     <div className="px-8 py-8 max-w-4xl">
+      {toastMessage && (
+        <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
+      )}
       <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1

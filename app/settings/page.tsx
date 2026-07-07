@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { PROVIDER_LABELS } from "@/lib/ocr/provider-labels";
 
 const PROVIDERS = [
   {
@@ -16,8 +17,8 @@ const PROVIDERS = [
     label: "Google Cloud Vision",
     cost: "~$0.0015 / label",
     description:
-      "Dedicated OCR engine with precise word-level bounding boxes. First 1,000 requests/month are free — this app doesn't track usage against that quota.",
-    requiresKey: true,
+      "Dedicated OCR engine with precise word-level bounding boxes. Uses this app's own shared API key — no key needed from you. First 1,000 requests/month are free — this app doesn't track usage against that quota.",
+    requiresKey: false,
     tested: true,
   },
   {
@@ -144,16 +145,19 @@ export default function SettingsPage() {
     } catch {
       /* ignore malformed localStorage */
     }
+    const providerId = settings.provider ?? "tesseract";
+    const providerLabel = PROVIDER_LABELS[providerId] ?? providerId;
+    setDevMessage({ text: `Running OCR with ${providerLabel}…`, ok: true });
     await fetch("/api/queue/analyze", {
       method: "POST",
       headers: {
-        "X-Ocr-Provider": settings.provider ?? "tesseract",
+        "X-Ocr-Provider": providerId,
         ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
       },
     });
     await loadPendingCount();
     setAnalyzing(false);
-    setDevMessage({ text: "Pre-analysis complete.", ok: true });
+    setDevMessage({ text: `Pre-analysis complete (${providerLabel}).`, ok: true });
     setTimeout(() => setDevMessage(null), 3000);
   }
 

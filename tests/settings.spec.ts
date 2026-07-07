@@ -38,3 +38,16 @@ test('API key input shown when Claude is selected', async ({ page }) => {
   await page.getByText('Claude Sonnet 4.6').click()
   await expect(page.locator('input[type="password"]')).toBeVisible()
 })
+
+test('selecting Google Vision without an API key saves and persists as Google Vision, not silently reverting to Tesseract', async ({
+  page,
+}) => {
+  await page.goto('/settings')
+  await page.getByText('Google Cloud Vision').click()
+  await expect(page.locator('input[type="password"]')).not.toBeVisible()
+  await page.getByRole('button', { name: 'Save Settings' }).click()
+  await expect(page.getByText('Saved!')).toBeVisible()
+
+  await page.goto('/')
+  await expect(page.locator('p:has-text("OCR Engine") + p')).toHaveText('Google Vision')
+})

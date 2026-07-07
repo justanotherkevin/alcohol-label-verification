@@ -16,123 +16,122 @@ import {
 async function assembleApplication(
   id: string,
 ): Promise<QueueApplication | undefined> {
-  const client = await pool.connect();
-  try {
-    const appRes = await client.query(
-      `SELECT * FROM applications WHERE id = $1`,
-      [id],
+  const appRes = await pool.query(
+    `SELECT * FROM applications WHERE id = $1`,
+    [id],
+  );
+  if (!appRes.rows.length) return undefined;
+  const app = appRes.rows[0];
+
+  // Five independent reads, no transaction needed — each goes through
+  // pool.query() (its own pooled connection) rather than a single shared
+  // client, so they run genuinely in parallel instead of being serialized
+  // (and deprecation-warned) on one connection.
+  const [dataRes, imagesRes, sessionsRes, notesRes, resRes] =
+    await Promise.all([
+      pool.query(
+        `SELECT * FROM application_data WHERE application_id = $1`,
+        [id],
+      ),
+      pool.query(
+        `SELECT * FROM application_images WHERE application_id = $1 ORDER BY position`,
+        [id],
+      ),
+      pool.query(
+        `SELECT * FROM review_sessions WHERE application_id = $1 ORDER BY started_at`,
+        [id],
+      ),
+      pool.query(
+        `SELECT * FROM field_notes WHERE application_id = $1 ORDER BY saved_at`,
+        [id],
+      ),
+      pool.query(`SELECT * FROM resolutions WHERE application_id = $1`, [
+        id,
+      ]),
+    ]);
+
+  const dr = dataRes.rows[0];
+  const applicationData: ApplicationData = {
+    brandName: dr?.brand_name ?? "",
+    classType: dr?.class_type ?? "",
+    abv: dr?.abv ?? "",
+    netContents: dr?.net_contents ?? "",
+    bottler: dr?.bottler ?? "",
+    countryOfOrigin: dr?.country_of_origin ?? "",
+    governmentWarning: dr?.government_warning ?? "",
+  };
+
+  const images: LabelImage[] = imagesRes.rows.map((r) => ({
+    path: r.image_path,
+    mimeType: r.mime_type,
+    side: r.side ?? undefined,
+    rawOcrText: r.raw_ocr_text ?? undefined,
+  }));
+
+  let ocrData: OcrData | null = null;
+  const primaryImage = imagesRes.rows.find((r) => r.position === 0);
+  if (primaryImage) {
+    const ocrRes = await pool.query(
+      `SELECT * FROM ocr_data WHERE application_image_id = $1`,
+      [primaryImage.id],
     );
-    if (!appRes.rows.length) return undefined;
-    const app = appRes.rows[0];
-
-    const [dataRes, imagesRes, sessionsRes, notesRes, resRes] =
-      await Promise.all([
-        client.query(
-          `SELECT * FROM application_data WHERE application_id = $1`,
-          [id],
-        ),
-        client.query(
-          `SELECT * FROM application_images WHERE application_id = $1 ORDER BY position`,
-          [id],
-        ),
-        client.query(
-          `SELECT * FROM review_sessions WHERE application_id = $1 ORDER BY started_at`,
-          [id],
-        ),
-        client.query(
-          `SELECT * FROM field_notes WHERE application_id = $1 ORDER BY saved_at`,
-          [id],
-        ),
-        client.query(`SELECT * FROM resolutions WHERE application_id = $1`, [
-          id,
-        ]),
-      ]);
-
-    const dr = dataRes.rows[0];
-    const applicationData: ApplicationData = {
-      brandName: dr?.brand_name ?? "",
-      classType: dr?.class_type ?? "",
-      abv: dr?.abv ?? "",
-      netContents: dr?.net_contents ?? "",
-      bottler: dr?.bottler ?? "",
-      countryOfOrigin: dr?.country_of_origin ?? "",
-      governmentWarning: dr?.government_warning ?? "",
-    };
-
-    const images: LabelImage[] = imagesRes.rows.map((r) => ({
-      path: r.image_path,
-      mimeType: r.mime_type,
-      side: r.side ?? undefined,
-      rawOcrText: r.raw_ocr_text ?? undefined,
-    }));
-
-    let ocrData: OcrData | null = null;
-    const primaryImage = imagesRes.rows.find((r) => r.position === 0);
-    if (primaryImage) {
-      const ocrRes = await client.query(
-        `SELECT * FROM ocr_data WHERE application_image_id = $1`,
-        [primaryImage.id],
+    if (ocrRes.rows.length > 0) {
+      const ocr = ocrRes.rows[0];
+      const d = ocr.data;
+      const result = verifyLabel(
+        applicationData,
+        d.extracted,
+        d.confidence ?? {},
       );
-      if (ocrRes.rows.length > 0) {
-        const ocr = ocrRes.rows[0];
-        const d = ocr.data;
-        const result = verifyLabel(
-          applicationData,
-          d.extracted,
-          d.confidence ?? {},
-        );
-        ocrData = {
-          extracted: d.extracted,
-          confidence: d.confidence ?? {},
-          boundingBoxes: d.boundingBoxes,
-          result,
-          analyzedAt: ocr.analyzed_at,
-        };
-      }
+      ocrData = {
+        extracted: d.extracted,
+        confidence: d.confidence ?? {},
+        boundingBoxes: d.boundingBoxes,
+        result,
+        analyzedAt: ocr.analyzed_at,
+      };
     }
-
-    const reviewData: ApplicationReviewData = {
-      sessions: sessionsRes.rows.map((r) => ({
-        specialistId: r.specialist_id,
-        startedAt: r.started_at,
-        completedAt: r.completed_at ?? undefined,
-      })),
-      fieldNotes: notesRes.rows.map((r) => ({
-        field: r.field,
-        note: r.note,
-        flagged: r.flagged,
-        decision: r.decision ?? undefined,
-        specialistId: r.specialist_id,
-        savedAt: r.saved_at,
-      })),
-      resolution:
-        resRes.rows.length > 0 ?
-          {
-            decision: resRes.rows[0].decision,
-            overrides: resRes.rows[0].overrides,
-            rejectedFields: resRes.rows[0].rejected_fields,
-            note: resRes.rows[0].note,
-            resolvedAt: resRes.rows[0].resolved_at,
-            specialistId: resRes.rows[0].specialist_id ?? undefined,
-          }
-        : null,
-    };
-
-    return {
-      id: app.id,
-      applicant: app.applicant,
-      submittedAt: app.submitted_at,
-      applicationData,
-      images,
-      status: app.status,
-      ocrData,
-      reviewData,
-      batchId: app.batch_id ?? undefined,
-      errorMessage: app.error_message ?? undefined,
-    };
-  } finally {
-    client.release();
   }
+
+  const reviewData: ApplicationReviewData = {
+    sessions: sessionsRes.rows.map((r) => ({
+      specialistId: r.specialist_id,
+      startedAt: r.started_at,
+      completedAt: r.completed_at ?? undefined,
+    })),
+    fieldNotes: notesRes.rows.map((r) => ({
+      field: r.field,
+      note: r.note,
+      flagged: r.flagged,
+      decision: r.decision ?? undefined,
+      specialistId: r.specialist_id,
+      savedAt: r.saved_at,
+    })),
+    resolution:
+      resRes.rows.length > 0 ?
+        {
+          decision: resRes.rows[0].decision,
+          overrides: resRes.rows[0].overrides,
+          rejectedFields: resRes.rows[0].rejected_fields,
+          note: resRes.rows[0].note,
+          resolvedAt: resRes.rows[0].resolved_at,
+          specialistId: resRes.rows[0].specialist_id ?? undefined,
+        }
+      : null,
+  };
+
+  return {
+    id: app.id,
+    applicant: app.applicant,
+    submittedAt: app.submitted_at,
+    applicationData,
+    images,
+    status: app.status,
+    ocrData,
+    reviewData,
+    batchId: app.batch_id ?? undefined,
+    errorMessage: app.error_message ?? undefined,
+  };
 }
 
 // ── Insert helper (used by addApplication and seedDatabase) ──────────────────

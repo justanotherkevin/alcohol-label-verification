@@ -4,16 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StoredSpecialist, DEMO_SPECIALISTS } from "@/lib/queue/specialist";
+import { PROVIDER_LABELS } from "@/lib/ocr/provider-labels";
 
 const SETTINGS_KEY = "ttb-ocr-settings";
-const PROVIDER_LABELS: Record<string, string> = {
-  tesseract: "Tesseract",
-  "google-vision": "Google Vision",
-  claude: "Claude",
-  gemini: "Gemini",
-  openai: "OpenAI",
-  mock: "Mock",
-};
 
 type NavItem = { href: string; icon: string; label: string };
 
