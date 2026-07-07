@@ -123,11 +123,23 @@ export function LabelRegionPanel({
         </div>
       )}
 
-      {boxesOnImage.length === 0 && (
-        <div
-          className="rounded-lg bg-outline/20 border border-outline flex items-center justify-center"
-          style={{ height: CANVAS_HEIGHT }}>
-          <p className="text-base text-on-surface-dim px-6 text-center">No location found on label</p>
+      {boxesOnImage.length === 0 && thumbImage && (
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setExpandImageIndex(primaryImageIndex);
+              setExpandOpen(true);
+            }}
+            aria-label={`Expand label image ${primaryImageIndex + 1} of ${images.length}${thumbImage.side ? ` (${thumbImage.side})` : ""}`}
+            className="cursor-pointer rounded-lg bg-outline/20 border border-outline overflow-hidden hover:border-primary transition-colors">
+            <img
+              src={thumbImage.path}
+              alt={`Label image ${primaryImageIndex + 1}${thumbImage.side ? ` - ${thumbImage.side}` : ""}`}
+              className="w-full h-auto object-contain"
+            />
+          </button>
+          <p className="text-sm text-on-surface-dim text-center">No location found on label</p>
         </div>
       )}
 

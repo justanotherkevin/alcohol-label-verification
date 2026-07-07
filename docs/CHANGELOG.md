@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-07] — show full label image on review when no field location is found
+
+### Fixed
+
+- `components/queue/LabelRegionPanel.tsx`: when a flagged field's bounding box wasn't detected, the review page showed a large empty placeholder box ("No location found on label") with nothing for the reviewer to look at. It now renders the actual label image at full width (matching the summary screen's larger image style), still clickable to expand, with the "no location found" note as a small caption underneath.
+
 ## [2026-07-07] — reintroduce CSV batch upload and add specialist-initiated application creation
 
 Batch upload (Flow 2 of `docs/users-flow.md`) was built once, then deliberately removed (`dafa627`, "replace bulk-upload batch page with queue selection-based batch review") on the reasoning that "batch" should mean reviewing already-queued applications, not bulk-uploading new ones. Re-reading the user-flow doc's persona table more carefully: Janet is listed as a **"Compliance agent, high-volume importer handling"** — the same role category as Jenny and Dave, not a self-service importer. That reframes Flow 2 as a specialist-initiated intake path, not something in conflict with the existing multi-select queue-review flow. This reintroduces batch upload on that basis, and extends the same reasoning to single-application creation.
