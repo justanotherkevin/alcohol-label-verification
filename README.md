@@ -111,6 +111,12 @@ The Settings page includes a "Development tools" section. These are for local de
 - **Database** — Postgres (optional; works in-memory for demos)
 - **Deployment** — Vercel or self-hosted
 
+Tesseract is the free default and needs no API key, but Google Vision produces noticeably better OCR accuracy and bounding-box precision on real label photos. For this demo, Tesseract's results are good enough to leave as the default — but if you have a Google Vision API key, selecting it on the Settings page is recommended for better results.
+
+| Tesseract                                        | Google vision                                       |
+| ------------------------------------------------ | --------------------------------------------------- |
+| ![Free Tesseract](docs/assets/ocr-tesseract.png) | ![Google vision](docs/assets/ocr-google-vision.png) |
+
 ## Documentation
 
 The [`docs/`](docs) folder has deeper background and design history:
