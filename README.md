@@ -56,18 +56,27 @@ This application automates the first three steps, letting specialists focus enti
 
 ## How It Works
 
-1. **Upload** — Submit one or more label images (front/back pairs for alcohol bottles)
-2. **Analysis** — The system automatically extracts label information using AI vision technology
-3. **Comparison** — Extracted data is compared against the submitted application
-4. **Review** — Specialists review flagged items and any uncertain extractions
-5. **Decision** — Approve, reject, or request corrections
-6. **Record** — All decisions are logged for audit purposes
+The app has two user roles: **Applicants**, who submit a label for review, and **Specialists**, who verify it against TTB requirements.
+
+### For Applicants
+
+1. **Pick a label** — Choose a sample label from the catalog (a front/back photo pair with pre-filled application data)
+2. **Review the application data** — Edit any of the auto-filled fields (brand name, class/type, ABV, net contents, bottler, country of origin, government warning) to match what you're actually submitting
+3. **Swap in your own photo (optional)** — Replace either photo slot with a real label image if you have one
+4. **Submit** — The application enters the specialist queue as "pending"
+
+### For Specialists
+
+1. **Analysis** — Before you open it, the system has already extracted label information using AI vision technology and compared it against the submitted application data (see [Architecture](#architecture))
+2. **Review** — Step through any flagged fields and uncertain extractions; re-run OCR if a result looks wrong
+3. **Decision** — Approve, reject, or request corrections
+4. **Record** — All decisions are logged for audit purposes
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    A[Specialist uploads label + application data] --> B[Queue store\nlib/queue/]
+    A[Applicant uploads label + application data] --> B[Queue store\nlib/queue/]
     B --> C[Pre-analysis\ngetProvider + verifyLabel]
     C -->|Tesseract or Google Vision| D[OCR extraction]
     D --> E[Field-by-field comparison\nvs application data]
@@ -109,7 +118,7 @@ The [`docs/`](docs) folder has deeper background and design history:
 - [`system-design.md`](docs/system-design.md) — architecture reference for the single/batch verification API design
 - [`2026-07-01-queue-based-review-flow.md`](docs/2026-07-01-queue-based-review-flow.md) — implementation plan for the current queue-based review flow (pre-analysis + specialist resolution)
 - [`20260630-ai-label-verification-app.md`](docs/20260630-ai-label-verification-app.md) — original product plan: stakeholder context, MVP scope, and phased build-out
-- [`users-flow.md`](docs/users-flow.md) — documented user flows through the app's screens
+- [`users-flow.md`](docs/users-flow.md) — user flows mapped to each persona's specific need (e.g. why pre-analysis exists, why batch processing runs in parallel)
 - [`TTB-COLA-context.md`](docs/TTB-COLA-context.md) — real-world background on the TTB COLA review process this app digitizes
 - [`ttb-cola-reference.md`](docs/ttb-cola-reference.md) — reference on the real TTB COLA form/process this app replaces
 - [`stakeholder-interview-notes.md`](docs/stakeholder-interview-notes.md) — raw interview notes with TTB stakeholders that shaped requirements
