@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — skeleton-load the whole queue table and keep its header sticky
+
+### Added
+
+- `app/page.tsx`: while a batch review is starting (the OCR analyze call is in flight), every row in the queue table now shows pulsing skeleton placeholders across all columns, rather than only the selected rows, so it's clear the whole table is mid-analysis.
+- `app/page.tsx`: the "Pending Applications" header, including the "Start review"/"Start batch review" button, is now sticky to the top of the viewport, so it stays reachable while scrolling through a long queue instead of requiring a scroll back up.
+
+### Fixed
+
+- `app/page.tsx`: making the header sticky surfaced that `overflow-hidden` on the surrounding card was silently defeating `position: sticky` (an ancestor with non-visible overflow becomes the sticky positioning boundary, even when it never scrolls internally). Removed `overflow-hidden` from the card and moved the rounded-top-corner clipping onto the header itself instead.
+
 ## [2026-07-06] — fix batch review button UX and add label overview for clean-pass review
 
 ### Fixed
