@@ -141,6 +141,16 @@ describe("extractFields — ABV matching", () => {
     expect(result.abv).toBeNull()
   })
 
+  it("resolves ABV when the label spells out 'Alcohol/Volume' in full", () => {
+    // demo-TTB-2026-1008 regression: the label reads "13.68% Alcohol/Volume",
+    // not an abbreviated "Alc/Vol" or "ABV" — the old regex only recognized
+    // the abbreviated forms and returned null even though the value is present.
+    const text = "HAWK'S SHADOW\n13.68% Alcohol/Volume\n375 mL"
+    const result = extractFields(text, { abv: "13.68 % ABV" })
+    expect(result.abv).not.toBeNull()
+    expect(result.abv).toContain("13.68%")
+  })
+
   it("returns null when ABV hint is null", () => {
     expect(extractFields(OCR_TEXT, { abv: null }).abv).toBeNull()
   })
@@ -310,6 +320,21 @@ describe("computeFieldBoxes — bidirectional token matching (ABV split-word cas
     const words = [word("45%", 0, 0, 40, 20), word("Alc./Vol.", 45, 0, 120, 20)]
     const boxes = computeFieldBoxes(words, "45% Alc./Vol.", W, H)
     expect(boxes).toHaveLength(1)
+  })
+
+  it("matches when OCR splits the number and '%' into separate words (real Google Vision tokenization)", () => {
+    // demo-TTB-2026-1007 regression: Google Vision tokenized "40% ALC./VOL." as
+    // three words — "40", "%", "ALC./VOL" — not a single "40%" token. The box
+    // must still span from "40" through "ALC./VOL", not just the last word.
+    const words = [
+      word("40", 0, 0, 30, 20),
+      word("%", 32, 0, 50, 20),
+      word("ALC./VOL", 55, 0, 120, 20),
+    ]
+    const boxes = computeFieldBoxes(words, "40% ALC./VOL.", W, H)
+    expect(boxes).toHaveLength(1)
+    expect(boxes[0].x).toBeCloseTo(0 / W)
+    expect(boxes[0].width).toBeCloseTo(120 / W)
   })
 })
 

@@ -49,7 +49,7 @@ export function LabelOverviewPanel({
 
   return (
     <div className="bg-surface-card rounded-lg p-6 flex flex-col gap-4 h-full">
-      <p className="text-xs uppercase tracking-wide text-on-surface-muted">
+      <p className="text-sm uppercase tracking-wide text-on-surface-muted">
         Label overview · all fields
       </p>
 
@@ -90,7 +90,7 @@ export function LabelOverviewPanel({
         {fields.map((f) => (
           <span
             key={f.field}
-            className="flex items-center gap-1.5 text-xs text-on-surface-dim">
+            className="flex items-center gap-1.5 text-sm text-on-surface-dim">
             <span
               className="w-2.5 h-2.5 rounded-sm shrink-0"
               style={{ backgroundColor: colorByField.get(f.field) }}

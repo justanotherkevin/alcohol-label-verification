@@ -27,7 +27,7 @@ export function PassedFieldPanel({
   return (
     <div className="flex flex-col gap-6 h-full">
       <div className="flex items-center gap-3">
-        <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${SEVERITY_PILL[severity]}`}>
+        <span className={`px-2.5 py-1 rounded-full text-sm font-bold border ${SEVERITY_PILL[severity]}`}>
           {SEVERITY_LABEL[severity]}
         </span>
         <h2 className="text-xl font-bold text-on-surface">{field.label}</h2>
@@ -36,18 +36,18 @@ export function PassedFieldPanel({
       <FieldValueRows field={field} boxes={boxes} />
 
       <div>
-        <p className="text-sm font-medium text-on-surface mb-2">
+        <p className="text-base font-medium text-on-surface mb-2">
           This field already passed. Disagree with it?
         </p>
         {isManuallyFlagged ?
           <button
             onClick={onClearFlag}
-            className="cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold border border-outline text-on-surface-dim">
+            className="cursor-pointer px-4 py-2 rounded-lg text-base font-semibold border border-outline text-on-surface-dim">
             Clear flag
           </button>
         : <button
             onClick={onFlag}
-            className="cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold border border-bp-error-border text-bp-error">
+            className="cursor-pointer px-4 py-2 rounded-lg text-base font-semibold border border-bp-error-border text-bp-error">
             ⚠ Flag as issue
           </button>
         }
@@ -55,7 +55,7 @@ export function PassedFieldPanel({
 
       <button
         onClick={onBack}
-        className="cursor-pointer mt-auto text-sm text-primary hover:text-primary-hover underline self-start">
+        className="cursor-pointer mt-auto text-base text-primary hover:text-primary-hover underline self-start">
         ← back to review
       </button>
     </div>

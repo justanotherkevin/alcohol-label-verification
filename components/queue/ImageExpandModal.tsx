@@ -41,7 +41,7 @@ export function ImageExpandModal({ image, boxes, fieldLabel, onClose }: ImageExp
           className="cursor-pointer absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white text-black font-bold shadow-lg">
           ×
         </button>
-        <p className="text-center text-sm text-white/70 mt-2">{fieldLabel}</p>
+        <p className="text-center text-base text-white/70 mt-2">{fieldLabel}</p>
       </div>
     </div>
   );

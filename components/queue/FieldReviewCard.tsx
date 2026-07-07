@@ -47,8 +47,8 @@ function Row({
     : "text-on-surface";
   return (
     <div className="grid grid-cols-[110px_1fr] gap-4 px-4 py-3">
-      <span className="text-xs uppercase tracking-wide text-on-surface-muted pt-0.5">{label}</span>
-      <span className={`text-sm font-mono ${toneClass}`}>{value}</span>
+      <span className="text-sm uppercase tracking-wide text-on-surface-muted pt-0.5">{label}</span>
+      <span className={`text-base font-mono ${toneClass}`}>{value}</span>
     </div>
   );
 }
@@ -132,12 +132,12 @@ export function FieldReviewCard({
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <span
-            className={`px-2.5 py-1 rounded-full text-xs font-bold border ${SEVERITY_PILL[severity]}`}>
+            className={`px-2.5 py-1 rounded-full text-sm font-bold border ${SEVERITY_PILL[severity]}`}>
             {SEVERITY_LABEL[severity]}
           </span>
           <h2 className="text-xl font-bold text-on-surface">{field.label}</h2>
         </div>
-        <span className="text-sm text-on-surface-muted shrink-0">
+        <span className="text-base text-on-surface-muted shrink-0">
           field {currentFlaggedIndex + 1} of {totalFlagged}
         </span>
       </div>
@@ -145,11 +145,11 @@ export function FieldReviewCard({
       <FieldValueRows field={field} boxes={boxes} />
 
       <div>
-        <p className="text-sm font-medium text-on-surface mb-2">Override this field:</p>
+        <p className="text-base font-medium text-on-surface mb-2">Override this field:</p>
         <div className="flex gap-2">
           <button
             onClick={onAccept}
-            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold border ${
+            className={`cursor-pointer px-4 py-2 rounded-lg text-base font-semibold border ${
               markedAction === "accept" ?
                 "bg-bp-success text-white border-bp-success"
               : "border-bp-success-border text-bp-success"
@@ -158,7 +158,7 @@ export function FieldReviewCard({
           </button>
           <button
             onClick={onReject}
-            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold border ${
+            className={`cursor-pointer px-4 py-2 rounded-lg text-base font-semibold border ${
               markedAction === "reject" ?
                 "bg-bp-error text-white border-bp-error"
               : "border-bp-error-border text-bp-error"
@@ -167,7 +167,7 @@ export function FieldReviewCard({
           </button>
           <button
             onClick={onSkip}
-            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold border ${
+            className={`cursor-pointer px-4 py-2 rounded-lg text-base font-semibold border ${
               markedAction === "skip" ?
                 "bg-surface-dim text-on-surface border-outline"
               : "border-outline text-on-surface-dim"
@@ -181,16 +181,16 @@ export function FieldReviewCard({
         <button
           onClick={onPrev}
           disabled={!canPrev}
-          className="cursor-pointer px-3 py-1.5 border border-outline rounded-lg text-sm text-on-surface-dim disabled:opacity-30 disabled:cursor-not-allowed">
+          className="cursor-pointer px-3 py-1.5 border border-outline rounded-lg text-base text-on-surface-dim disabled:opacity-30 disabled:cursor-not-allowed">
           ← prev
         </button>
-        <span className="text-sm text-on-surface-muted">
+        <span className="text-base text-on-surface-muted">
           {reviewedCount} reviewed · {leftCount} left
         </span>
         <button
           onClick={onNext}
           disabled={!canNext}
-          className="cursor-pointer px-3 py-1.5 bg-on-surface text-surface-card rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed">
+          className="cursor-pointer px-3 py-1.5 bg-on-surface text-surface-card rounded-lg text-base font-medium disabled:opacity-30 disabled:cursor-not-allowed">
           next flag →
         </button>
       </div>

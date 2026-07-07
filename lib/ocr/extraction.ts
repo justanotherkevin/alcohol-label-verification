@@ -32,7 +32,7 @@ function matchAbv(text: string, hint: string | null | undefined): string | null 
   const num = hint.match(/(\d+(?:\.\d+)?)/)?.[1]
   if (!num) return null
   const m = text.match(
-    new RegExp(`${num}\\s*%\\s*(?:Alc\\.?\\/Vol\\.?|ALC\\/VOL\\.?|ABV|alcohol by volume)`, "i"),
+    new RegExp(`${num}\\s*%\\s*(?:Alc(?:ohol)?\\.?\\s*(?:\\/|by)?\\s*Vol(?:ume)?\\.?|ABV)`, "i"),
   )
   return m ? m[0].trim() : null
 }
@@ -139,6 +139,16 @@ function normalizeForBbox(s: string): string {
     .trim()
 }
 
+// Whitespace-insensitive variant of the above, used only for the contiguous-run
+// containment checks in findContiguousRun: some OCR providers tokenize a number
+// and its adjacent "%"/unit as separate words (e.g. "40" + "%"), which the
+// accumulation step joins with a forced space ("40 %"). The field's extracted
+// text has no such space ("40%"), so those containment checks must ignore
+// whitespace differences entirely to still recognize the match.
+function stripSpaces(s: string): string {
+  return s.replace(/\s+/g, "")
+}
+
 // Walks OCR words consecutively, accumulating a candidate string, and scores how
 // much of fieldValue it covers — a "skip some and continue" fuzzy match rather
 // than requiring every word to independently contain a token. Ported from
@@ -149,7 +159,7 @@ function findContiguousRun(
   fieldValue: string,
   words: WordLike[],
 ): { words: WordLike[]; score: number } | null {
-  const target = normalizeForBbox(fieldValue)
+  const target = stripSpaces(normalizeForBbox(fieldValue))
   if (!target) return null
 
   let bestMatch: WordLike[] = []
@@ -165,7 +175,7 @@ function findContiguousRun(
       accumulated += candidates.length > 0 ? " " + words[j].text : words[j].text
       candidates.push(words[j])
 
-      const accNorm = normalizeForBbox(accumulated)
+      const accNorm = stripSpaces(normalizeForBbox(accumulated))
 
       if (accNorm === target) return { words: [...candidates], score: 1 }
 

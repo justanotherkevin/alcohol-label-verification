@@ -10,7 +10,12 @@ test.beforeEach(async ({ page }) => {
   }, { settings: MOCK_SETTINGS, specialist: MOCK_SPECIALIST })
 })
 
+async function leaveSummary(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: 'Next field →' }).click()
+}
+
 async function acceptAllFlaggedFields(page: import('@playwright/test').Page) {
+  await leaveSummary(page)
   const acceptButton = page.getByRole('button', { name: '✓ Accept', exact: true })
   await expect(acceptButton).toBeVisible({ timeout: 15000 })
   const nextButton = page.getByRole('button', { name: 'next flag →', exact: true })
@@ -38,7 +43,7 @@ test('add mock application increases the pending count', async ({ page }) => {
   const before = await pendingStat.textContent()
 
   await page.goto('/settings')
-  await page.getByRole('button', { name: '+ Add mock application' }).click()
+  await page.getByRole('button', { name: '+ Add mock' }).click()
 
   await page.goto('/')
   await expect(pendingStat).not.toHaveText(before ?? '')
@@ -46,32 +51,34 @@ test('add mock application increases the pending count', async ({ page }) => {
 
 test('run pre-analysis clears the pending count', async ({ page }) => {
   await page.goto('/settings')
-  await page.getByRole('button', { name: /Run pre-analysis now/ }).click()
-  await expect(page.getByRole('button', { name: /Run pre-analysis now \(0 pending\)/ })).toBeVisible({ timeout: 15000 })
+  await page.getByRole('button', { name: /Run pre-analysis \(\d+\)/ }).click()
+  await expect(page.getByRole('button', { name: /Run pre-analysis \(0\)/ })).toBeVisible({ timeout: 15000 })
 })
 
 test('opening a flagged application shows a field review card with an Accept option', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Review →' }).first().click()
+  await page.getByRole('button', { name: 'Review', exact: true }).first().click()
+  await leaveSummary(page)
   await expect(page.getByRole('button', { name: '✓ Accept', exact: true })).toBeVisible()
 })
 
 test('approve is disabled until all flagged fields are accepted', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Review →' }).first().click()
+  await page.getByRole('button', { name: 'Review', exact: true }).first().click()
   await expect(page.getByRole('button', { name: 'Approve Application' })).toBeDisabled()
 })
 
 test('accepting all flagged fields enables Approve', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Review →' }).first().click()
+  await page.getByRole('button', { name: 'Review', exact: true }).first().click()
   await acceptAllFlaggedFields(page)
   await expect(page.getByRole('button', { name: 'Approve Application' })).toBeEnabled()
 })
 
 test('deny requires rejecting a field and a note', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Review →' }).first().click()
+  await page.getByRole('button', { name: 'Review', exact: true }).first().click()
+  await leaveSummary(page)
   await page.getByRole('button', { name: '✗ Reject', exact: true }).click()
   await page.getByRole('button', { name: 'Skip to summary' }).click()
   await page.getByRole('button', { name: '✗ Deny' }).click()
@@ -85,7 +92,7 @@ test('approving a resolved application returns to the queue and removes its row'
   await page.goto('/')
   const firstRow = page.locator('tbody tr').first()
   const brandName = (await firstRow.locator('td').nth(1).textContent())?.trim()
-  await firstRow.getByRole('link', { name: 'Review →' }).click()
+  await firstRow.getByRole('button', { name: 'Review', exact: true }).click()
 
   await acceptAllFlaggedFields(page)
   await expect(page.getByRole('button', { name: 'Approve Application' })).toBeEnabled()
@@ -101,8 +108,9 @@ test('rejecting a resolved application returns to the queue and removes its row'
   await page.goto('/')
   const firstRow = page.locator('tbody tr').first()
   const brandName = (await firstRow.locator('td').nth(1).textContent())?.trim()
-  await firstRow.getByRole('link', { name: 'Review →' }).click()
+  await firstRow.getByRole('button', { name: 'Review', exact: true }).click()
 
+  await leaveSummary(page)
   await page.getByRole('button', { name: '✗ Reject', exact: true }).click()
   await page.getByRole('button', { name: 'Skip to summary' }).click()
   await page.getByRole('button', { name: '✗ Deny' }).click()

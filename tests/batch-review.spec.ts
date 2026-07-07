@@ -39,6 +39,7 @@ test('batch review: select 3, reject each in sequence, auto-advance, return home
       page.getByText(`Batch review — application ${i + 1} of ${orderedIds.length}`)
     ).toBeVisible()
 
+    await page.getByRole('button', { name: 'Next field →' }).click()
     await page.getByRole('button', { name: '✗ Reject', exact: true }).click()
     await page.getByRole('button', { name: 'Skip to summary' }).click()
     await page.getByRole('button', { name: '✗ Deny' }).click()
