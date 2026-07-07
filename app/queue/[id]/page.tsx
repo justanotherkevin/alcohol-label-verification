@@ -23,6 +23,8 @@ import { ReviewSummaryPanel } from "@/components/queue/ReviewSummaryPanel";
 import { ReviewSummaryBar } from "@/components/queue/ReviewSummaryBar";
 import { DenyNoteModal } from "@/components/queue/DenyNoteModal";
 import { RevertConfirmModal } from "@/components/queue/RevertConfirmModal";
+import { Toast } from "@/components/Toast";
+import { PROVIDER_LABELS } from "@/lib/ocr/provider-labels";
 
 interface QueueApplicationDetail {
   id: string;
@@ -75,6 +77,7 @@ export default function QueueDetailPage() {
   const [revertError, setRevertError] = useState<string | null>(null);
   const [reanalyzing, setReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -109,11 +112,13 @@ export default function QueueDetailPage() {
       } catch {
         /* ignore malformed localStorage */
       }
+      const providerId = settings.provider ?? "tesseract";
+      setToastMessage(`Running OCR with ${PROVIDER_LABELS[providerId] ?? providerId}…`);
       const res = await fetch("/api/queue/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Ocr-Provider": settings.provider ?? "tesseract",
+          "X-Ocr-Provider": providerId,
           ...(settings.apiKey ? { "X-Api-Key": settings.apiKey } : {}),
         },
         body: JSON.stringify({ ids: [app.id], force: true }),
@@ -389,6 +394,9 @@ export default function QueueDetailPage() {
 
   return (
     <div className="px-8 py-8 max-w-10xl">
+      {toastMessage && (
+        <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
+      )}
       <div className="mb-6 flex items-start justify-between gap-6">
         <div>
           <h1

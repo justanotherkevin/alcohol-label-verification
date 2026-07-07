@@ -2,9 +2,7 @@ import { put } from "@vercel/blob"
 import { NextResponse } from "next/server"
 import fs from "fs/promises"
 import path from "path"
-import { ALLOWED_IMAGE_MIME_TYPES, EXTENSION_BY_MIME_TYPE } from "@/lib/uploads"
-
-const MAX_BYTES = 8 * 1024 * 1024
+import { ALLOWED_IMAGE_MIME_TYPES, EXTENSION_BY_MIME_TYPE, MAX_IMAGE_BYTES } from "@/lib/uploads"
 
 async function saveToLocalUploadsDir(file: File, filename: string): Promise<string> {
   const uploadsDir = path.join(process.cwd(), "public", "uploads")
@@ -23,8 +21,8 @@ export async function POST(request: Request) {
   if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
     return NextResponse.json({ error: "unsupported image type" }, { status: 400 })
   }
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "file too large (max 8MB)" }, { status: 400 })
+  if (file.size > MAX_IMAGE_BYTES) {
+    return NextResponse.json({ error: "file too large (max 1MB)" }, { status: 400 })
   }
 
   // Filename is derived entirely from server-generated values (never file.name,

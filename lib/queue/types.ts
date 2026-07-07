@@ -64,6 +64,10 @@ export interface QueueApplication {
   ocrData: OcrData | null
   reviewData: ApplicationReviewData
   status: QueueStatus
+  /** Set when this application originated from a CSV batch upload (Flow 2). */
+  batchId?: string
+  /** Set when batch processing failed for this row (e.g. bad image fetch, OCR error). */
+  errorMessage?: string | null
 }
 
 export interface QueueSummary {

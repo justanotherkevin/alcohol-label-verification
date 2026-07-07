@@ -7,13 +7,31 @@ DROP TABLE IF EXISTS application_images CASCADE;
 DROP TABLE IF EXISTS application_data CASCADE;
 DROP TABLE IF EXISTS applications CASCADE;
 DROP TABLE IF EXISTS batch_runs CASCADE;
+DROP TABLE IF EXISTS submission_batches CASCADE;
+
+-- Tracks a single CSV batch-upload (Flow 2, importer bulk submission). Distinct
+-- from batch_runs, which logs OCR pre-analysis sweep runs (cron/manual), not
+-- import batches.
+CREATE TABLE submission_batches (
+  id           TEXT PRIMARY KEY,
+  uploaded_at  TIMESTAMPTZ NOT NULL,
+  filename     TEXT,
+  total_count  INTEGER     NOT NULL,
+  ocr_provider TEXT        NOT NULL,
+  status       TEXT        NOT NULL, -- 'processing' | 'completed'
+  skipped_rows JSONB       NOT NULL DEFAULT '[]'
+);
 
 CREATE TABLE applications (
-  id           TEXT PRIMARY KEY,
-  applicant    TEXT        NOT NULL,
-  submitted_at TIMESTAMPTZ NOT NULL,
-  status       TEXT        NOT NULL
+  id            TEXT PRIMARY KEY,
+  applicant     TEXT        NOT NULL,
+  submitted_at  TIMESTAMPTZ NOT NULL,
+  status        TEXT        NOT NULL,
+  batch_id      TEXT        REFERENCES submission_batches(id) ON DELETE CASCADE,
+  error_message TEXT
 );
+
+CREATE INDEX idx_applications_batch_id ON applications(batch_id);
 
 CREATE TABLE application_data (
   application_id     TEXT PRIMARY KEY REFERENCES applications(id) ON DELETE CASCADE,
