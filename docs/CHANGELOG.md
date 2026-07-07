@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-06] — fix re-run OCR provider, redesign review page, fix ABV extraction
+
+### Fixed
+
+- `app/queue/[id]/page.tsx`: "Re-run OCR" was silently defaulting to Tesseract regardless of the provider configured on the Settings page, because its request never attached the `X-Ocr-Provider`/`X-Api-Key` headers that the normal batch-analyze flow already sends. It now reads the saved `ttb-ocr-settings` from `localStorage` and forwards the same headers, matching `app/page.tsx`'s existing behavior.
+- `lib/ocr/extraction.ts`: the ABV (alcohol content) field's fallback regex only recognized abbreviated forms (`Alc/Vol`, `ABV`), so labels spelling it out in full (e.g. "13.68% Alcohol/Volume") returned no ABV value at all. Broadened the pattern to accept spelled-out `Alcohol`/`Volume` forms alongside the abbreviations.
+- `lib/ocr/extraction.ts`: the bounding-box word-accumulation match (`findContiguousRun`) was whitespace-sensitive, so when an OCR provider tokenized a number and its adjacent `%` as two separate words (e.g. `"40"` + `"%"`), joining them with a forced space during accumulation no longer matched the no-space target text. This truncated the ABV bounding box down to just the unit text (e.g. "ALC./VOL." without the "40%"). Added a whitespace-insensitive comparison so the box now spans the full value.
+- `tests/mocks/labels/_extracted.json`: regenerated via `scripts/regenerate-extracted.ts` to pick up both ABV fixes across all seeded labels (not just the two originally reported).
+- `tests/queue.spec.ts`, `tests/batch-review.spec.ts`: fixed stale locators that predated this session — the queue's "Review" action is now a plain button (not a `Review →` link), and the Settings page's mock/pre-analysis buttons read `"+ Add mock"`/`"Run pre-analysis (n)"` rather than their older longer labels.
+
+### Changed
+
+- `app/queue/[id]/page.tsx`, `components/queue/FieldStatusStrip.tsx`: the review page now lands on the Summary slide first instead of the first flagged field, and adds an always-visible "Next field →" button in the header strip that steps through flagged fields one at a time, wrapping from Summary back to the first field.
+- `components/queue/FieldReviewCard.tsx`, `PassedFieldPanel.tsx`, `LabelRegionPanel.tsx`, `ReviewSummaryBar.tsx`, `ReviewSummaryPanel.tsx`, `LabelOverviewPanel.tsx`, `DenyNoteModal.tsx`, `RevertConfirmModal.tsx`, `ImageExpandModal.tsx`: bumped up small (`text-xs`/`text-sm`) text sizes for readability across the review flow.
+
+### Added
+
+- `tests/reanalyze-provider.spec.ts`: regression test asserting "Re-run OCR" forwards the configured provider header instead of defaulting to Tesseract.
+- `lib/ocr/extraction.test.ts`: regression tests for the split number/`%` bounding-box case and the spelled-out "Alcohol/Volume" extraction case.
+
 ## [2026-07-06] — skeleton-load the whole queue table and keep its header sticky
 
 ### Added
