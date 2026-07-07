@@ -13,6 +13,7 @@ import {
 import { ApplicationData } from "@/lib/verify";
 import { FieldStatusStrip } from "@/components/queue/FieldStatusStrip";
 import { LabelRegionPanel } from "@/components/queue/LabelRegionPanel";
+import { LabelOverviewPanel } from "@/components/queue/LabelOverviewPanel";
 import {
   FieldReviewCard,
   MarkedAction,
@@ -425,9 +426,11 @@ export default function QueueDetailPage() {
                   extractedText={displayedField.extracted}
                   boxes={displayedBoxes}
                 />
-              : <div className="h-full flex items-center justify-center text-white/40 text-sm py-16">
-                  Review complete — see summary
-                </div>
+              : <LabelOverviewPanel
+                  images={app.images}
+                  fields={allFields}
+                  boundingBoxes={app.ocrData?.boundingBoxes}
+                />
               }
             </div>
             <div className="bg-surface p-6">
